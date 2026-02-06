@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.95 (2026-02-07)
+
+### Exports
+
+- Export `Section` class from package entry point
+- Re-export all shared types (`NavItem`, `Location`, etc.) from package entry,
+  matching the original epubjs public API surface
+
 ## 0.3.94 (2026-02-07)
 
 ### Bug fixes

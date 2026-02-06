@@ -1,6 +1,6 @@
 {
   "name": "@likecoin/epub-ts",
-  "version": "0.3.94",
+  "version": "0.3.95",
   "description": "TypeScript EPUB parser and renderer, forked from epubjs",
   "keywords": ["epub", "ebook", "reader", "typescript", "epubjs", "parser", "renderer"],
   "type": "module",
