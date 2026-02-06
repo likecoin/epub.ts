@@ -33,7 +33,7 @@ class EpubCFI {
 	end: EpubCFIComponent | null;
 	id: string | null;
 
-	constructor(cfiFrom?: any, base?: any, ignoreClass?: string) {
+	constructor(cfiFrom?: string | Range | Node | EpubCFI, base?: string | EpubCFIComponent, ignoreClass?: string) {
 		var type;
 
 		this.str = "";
@@ -62,14 +62,14 @@ class EpubCFI {
 
 
 		if(type === "string") {
-			this.str = cfiFrom;
-			return extend(this, this.parse(cfiFrom));
+			this.str = cfiFrom as string;
+			return extend(this, this.parse(cfiFrom as string));
 		} else if (type === "range") {
-			return extend(this, this.fromRange(cfiFrom, this.base, ignoreClass));
+			return extend(this, this.fromRange(cfiFrom as Range, this.base, ignoreClass));
 		} else if (type === "node") {
-			return extend(this, this.fromNode(cfiFrom, this.base, ignoreClass));
-		} else if (type === "EpubCFI" && cfiFrom.path) {
-			return cfiFrom;
+			return extend(this, this.fromNode(cfiFrom as Node, this.base, ignoreClass));
+		} else if (type === "EpubCFI" && (cfiFrom as EpubCFI).path) {
+			return cfiFrom as EpubCFI;
 		} else if (!cfiFrom) {
 			return this;
 		} else {
@@ -82,14 +82,14 @@ class EpubCFI {
 	 * Check the type of constructor input
 	 * @private
 	 */
-	checkType(cfi: any): string | false {
+	checkType(cfi: string | Range | Node | EpubCFI | undefined): string | false {
 
 		if (this.isCfiString(cfi)) {
 			return "string";
 		// Is a range object
-		} else if (cfi && typeof cfi === "object" && (type(cfi) === "Range" || typeof(cfi.startContainer) != "undefined")){
+		} else if (cfi && typeof cfi === "object" && (type(cfi) === "Range" || typeof((cfi as Range).startContainer) != "undefined")){
 			return "range";
-		} else if (cfi && typeof cfi === "object" && typeof(cfi.nodeType) != "undefined" ){ // || typeof cfi === "function"
+		} else if (cfi && typeof cfi === "object" && typeof((cfi as Node).nodeType) != "undefined" ){ // || typeof cfi === "function"
 			return "node";
 		} else if (cfi && typeof cfi === "object" && cfi instanceof EpubCFI){
 			return "EpubCFI";
@@ -153,7 +153,7 @@ class EpubCFI {
 	}
 
 	parseComponent(componentStr: string): EpubCFIComponent {
-		var component: { steps: any[]; terminal: { offset: any; assertion: any } } = {
+		var component: EpubCFIComponent = {
 			steps: [],
 			terminal: {
 				offset: null,
@@ -173,14 +173,14 @@ class EpubCFI {
 			steps.shift(); // Ignore the first slash
 		}
 
-		component.steps = steps.map(function(step: any){
+		component.steps = steps.map(function(step: string){
 			return this.parseStep(step);
 		}.bind(this));
 
 		return component;
 	}
 
-	parseStep(stepStr: string): any {
+	parseStep(stepStr: string): EpubCFIStep | undefined {
 		var type, num, index, has_brackets, id;
 
 		has_brackets = stepStr.match(/\[(.*)\]/);
@@ -206,7 +206,8 @@ class EpubCFI {
 		return {
 			"type" : type,
 			"index" : index,
-			"id" : id || null
+			"id" : id || null,
+			"tagName" : ""
 		};
 	}
 
@@ -344,7 +345,7 @@ class EpubCFI {
 	 * Compare which of two CFIs is earlier in the text
 	 * @returns {number} First is earlier = -1, Second is earlier = 1, They are equal = 0
 	 */
-	compare(cfiOne: any, cfiTwo: any): number {
+	compare(cfiOne: string | EpubCFI, cfiTwo: string | EpubCFI): number {
 		var stepsA, stepsB;
 		var terminalA, terminalB;
 
@@ -417,18 +418,18 @@ class EpubCFI {
 		return 0;
 	}
 
-	step(node: any): any {
+	step(node: Node): EpubCFIStep {
 		var nodeType = (node.nodeType === TEXT_NODE) ? "text" : "element";
 
 		return {
-			"id" : node.id,
-			"tagName" : node.tagName,
+			"id" : (node as Element).id,
+			"tagName" : (node as Element).tagName,
 			"type" : nodeType,
 			"index" : this.position(node)
 		};
 	}
 
-	filteredStep(node: any, ignoreClass: string): any {
+	filteredStep(node: Node, ignoreClass: string): EpubCFIStep | undefined {
 		var filteredNode = this.filter(node, ignoreClass);
 		var nodeType;
 
@@ -441,15 +442,15 @@ class EpubCFI {
 		nodeType = (filteredNode.nodeType === TEXT_NODE) ? "text" : "element";
 
 		return {
-			"id" : filteredNode.id,
-			"tagName" : filteredNode.tagName,
+			"id" : (filteredNode as Element).id,
+			"tagName" : (filteredNode as Element).tagName,
 			"type" : nodeType,
 			"index" : this.filteredPosition(filteredNode, ignoreClass)
 		};
 	}
 
-	pathTo(node: any, offset: number | null, ignoreClass?: string): any {
-		var segment: { steps: any[]; terminal: { offset: any; assertion: any } } = {
+	pathTo(node: Node, offset: number | null, ignoreClass?: string): EpubCFIComponent {
+		var segment: EpubCFIComponent = {
 			steps: [],
 			terminal: {
 				offset: null,
@@ -484,7 +485,9 @@ class EpubCFI {
 			if(segment.steps[segment.steps.length-1].type != "text") {
 				segment.steps.push({
 					"type" : "text",
-					"index" : 0
+					"index" : 0,
+					"id" : null,
+					"tagName" : ""
 				});
 			}
 
@@ -494,7 +497,7 @@ class EpubCFI {
 		return segment;
 	}
 
-	equalStep(stepA: any, stepB: any): boolean {
+	equalStep(stepA: EpubCFIStep, stepB: EpubCFIStep): boolean {
 		if (!stepA || !stepB) {
 			return false;
 		}
@@ -515,7 +518,7 @@ class EpubCFI {
 	 * @param {string} [ignoreClass]
 	 * @returns {object} cfi
 	 */
-	fromRange(range: Range, base: any, ignoreClass?: string): any {
+	fromRange(range: Range, base: string | EpubCFIComponent, ignoreClass?: string): Partial<EpubCFI> {
 		var cfi: any = {
 			range: false,
 			base: {},
@@ -609,7 +612,7 @@ class EpubCFI {
 	 * @param {string} [ignoreClass]
 	 * @returns {object} cfi
 	 */
-	fromNode(anchor: Node, base: any, ignoreClass?: string): any {
+	fromNode(anchor: Node, base: string | EpubCFIComponent, ignoreClass?: string): Partial<EpubCFI> {
 		var cfi: any = {
 			range: false,
 			base: {},
@@ -630,7 +633,7 @@ class EpubCFI {
 		return cfi;
 	}
 
-	filter(anchor: any, ignoreClass: string): any {
+	filter(anchor: Node, ignoreClass: string): Node | false {
 		var needsIgnoring;
 		var sibling; // to join with
 		var parent, previousSibling, nextSibling;
@@ -639,10 +642,10 @@ class EpubCFI {
 		if (anchor.nodeType === TEXT_NODE) {
 			isText = true;
 			parent = anchor.parentNode;
-			needsIgnoring = anchor.parentNode.classList.contains(ignoreClass);
+			needsIgnoring = (anchor.parentNode as Element).classList.contains(ignoreClass);
 		} else {
 			isText = false;
-			needsIgnoring = anchor.classList.contains(ignoreClass);
+			needsIgnoring = (anchor as Element).classList.contains(ignoreClass);
 		}
 
 		if (needsIgnoring && isText) {
@@ -673,7 +676,7 @@ class EpubCFI {
 
 	}
 
-	patchOffset(anchor: any, offset: number, ignoreClass: string): number {
+	patchOffset(anchor: Node, offset: number, ignoreClass: string): number {
 		if (anchor.nodeType != TEXT_NODE) {
 			throw new Error("Anchor must be a text node");
 		}
@@ -682,14 +685,14 @@ class EpubCFI {
 		var totalOffset = offset;
 
 		// If the parent is a ignored node, get offset from it's start
-		if (anchor.parentNode.classList.contains(ignoreClass)) {
+		if ((anchor.parentNode as Element).classList.contains(ignoreClass)) {
 			curr = anchor.parentNode;
 		}
 
 		while (curr.previousSibling) {
 			if(curr.previousSibling.nodeType === ELEMENT_NODE) {
 				// Originally a text node, so join
-				if(curr.previousSibling.classList.contains(ignoreClass)){
+				if((curr.previousSibling as Element).classList.contains(ignoreClass)){
 					totalOffset += curr.previousSibling.textContent.length;
 				} else {
 					break; // Normal node, dont join
@@ -706,7 +709,7 @@ class EpubCFI {
 
 	}
 
-	normalizedMap(children: any, nodeType: number, ignoreClass: string): Record<number, number> {
+	normalizedMap(children: NodeListOf<ChildNode>, nodeType: number, ignoreClass: string): Record<number, number> {
 		var output: Record<number, number> = {};
 		var prevIndex = -1;
 		var i, len = children.length;
@@ -719,7 +722,7 @@ class EpubCFI {
 
 			// Check if needs ignoring
 			if (currNodeType === ELEMENT_NODE &&
-					children[i].classList.contains(ignoreClass)) {
+					(children[i] as Element).classList.contains(ignoreClass)) {
 				currNodeType = TEXT_NODE;
 			}
 
@@ -740,12 +743,12 @@ class EpubCFI {
 		return output;
 	}
 
-	position(anchor: any): number {
+	position(anchor: Node): number {
 		var children, index;
 		if (anchor.nodeType === ELEMENT_NODE) {
-			children = anchor.parentNode.children;
+			children = (anchor.parentNode as Element).children;
 			if (!children) {
-				children = findChildren(anchor.parentNode);
+				children = findChildren(anchor.parentNode as Element);
 			}
 			index = Array.prototype.indexOf.call(children, anchor);
 		} else {
@@ -756,16 +759,16 @@ class EpubCFI {
 		return index;
 	}
 
-	filteredPosition(anchor: any, ignoreClass: string): number {
+	filteredPosition(anchor: Node, ignoreClass: string): number {
 		var children, index, map;
 
 		if (anchor.nodeType === ELEMENT_NODE) {
-			children = anchor.parentNode.children;
-			map = this.normalizedMap(children, ELEMENT_NODE, ignoreClass);
+			children = (anchor.parentNode as Element).children;
+			map = this.normalizedMap(children as any, ELEMENT_NODE, ignoreClass);
 		} else {
 			children = anchor.parentNode.childNodes;
 			// Inside an ignored node
-			if(anchor.parentNode.classList.contains(ignoreClass)) {
+			if((anchor.parentNode as Element).classList.contains(ignoreClass)) {
 				anchor = anchor.parentNode;
 				children = anchor.parentNode.childNodes;
 			}
@@ -832,21 +835,21 @@ class EpubCFI {
 
 	}
 
-	textNodes(container: any, ignoreClass?: string): any[] {
+	textNodes(container: Node, ignoreClass?: string): Node[] {
 		return Array.prototype.slice.call(container.childNodes).
-			filter(function (node: any) {
+			filter(function (node: Node) {
 				if (node.nodeType === TEXT_NODE) {
 					return true;
-				} else if (ignoreClass && node.classList.contains(ignoreClass)) {
+				} else if (ignoreClass && (node as Element).classList.contains(ignoreClass)) {
 					return true;
 				}
 				return false;
 			});
 	}
 
-	walkToNode(steps: EpubCFIStep[], _doc?: Document, ignoreClass?: string): any {
+	walkToNode(steps: EpubCFIStep[], _doc?: Document, ignoreClass?: string): Node | undefined {
 		var doc = _doc || document;
-		var container: any = doc.documentElement;
+		var container: Node = doc.documentElement;
 		var children;
 		var step;
 		var len = steps.length;
@@ -862,7 +865,7 @@ class EpubCFI {
 					container = doc.getElementById(step.id);
 				}
 				else {
-					children = container.children || findChildren(container);
+					children = (container as Element).children || findChildren(container as Element);
 					container = children[step.index];
 				}
 			} else if(step.type === "text") {
@@ -880,7 +883,7 @@ class EpubCFI {
 		return container;
 	}
 
-	findNode(steps: EpubCFIStep[], _doc?: Document, ignoreClass?: string): any {
+	findNode(steps: EpubCFIStep[], _doc?: Document, ignoreClass?: string): Node | undefined {
 		var doc = _doc || document;
 		var container;
 		var xpath;
@@ -897,7 +900,7 @@ class EpubCFI {
 		return container;
 	}
 
-	fixMiss(steps: EpubCFIStep[], offset: number, _doc?: Document, ignoreClass?: string): any {
+	fixMiss(steps: EpubCFIStep[], offset: number, _doc?: Document, ignoreClass?: string): { container: Node; offset: number } {
 		var container = this.findNode(steps.slice(0,-1), _doc, ignoreClass);
 		var children = container.childNodes;
 		var map = this.normalizedMap(children, TEXT_NODE, ignoreClass);
@@ -1009,7 +1012,7 @@ class EpubCFI {
 	 * @param {string} str
 	 * @returns {boolean}
 	 */
-	isCfiString(str: any): boolean {
+	isCfiString(str: unknown): boolean {
 		if(typeof str === "string" &&
 			str.indexOf("epubcfi(") === 0 &&
 			str[str.length-1] === ")") {

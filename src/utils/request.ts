@@ -68,7 +68,7 @@ function request(url: string, type?: string, withCredentials?: boolean, headers?
 
 	xhr.send();
 
-	function err(e: any) {
+	function err(e: ProgressEvent) {
 		deferred.reject(e);
 	}
 

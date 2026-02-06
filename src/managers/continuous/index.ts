@@ -2,8 +2,12 @@ import {extend, defer, requestAnimationFrame} from "../../utils/core";
 import DefaultViewManager from "../default";
 import Snap from "../helpers/snap";
 import { EVENTS } from "../../utils/constants";
+import type Section from "../../section";
+import type IframeView from "../views/iframe";
+import type Stage from "../helpers/stage";
+import type { ManagerOptions, ReframeBounds } from "../../types";
 function debounce(func: Function, wait: number): () => void {
-	var timeout: any;
+	var timeout: ReturnType<typeof setTimeout>;
 	return function() {
 		var context = this;
 		var args = arguments;
@@ -15,8 +19,8 @@ function debounce(func: Function, wait: number): () => void {
 }
 
 class ContinuousViewManager extends DefaultViewManager {
-	snapper: any;
-	tick: any;
+	snapper: Snap;
+	tick: typeof requestAnimationFrame;
 	scrollDeltaVert: number;
 	scrollDeltaHorz: number;
 	_scrolled: (...args: any[]) => void;
@@ -26,7 +30,7 @@ class ContinuousViewManager extends DefaultViewManager {
 	scrollTimeout: ReturnType<typeof setTimeout>;
 	trimTimeout: ReturnType<typeof setTimeout>;
 
-	constructor(options: any) {
+	constructor(options: ManagerOptions) {
 		super(options);
 
 		this.name = "continuous";
@@ -70,19 +74,19 @@ class ContinuousViewManager extends DefaultViewManager {
 		this.scrollLeft = 0;
 	}
 
-	display(section: any, target?: any): Promise<any> {
+	display(section: Section, target?: string): Promise<any> {
 		return DefaultViewManager.prototype.display.call(this, section, target)
 			.then(function () {
 				return this.fill();
 			}.bind(this));
 	}
 
-	fill(_full?: any): Promise<any> {
+	fill(_full?: InstanceType<typeof defer>): Promise<any> {
 		var full = _full || new defer();
 
 		this.q.enqueue(() => {
 			return this.check();
-		}).then((result: any) => {
+		}).then((result: boolean) => {
 			if (result) {
 				this.fill(full);
 			} else {
@@ -93,7 +97,7 @@ class ContinuousViewManager extends DefaultViewManager {
 		return full.promise;
 	}
 
-	moveTo(offset: any): void {
+	moveTo(offset: { left: number; top: number }): void {
 		// var bounds = this.stage.bounds();
 		// var dist = Math.floor(offset.top / bounds.height) * bounds.height;
 		var distX = 0,
@@ -115,12 +119,12 @@ class ContinuousViewManager extends DefaultViewManager {
 		}
 	}
 
-	afterResized(view: any): void {
+	afterResized(view: IframeView): void {
 		this.emit(EVENTS.MANAGERS.RESIZE, view.section);
 	}
 
 	// Remove Previous Listeners if present
-	removeShownListeners(view: any): void {
+	removeShownListeners(view: IframeView): void {
 
 		// view.off("shown", this.afterDisplayed);
 		// view.off("shown", this.afterDisplayedAbove);
@@ -128,20 +132,20 @@ class ContinuousViewManager extends DefaultViewManager {
 
 	}
 
-	add(section: any): Promise<any> {
+	add(section: Section): Promise<any> {
 		var view = this.createView(section);
 
 		this.views.append(view);
 
-		view.on(EVENTS.VIEWS.RESIZED, (bounds: any) => {
-			view.expanded = true;
+		view.on(EVENTS.VIEWS.RESIZED, (bounds: ReframeBounds) => {
+			(view as any).expanded = true;
 		});
 
-		view.on(EVENTS.VIEWS.AXIS, (axis: any) => {
+		view.on(EVENTS.VIEWS.AXIS, (axis: string) => {
 			this.updateAxis(axis);
 		});
 
-		view.on(EVENTS.VIEWS.WRITING_MODE, (mode: any) => {
+		view.on(EVENTS.VIEWS.WRITING_MODE, (mode: string) => {
 			this.updateWritingMode(mode);
 		});
 
@@ -152,18 +156,18 @@ class ContinuousViewManager extends DefaultViewManager {
 		return view.display(this.request);
 	}
 
-	append(section: any): any {
+	append(section: Section): any {
 		var view = this.createView(section);
 
-		view.on(EVENTS.VIEWS.RESIZED, (bounds: any) => {
-			view.expanded = true;
+		view.on(EVENTS.VIEWS.RESIZED, (bounds: ReframeBounds) => {
+			(view as any).expanded = true;
 		});
 
-		view.on(EVENTS.VIEWS.AXIS, (axis: any) => {
+		view.on(EVENTS.VIEWS.AXIS, (axis: string) => {
 			this.updateAxis(axis);
 		});
 
-		view.on(EVENTS.VIEWS.WRITING_MODE, (mode: any) => {
+		view.on(EVENTS.VIEWS.WRITING_MODE, (mode: string) => {
 			this.updateWritingMode(mode);
 		});
 
@@ -174,19 +178,19 @@ class ContinuousViewManager extends DefaultViewManager {
 		return view;
 	}
 
-	prepend(section: any): any {
+	prepend(section: Section): any {
 		var view = this.createView(section);
 
-		view.on(EVENTS.VIEWS.RESIZED, (bounds: any) => {
+		view.on(EVENTS.VIEWS.RESIZED, (bounds: ReframeBounds) => {
 			this.counter(bounds);
-			view.expanded = true;
+			(view as any).expanded = true;
 		});
 
-		view.on(EVENTS.VIEWS.AXIS, (axis: any) => {
+		view.on(EVENTS.VIEWS.AXIS, (axis: string) => {
 			this.updateAxis(axis);
 		});
 
-		view.on(EVENTS.VIEWS.WRITING_MODE, (mode: any) => {
+		view.on(EVENTS.VIEWS.WRITING_MODE, (mode: string) => {
 			this.updateWritingMode(mode);
 		});
 
@@ -197,7 +201,7 @@ class ContinuousViewManager extends DefaultViewManager {
 		return view;
 	}
 
-	counter(bounds: any): void {
+	counter(bounds: ReframeBounds): void {
 		if(this.settings.axis === "vertical") {
 			this.scrollBy(0, bounds.heightDelta, true);
 		} else {
@@ -212,7 +216,7 @@ class ContinuousViewManager extends DefaultViewManager {
 		var visible = [];
 		var offset = typeof _offset != "undefined" ? _offset : (this.settings.offset || 0);
 		var isVisible;
-		var view: any;
+		var view: IframeView;
 
 		var updating = new defer();
 		var promises = [];
@@ -226,9 +230,9 @@ class ContinuousViewManager extends DefaultViewManager {
 
 				if (!view.displayed) {
 					let displayed = view.display(this.request)
-						.then(function (view: any) {
+						.then(function (view: IframeView) {
 							view.show();
-						}, (err: any) => {
+						}, (err: Error) => {
 							view.hide();
 						});
 					promises.push(displayed);
@@ -250,7 +254,7 @@ class ContinuousViewManager extends DefaultViewManager {
 
 		if(promises.length){
 			return Promise.all(promises)
-				.catch((err: any) => {
+				.catch((err: Error) => {
 					updating.reject(err);
 				});
 		} else {
@@ -262,7 +266,7 @@ class ContinuousViewManager extends DefaultViewManager {
 
 	check(_offsetLeft?: number, _offsetTop?: number): Promise<any> {
 		var checking = new defer();
-		var newViews: any[] = [];
+		var newViews: IframeView[] = [];
 
 		var horizontal = (this.settings.axis === "horizontal");
 		var delta = this.settings.offset || 0;
@@ -303,7 +307,7 @@ class ContinuousViewManager extends DefaultViewManager {
 
 		let prepend = () => {
 			let first = this.views.first();
-			let prev = first && first.section.prev();
+			let prev: any = first && first.section.prev();
 
 			if(prev) {
 				newViews.push(this.prepend(prev));
@@ -312,7 +316,7 @@ class ContinuousViewManager extends DefaultViewManager {
 
 		let append = () => {
 			let last = this.views.last();
-			let next = last && last.section.next();
+			let next: any = last && last.section.next();
 
 			if(next) {
 				newViews.push(this.append(next));
@@ -344,7 +348,7 @@ class ContinuousViewManager extends DefaultViewManager {
 				.then(() => {
 					// Check to see if anything new is on screen after rendering
 					return this.update(delta);
-				}, (err: any) => {
+				}, (err: Error) => {
 					return err;
 				});
 		} else {
@@ -382,7 +386,7 @@ class ContinuousViewManager extends DefaultViewManager {
 		return task.promise;
 	}
 
-	erase(view: any, above?: any): void { //Trim
+	erase(view: IframeView, above?: IframeView[]): void { //Trim
 
 		var prevTop;
 		var prevLeft;
@@ -417,9 +421,9 @@ class ContinuousViewManager extends DefaultViewManager {
 
 	}
 
-	addEventListeners(stage?: any): void {
+	addEventListeners(stage?: Stage): void {
 
-		window.addEventListener("unload", function(e: any){
+		window.addEventListener("unload", function(e: Event){
 			this.ignore = true;
 			// this.scrollTo(0,0);
 			this.destroy();

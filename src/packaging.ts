@@ -1,5 +1,5 @@
 import {qs, qsa, qsp, indexOfElementNode} from "./utils/core";
-import type { PackagingMetadataObject, PackagingSpineItem, PackagingManifestObject, PackagingObject } from "./types";
+import type { PackagingMetadataObject, PackagingSpineItem, PackagingManifestItem, PackagingManifestObject, PackagingObject, NavItem } from "./types";
 
 /**
  * Open Packaging Format Parser
@@ -13,9 +13,9 @@ class Packaging {
 	coverPath: string;
 	spineNodeIndex: number;
 	spine: PackagingSpineItem[];
-	metadata: any;
+	metadata: PackagingMetadataObject;
 	uniqueIdentifier: string;
-	toc: any[];
+	toc: NavItem[];
 
 	constructor(packageDocument?: Document) {
 		this.manifest = {};
@@ -24,7 +24,7 @@ class Packaging {
 		this.coverPath = '';
 		this.spineNodeIndex = 0;
 		this.spine = [];
-		this.metadata = {};
+		this.metadata = {} as PackagingMetadataObject;
 
 		if (packageDocument) {
 			this.parse(packageDocument);
@@ -89,8 +89,8 @@ class Packaging {
 	 * @param  {node} xml
 	 * @return {object} metadata
 	 */
-	parseMetadata(xml: Element): any {
-		var metadata: any = {};
+	parseMetadata(xml: Element): PackagingMetadataObject {
+		var metadata = {} as PackagingMetadataObject;
 
 		metadata.title = this.getElementText(xml, "title");
 		metadata.creator = this.getElementText(xml, "creator");
@@ -124,7 +124,7 @@ class Packaging {
 	 * @return {object} manifest
 	 */
 	parseManifest(manifestXml: Element): PackagingManifestObject {
-		var manifest: Record<string, any> = {};
+		var manifest: PackagingManifestObject = {};
 
 		//-- Turn items into an array
 		// var selected = manifestXml.querySelectorAll("item");
@@ -132,7 +132,7 @@ class Packaging {
 		var items = Array.prototype.slice.call(selected);
 
 		//-- Create an object with the id as key
-		items.forEach(function(item: any){
+		items.forEach(function(item: Element){
 			var id = item.getAttribute("id"),
 					href = item.getAttribute("href") || "",
 					type = item.getAttribute("media-type") || "",
@@ -161,7 +161,7 @@ class Packaging {
 	 * @return {object} spine
 	 */
 	parseSpine(spineXml: Element, manifest: PackagingManifestObject): PackagingSpineItem[] {
-		var spine: any[] = [];
+		var spine: PackagingSpineItem[] = [];
 
 		var selected = qsa(spineXml, "itemref");
 		var items = Array.prototype.slice.call(selected);
@@ -169,7 +169,7 @@ class Packaging {
 		// var epubcfi = new EpubCFI();
 
 		//-- Add to array to maintain ordering and cross reference with manifest
-		items.forEach(function(item: any, index: any){
+		items.forEach(function(item: Element, index: number){
 			var idref = item.getAttribute("idref");
 			// var cfiBase = epubcfi.generateChapterComponent(spineNodeIndex, index, Id);
 			var props = item.getAttribute("properties") || "";
@@ -222,12 +222,12 @@ class Packaging {
 	 * @param {element} manifestNode
 	 * @return {string}
 	 */
-	findNavPath(manifestNode: Element): any {
+	findNavPath(manifestNode: Element): string {
 		// Find item with property "nav"
 		// Should catch nav regardless of order
 		// var node = manifestNode.querySelector("item[properties$='nav'], item[properties^='nav '], item[properties*=' nav ']");
 		var node = qsp(manifestNode, "item", {"properties":"nav"});
-		return node ? node.getAttribute("href") : false;
+		return node ? node.getAttribute("href") || "" : "";
 	}
 
 	/**
@@ -238,7 +238,7 @@ class Packaging {
 	 * @param {element} spineNode
 	 * @return {string}
 	 */
-	findNcxPath(manifestNode: Element, spineNode: Element): any {
+	findNcxPath(manifestNode: Element, spineNode: Element): string {
 		// var node = manifestNode.querySelector("item[media-type='application/x-dtbncx+xml']");
 		var node = qsp(manifestNode, "item", {"media-type":"application/x-dtbncx+xml"});
 		var tocId;
@@ -254,7 +254,7 @@ class Packaging {
 			}
 		}
 
-		return node ? node.getAttribute("href") : false;
+		return node ? node.getAttribute("href") || "" : "";
 	}
 
 	/**
@@ -265,7 +265,7 @@ class Packaging {
 	 * @param  {node} packageXml
 	 * @return {string} href
 	 */
-	findCoverPath(packageXml: Document): any {
+	findCoverPath(packageXml: Document): string {
 		var pkg = qs(packageXml, "package");
 		var epubVersion = pkg.getAttribute("version");
 		
@@ -284,7 +284,7 @@ class Packaging {
 			return cover ? cover.getAttribute("href") : "";
 		}
 		else {
-			return false;
+			return "";
 		}
 	}
 
@@ -333,28 +333,28 @@ class Packaging {
 	 * @param  {document} packageDocument OPF XML
 	 * @return {object} parsed package parts
 	 */
-	load(json: any): any {
+	load(json: Record<string, any>): PackagingObject & { toc: NavItem[] } {
 		this.metadata = json.metadata;
 
 		let spine = json.readingOrder || json.spine;
-		this.spine = spine.map((item: any, index: any) =>{
+		this.spine = spine.map((item: PackagingSpineItem, index: number) =>{
 			item.index = index;
 			item.linear = item.linear || "yes";
 			return item;
 		});
 
-		json.resources.forEach((item: any, index: any) => {
+		json.resources.forEach((item: PackagingManifestItem, index: number) => {
 			this.manifest[index] = item;
 
-			if (item.rel && item.rel[0] === "cover") {
+			if ((item as any).rel && (item as any).rel[0] === "cover") {
 				this.coverPath = item.href;
 			}
 		});
 
 		this.spineNodeIndex = 0;
 
-		this.toc = json.toc.map((item: any, index: any) =>{
-			item.label = item.title;
+		this.toc = json.toc.map((item: NavItem & { title?: string }) =>{
+			item.label = item.title || item.label;
 			return item;
 		});
 

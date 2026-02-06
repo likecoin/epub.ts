@@ -2,6 +2,9 @@ import {extend, defer, requestAnimationFrame, prefixed} from "../../utils/core";
 import { EVENTS, DOM_EVENTS } from "../../utils/constants";
 import EventEmitter from "../../utils/event-emitter";
 import type { IEventEmitter } from "../../types";
+import type DefaultViewManager from "../default/index";
+import type Contents from "../../contents";
+import type Layout from "../../layout";
 
 // easing equations from https://github.com/danro/easing-js/blob/master/easing.js
 const PI_D2 = (Math.PI / 2);
@@ -24,12 +27,12 @@ const EASING_EQUATIONS = {
 };
 
 class Snap implements IEventEmitter {
-	settings: any;
-	manager: any;
-	layout: any;
+	settings: { duration: number; minVelocity: number; minDistance: number; easing: (pos: number) => number; [key: string]: any };
+	manager: DefaultViewManager;
+	layout: Layout;
 	fullsize: boolean;
-	element: any;
-	scroller: any;
+	element: HTMLElement;
+	scroller: HTMLElement | Window;
 	isVertical: boolean;
 	touchCanceler: boolean;
 	resizeCanceler: boolean;
@@ -53,7 +56,7 @@ class Snap implements IEventEmitter {
 	declare off: IEventEmitter["off"];
 	declare emit: IEventEmitter["emit"];
 
-	constructor(manager: any, options?: any) {
+	constructor(manager: DefaultViewManager, options?: Record<string, any>) {
 
 		this.settings = extend({
 			duration: 80,
@@ -62,14 +65,14 @@ class Snap implements IEventEmitter {
 			easing: EASING_EQUATIONS['easeInCubic']
 		}, options || {});
 
-		this.supportsTouch = this.supportsTouch();
+		(this as any).supportsTouch = this.supportsTouch();
 
-		if (this.supportsTouch) {
+		if ((this as any).supportsTouch) {
 			this.setup(manager);
 		}
 	}
 
-	setup(manager: any): void {
+	setup(manager: DefaultViewManager): void {
 		this.manager = manager;
 
 		this.layout = this.manager.layout;
@@ -82,7 +85,7 @@ class Snap implements IEventEmitter {
 		} else {
 			this.element = this.manager.stage.container;
 			this.scroller = this.element;
-			this.element.style["WebkitOverflowScrolling"] = "touch";
+			(this.element.style as any)["WebkitOverflowScrolling"] = "touch";
 		}
 
 		// this.overflow = this.manager.overflow;
@@ -116,7 +119,7 @@ class Snap implements IEventEmitter {
 		this.addListeners();
 	}
 
-	supportsTouch(): any {
+	supportsTouch(): boolean {
 		if (('ontouchstart' in window) || (window as any).DocumentTouch && document instanceof (window as any).DocumentTouch) {
 			return true;
 		}
@@ -162,15 +165,15 @@ class Snap implements IEventEmitter {
 		this.scroller.removeEventListener('scroll', this._onScroll);
 		this._onScroll = undefined;
 
-		this.scroller.removeEventListener('touchstart', this._onTouchStart, { passive: true });
+		this.scroller.removeEventListener('touchstart', this._onTouchStart, { passive: true } as EventListenerOptions);
 		this.off('touchstart', this._onTouchStart);
 		this._onTouchStart = undefined;
 
-		this.scroller.removeEventListener('touchmove', this._onTouchMove, { passive: true });
+		this.scroller.removeEventListener('touchmove', this._onTouchMove, { passive: true } as EventListenerOptions);
 		this.off('touchmove', this._onTouchMove);
 		this._onTouchMove = undefined;
 
-		this.scroller.removeEventListener('touchend', this._onTouchEnd, { passive: true });
+		this.scroller.removeEventListener('touchend', this._onTouchEnd, { passive: true } as EventListenerOptions);
 		this.off('touchend', this._onTouchEnd);
 		this._onTouchEnd = undefined;
 
@@ -178,27 +181,27 @@ class Snap implements IEventEmitter {
 		this._afterDisplayed = undefined;
 	}
 
-	afterDisplayed(view: any): void {
+	afterDisplayed(view: { contents: Contents }): void {
 		let contents = view.contents;
 		["touchstart", "touchmove", "touchend"].forEach((e) => {
-			contents.on(e, (ev: any) => this.triggerViewEvent(ev, contents));
+			contents.on(e, (ev: TouchEvent) => this.triggerViewEvent(ev, contents));
 		});
 	}
 
-	triggerViewEvent(e: any, contents: any): void {
+	triggerViewEvent(e: TouchEvent, contents: Contents): void {
 		this.emit(e.type, e, contents);
 	}
 
-	onScroll(e?: any): void {
-		this.scrollLeft = this.fullsize ? window.scrollX : this.scroller.scrollLeft;
-		this.scrollTop = this.fullsize ? window.scrollY : this.scroller.scrollTop;
+	onScroll(e?: Event): void {
+		this.scrollLeft = this.fullsize ? window.scrollX : (this.scroller as HTMLElement).scrollLeft;
+		this.scrollTop = this.fullsize ? window.scrollY : (this.scroller as HTMLElement).scrollTop;
 	}
 
-	onResize(e?: any): void {
+	onResize(e?: Event): void {
 		this.resizeCanceler = true;
 	}
 
-	onTouchStart(e: any): void {
+	onTouchStart(e: TouchEvent): void {
 		let { screenX, screenY } = e.touches[0];
 
 		if (this.fullsize) {
@@ -218,7 +221,7 @@ class Snap implements IEventEmitter {
 		this.endTime = this.now();
 	}
 
-	onTouchMove(e: any): void {
+	onTouchMove(e: TouchEvent): void {
 		let { screenX, screenY } = e.touches[0];
 		let deltaY = Math.abs(screenY - this.endTouchY);
 
@@ -234,7 +237,7 @@ class Snap implements IEventEmitter {
 		this.endTime = this.now();
 	}
 
-	onTouchEnd(e?: any): void {
+	onTouchEnd(e?: TouchEvent): void {
 		if (this.fullsize) {
 			this.disableScroll();
 		}
@@ -284,7 +287,7 @@ class Snap implements IEventEmitter {
 		return (left % snapWidth) !== 0;
 	}
 
-	snap(howMany: number = 0): Promise<any> {
+	snap(howMany: number = 0): Promise<void> {
 		let left = this.scrollLeft;
 		let snapWidth = this.layout.pageWidth * this.layout.divisor;
 		let snapTo = Math.round(left / snapWidth) * snapWidth;
@@ -296,7 +299,7 @@ class Snap implements IEventEmitter {
 		return this.smoothScrollTo(snapTo);
 	}
 
-	smoothScrollTo(destination: number): Promise<any> {
+	smoothScrollTo(destination: number): Promise<void> {
 		const deferred = new defer();
 		const start = this.scrollLeft;
 		const startTime = this.now();
@@ -339,8 +342,8 @@ class Snap implements IEventEmitter {
 		if (this.fullsize) {
 			window.scroll(left, top);
 		} else {
-			this.scroller.scrollLeft = left;
-			this.scroller.scrollTop = top;
+			(this.scroller as HTMLElement).scrollLeft = left;
+			(this.scroller as HTMLElement).scrollTop = top;
 		}
 	}
 

@@ -13,17 +13,17 @@ import type { PageListItem } from "./types";
  * @param {document} [xml]
  */
 class PageList {
-	pages: any[];
+	pages: number[];
 	locations: string[];
 	epubcfi: EpubCFI;
 	firstPage: number;
 	lastPage: number;
 	totalPages: number;
-	toc: any;
-	ncx: any;
-	pageList: any[];
+	toc: Document | undefined;
+	ncx: Document | undefined;
+	pageList: PageListItem[];
 
-	constructor(xml?: any) {
+	constructor(xml?: Document) {
 		this.pages = [];
 		this.locations = [];
 		this.epubcfi = new EpubCFI();
@@ -48,7 +48,7 @@ class PageList {
 	 * Parse PageList Xml
 	 * @param  {document} xml
 	 */
-	parse(xml: any): any[] {
+	parse(xml: Document): PageListItem[] {
 		var html = qs(xml, "html");
 		var ncx = qs(xml, "ncx");
 
@@ -66,12 +66,12 @@ class PageList {
 	 * @param  {node} navHtml
 	 * @return {PageList.item[]} list
 	 */
-	parseNav(navHtml: any): any[] {
+	parseNav(navHtml: Document): PageListItem[] {
 		var navElement = querySelectorByType(navHtml, "nav", "page-list");
-		var navItems: any[] = navElement ? qsa(navElement, "li") as any : [];
+		var navItems = navElement ? Array.from(qsa(navElement, "li")) : [];
 		var length = navItems.length;
 		var i;
-		var list: any[] = [];
+		var list: PageListItem[] = [];
 		var item;
 
 		if(!navItems || length === 0) return list;
@@ -84,8 +84,8 @@ class PageList {
 		return list;
 	}
 
-	parseNcx(navXml: any): any[] {
-		var list: any[] = [];
+	parseNcx(navXml: Document): PageListItem[] {
+		var list: PageListItem[] = [];
 		var i = 0;
 		var item;
 		var pageList;
@@ -110,7 +110,7 @@ class PageList {
 		return list;
 	}
 
-	ncxItem(item: any): any {
+	ncxItem(item: Element): PageListItem {
 		var navLabel = qs(item, "navLabel");
 		var navLabelText = qs(navLabel, "text");
 		var pageText = navLabelText.textContent;
@@ -131,7 +131,7 @@ class PageList {
 	 * @param  {node} item
 	 * @return {object} pageListItem
 	 */
-	item(item: any): any {
+	item(item: Element): PageListItem {
 		var content = qs(item, "a"),
 				href = content.getAttribute("href") || "",
 				text = content.textContent || "",
@@ -144,7 +144,7 @@ class PageList {
 		if(isCfi != -1) {
 			split = href.split("#");
 			packageUrl = split[0];
-			cfi = split.length > 1 ? split[1] : false;
+			cfi = split.length > 1 ? split[1] : undefined;
 			return {
 				"cfi" : cfi,
 				"href" : href,
@@ -164,15 +164,15 @@ class PageList {
 	 * @private
 	 * @param  {array} pageList
 	 */
-	process(pageList: any[]): void {
+	process(pageList: PageListItem[]): void {
 		pageList.forEach(function(item){
 			this.pages.push(item.page);
 			if (item.cfi) {
 				this.locations.push(item.cfi);
 			}
 		}, this);
-		this.firstPage = parseInt(this.pages[0]);
-		this.lastPage = parseInt(this.pages[this.pages.length-1]);
+		this.firstPage = this.pages[0];
+		this.lastPage = this.pages[this.pages.length-1];
 		this.totalPages = this.lastPage - this.firstPage;
 	}
 
@@ -219,8 +219,8 @@ class PageList {
 	 * @param  {string | number} pg
 	 * @return {string} cfi
 	 */
-	cfiFromPage(pg: string | number): any {
-		var cfi: any = -1;
+	cfiFromPage(pg: string | number): string | number {
+		var cfi: string | number = -1;
 		// check that pg is an int
 		if(typeof pg != "number"){
 			pg = parseInt(pg);

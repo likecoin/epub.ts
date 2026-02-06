@@ -53,8 +53,8 @@ export function documentHeight(): number {
  * @returns {boolean}
  * @memberof Core
  */
-export function isElement(obj: any): boolean {
-	return !!(obj && obj.nodeType == 1);
+export function isElement(obj: unknown): boolean {
+	return !!(obj && (obj as Node).nodeType == 1);
 }
 
 /**
@@ -62,8 +62,8 @@ export function isElement(obj: any): boolean {
  * @returns {boolean}
  * @memberof Core
  */
-export function isNumber(n: any): boolean {
-	return !isNaN(parseFloat(n)) && isFinite(n);
+export function isNumber(n: unknown): boolean {
+	return !isNaN(parseFloat(n as string)) && isFinite(n as number);
 }
 
 /**
@@ -71,8 +71,8 @@ export function isNumber(n: any): boolean {
  * @returns {boolean}
  * @memberof Core
  */
-export function isFloat(n: any): boolean {
-	let f = parseFloat(n);
+export function isFloat(n: unknown): boolean {
+	let f = parseFloat(n as string);
 
 	if (isNumber(n) === false) {
 		return false;
@@ -402,7 +402,7 @@ export function isXml(ext: string): boolean {
  * @returns {Blob}
  * @memberof Core
  */
-export function createBlob(content: any, mime: string): Blob {
+export function createBlob(content: BlobPart, mime: string): Blob {
 	return new Blob([content], {type : mime });
 }
 
@@ -413,7 +413,7 @@ export function createBlob(content: any, mime: string): Blob {
  * @returns {string} url
  * @memberof Core
  */
-export function createBlobUrl(content: any, mime: string): string {
+export function createBlobUrl(content: BlobPart, mime: string): string {
 	var tempUrl;
 	var blob = createBlob(content, mime);
 
@@ -438,7 +438,7 @@ export function revokeBlobUrl(url: string): void {
  * @returns {string} url
  * @memberof Core
  */
-export function createBase64Url(content: any, mime: string): string | undefined {
+export function createBase64Url(content: string, mime: string): string | undefined {
 	var data;
 	var datauri;
 
@@ -460,7 +460,7 @@ export function createBase64Url(content: any, mime: string): string | undefined 
  * @returns {string} type
  * @memberof Core
  */
-export function type(obj: any): string {
+export function type(obj: unknown): string {
 	return Object.prototype.toString.call(obj).slice(8, -1);
 }
 
@@ -500,7 +500,7 @@ export function parse(markup: string, mime: string, forceXMLDom?: boolean): Docu
  * @returns {element} element
  * @memberof Core
  */
-export function qs(el: any, sel: string): Element | undefined {
+export function qs(el: Document | Element, sel: string): Element | undefined {
 	var elements;
 	if (!el) {
 		throw new Error("No Element Provided");
@@ -523,7 +523,7 @@ export function qs(el: any, sel: string): Element | undefined {
  * @returns {element[]} elements
  * @memberof Core
  */
-export function qsa(el: any, sel: string): NodeListOf<Element> | HTMLCollectionOf<Element> {
+export function qsa(el: Document | Element, sel: string): NodeListOf<Element> | HTMLCollectionOf<Element> {
 
 	if (typeof el.querySelector != "undefined") {
 		return el.querySelectorAll(sel);
@@ -540,7 +540,7 @@ export function qsa(el: any, sel: string): NodeListOf<Element> | HTMLCollectionO
  * @returns {element[]} elements
  * @memberof Core
  */
-export function qsp(el: any, sel: string, props: Record<string, string>): Element | undefined {
+export function qsp(el: Document | Element, sel: string, props: Record<string, string>): Element | undefined {
 	var q, filtered;
 	if (typeof el.querySelector != "undefined") {
 		sel += "[";
@@ -551,7 +551,7 @@ export function qsp(el: any, sel: string, props: Record<string, string>): Elemen
 		return el.querySelector(sel);
 	} else {
 		q = el.getElementsByTagName(sel);
-		filtered = Array.prototype.slice.call(q, 0).filter(function(el: any) {
+		filtered = Array.prototype.slice.call(q, 0).filter(function(el: Element) {
 			for (var prop in props) {
 				if(el.getAttribute(prop) === props[prop]){
 					return true;
@@ -574,7 +574,7 @@ export function qsp(el: any, sel: string, props: Record<string, string>): Elemen
  */
 export function sprint(root: Node, func: (node: Node) => void): void {
 	var doc = root.ownerDocument || root;
-	if (typeof((doc as any).createTreeWalker) !== "undefined") {
+	if (typeof((doc as Document).createTreeWalker) !== "undefined") {
 		treeWalker(root, func, NodeFilter.SHOW_TEXT);
 	} else {
 		walk(root, function(node) {
@@ -594,7 +594,7 @@ export function sprint(root: Node, func: (node: Node) => void): void {
  * @param  {function | object} filter function or object to filter with
  */
 export function treeWalker(root: Node, func: (node: Node) => void, filter: number): void {
-	var treeWalker = (document as any).createTreeWalker(root, filter, null, false);
+	var treeWalker = document.createTreeWalker(root, filter, null);
 	let node;
 	while ((node = treeWalker.nextNode())) {
 		func(node);
@@ -690,13 +690,13 @@ export class defer {
  * @returns {element[]} elements
  * @memberof Core
  */
-export function querySelectorByType(html: any, element: string, type: string): Element | undefined {
+export function querySelectorByType(html: Document | Element, element: string, type: string): Element | undefined {
 	var query;
 	if (typeof html.querySelector != "undefined") {
 		query = html.querySelector(`${element}[*|type="${type}"]`);
 	}
 	// Handle IE not supporting namespaced epub:type in querySelector
-	if(!query || query.length === 0) {
+	if(!query || (query as any).length === 0) {
 		query = qsa(html, element);
 		for (var i = 0; i < query.length; i++) {
 			if(query[i].getAttributeNS("http://www.idpf.org/2007/ops", "type") === type ||

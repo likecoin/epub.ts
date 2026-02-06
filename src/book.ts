@@ -16,7 +16,30 @@ import EpubCFI from "./epubcfi";
 import Store from "./store";
 import DisplayOptions from "./displayoptions";
 import { EPUBJS_VERSION, EVENTS } from "./utils/constants";
-import type { IEventEmitter, BookOptions } from "./types";
+import type { IEventEmitter, BookOptions, RenditionOptions, RequestFunction } from "./types";
+import type Section from "./section";
+
+interface BookLoadingState {
+	manifest: defer;
+	spine: defer;
+	metadata: defer;
+	cover: defer;
+	navigation: defer;
+	pageList: defer;
+	resources: defer;
+	displayOptions: defer;
+}
+
+interface BookLoadedState {
+	manifest: Promise<any>;
+	spine: Promise<any>;
+	metadata: Promise<any>;
+	cover: Promise<any>;
+	navigation: Promise<any>;
+	pageList: Promise<any>;
+	resources: Promise<any>;
+	displayOptions: Promise<any>;
+}
 
 const CONTAINER_PATH = "META-INF/container.xml";
 const IBOOKS_DISPLAY_OPTIONS_PATH = "META-INF/com.apple.ibooks.display-options.xml";
@@ -49,37 +72,37 @@ const INPUT_TYPE = {
  * @example new Book({ replacements: "blobUrl" })
  */
 class Book implements IEventEmitter {
-	settings: any;
-	opening: any;
-	opened: Promise<any>;
+	settings: BookOptions & Record<string, any>;
+	opening: defer;
+	opened: Promise<Book> | undefined;
 	isOpen: boolean;
-	loading: any;
-	loaded: any;
-	ready: Promise<any>;
+	loading: BookLoadingState | undefined;
+	loaded: BookLoadedState | undefined;
+	ready: Promise<any[]> | undefined;
 	isRendered: boolean;
-	request: any;
-	spine: any;
-	locations: any;
-	navigation: any;
-	pageList: any;
-	url: any;
-	path: any;
+	request: RequestFunction;
+	spine: Spine | undefined;
+	locations: Locations | undefined;
+	navigation: Navigation | undefined;
+	pageList: PageList | undefined;
+	url: Url | undefined;
+	path: Path | undefined;
 	archived: boolean;
-	archive: any;
-	storage: any;
-	resources: any;
-	rendition: any;
-	container: any;
-	packaging: any;
-	displayOptions: any;
-	package: any;
+	archive: Archive | undefined;
+	storage: Store | undefined;
+	resources: Resources | undefined;
+	rendition: Rendition | undefined;
+	container: Container | undefined;
+	packaging: Packaging | undefined;
+	displayOptions: DisplayOptions | undefined;
+	package: Packaging | undefined;
 	cover: string;
 
 	declare on: IEventEmitter["on"];
 	declare off: IEventEmitter["off"];
 	declare emit: IEventEmitter["emit"];
 
-	constructor(url?: any, options?: BookOptions) {
+	constructor(url?: string | ArrayBuffer | Blob | BookOptions, options?: BookOptions) {
 		// Allow passing just options to the Book
 		if (typeof(options) === "undefined" &&
 			  typeof(url) !== "string" &&
@@ -261,7 +284,7 @@ class Book implements IEventEmitter {
 		}
 
 		if(url) {
-			this.open(url, this.settings.openAs).catch((error) => {
+			this.open(url as string | ArrayBuffer | Blob, this.settings.openAs).catch((error) => {
 				var err = new Error("Cannot load book at "+ url );
 				this.emit(EVENTS.BOOK.OPEN_FAILED, err);
 			});
@@ -275,7 +298,7 @@ class Book implements IEventEmitter {
 	 * @returns {Promise} of when the book has been loaded
 	 * @example book.open("/path/to/book.epub")
 	 */
-	open(input: any, what?: string): Promise<any> {
+	open(input: string | ArrayBuffer | Blob, what?: string): Promise<void> {
 		var opening;
 		var type = what || this.determineType(input);
 
@@ -290,16 +313,16 @@ class Book implements IEventEmitter {
 		} else if (type === INPUT_TYPE.EPUB) {
 			this.archived = true;
 			this.url = new Url("/", "");
-			opening = this.request(input, "binary", this.settings.requestCredentials, this.settings.requestHeaders)
+			opening = this.request(input as string, "binary", this.settings.requestCredentials, this.settings.requestHeaders)
 				.then(this.openEpub.bind(this));
 		} else if(type == INPUT_TYPE.OPF) {
-			this.url = new Url(input);
+			this.url = new Url(input as string);
 			opening = this.openPackaging(this.url.Path.toString());
 		} else if(type == INPUT_TYPE.MANIFEST) {
-			this.url = new Url(input);
+			this.url = new Url(input as string);
 			opening = this.openManifest(this.url.Path.toString());
 		} else {
-			this.url = new Url(input);
+			this.url = new Url(input as string);
 			opening = this.openContainer(CONTAINER_PATH)
 				.then(this.openPackaging.bind(this));
 		}
@@ -314,7 +337,7 @@ class Book implements IEventEmitter {
 	 * @param  {string} [encoding]
 	 * @return {Promise}
 	 */
-	openEpub(data: any, encoding?: string): Promise<any> {
+	openEpub(data: string | ArrayBuffer | Blob, encoding?: string): Promise<void> {
 		return this.unarchive(data, encoding || this.settings.encoding)
 			.then(() => {
 				return this.openContainer(CONTAINER_PATH);
@@ -330,7 +353,7 @@ class Book implements IEventEmitter {
 	 * @param  {string} url
 	 * @return {string} packagePath
 	 */
-	openContainer(url: string): Promise<any> {
+	openContainer(url: string): Promise<string> {
 		return this.load(url)
 			.then((xml) => {
 				this.container = new Container(xml);
@@ -344,7 +367,7 @@ class Book implements IEventEmitter {
 	 * @param  {string} url
 	 * @return {Promise}
 	 */
-	openPackaging(url: string): Promise<any> {
+	openPackaging(url: string): Promise<void> {
 		this.path = new Path(url);
 		return this.load(url)
 			.then((xml) => {
@@ -359,7 +382,7 @@ class Book implements IEventEmitter {
 	 * @param  {string} url
 	 * @return {Promise}
 	 */
-	openManifest(url: string): Promise<any> {
+	openManifest(url: string): Promise<void> {
 		this.path = new Path(url);
 		return this.load(url)
 			.then((json) => {
@@ -438,7 +461,7 @@ class Book implements IEventEmitter {
 	 * @param  {string} input
 	 * @return {string}  binary | directory | epub | opf
 	 */
-	determineType(input: any): string {
+	determineType(input: string | ArrayBuffer | Blob): string {
 		var url;
 		var path;
 		var extension;
@@ -483,7 +506,7 @@ class Book implements IEventEmitter {
 	 * @private
 	 * @param {Packaging} packaging object
 	 */
-	unpack(packaging: any): void {
+	unpack(packaging: Packaging): void {
 		this.package = packaging; //TODO: deprecated this
 
 		if (this.packaging.metadata.layout === "") {
@@ -550,7 +573,7 @@ class Book implements IEventEmitter {
 	 * @private
 	 * @param {Packaging} packaging
 	 */
-	loadNavigation(packaging: any): Promise<any> {
+	loadNavigation(packaging: Packaging): Promise<Navigation> {
 		let navPath = packaging.navPath || packaging.ncxPath;
 		let toc = packaging.toc;
 
@@ -559,8 +582,8 @@ class Book implements IEventEmitter {
 			return new Promise((resolve, reject) => {
 				this.navigation = new Navigation(toc);
 
-				if (packaging.pageList) {
-					this.pageList = new PageList(packaging.pageList); // TODO: handle page lists from Manifest
+				if ((packaging as any).pageList) {
+					this.pageList = new PageList((packaging as any).pageList); // TODO: handle page lists from Manifest
 				}
 
 				resolve(this.navigation);
@@ -590,7 +613,7 @@ class Book implements IEventEmitter {
 	 * @param {string} target
 	 * @return {Section}
 	 */
-	section(target: any): any {
+	section(target: string | number): Section | null {
 		return this.spine.get(target);
 	}
 
@@ -600,7 +623,7 @@ class Book implements IEventEmitter {
 	 * @param  {object} [options]
 	 * @return {Rendition}
 	 */
-	renderTo(element: any, options?: any): any {
+	renderTo(element: HTMLElement | string, options?: RenditionOptions): Rendition {
 		this.rendition = new Rendition(this, options);
 		this.rendition.attachTo(element);
 
@@ -619,7 +642,7 @@ class Book implements IEventEmitter {
 	 * Set headers request should use
 	 * @param {object} headers
 	 */
-	setRequestHeaders(headers: object): void {
+	setRequestHeaders(headers: Record<string, string>): void {
 		this.settings.requestHeaders = headers;
 	}
 
@@ -630,9 +653,9 @@ class Book implements IEventEmitter {
 	 * @param  {string} [encoding]
 	 * @return {Archive}
 	 */
-	unarchive(input: any, encoding?: string): Promise<any> {
+	unarchive(input: string | ArrayBuffer | Blob, encoding?: string): Promise<any> {
 		this.archive = new Archive();
-		return this.archive.open(input, encoding);
+		return this.archive.open(input, encoding === "base64");
 	}
 
 	/**
@@ -642,7 +665,7 @@ class Book implements IEventEmitter {
 	 * @param  {string} [encoding]
 	 * @return {Store}
 	 */
-	store(name: any): any {
+	store(name: string | boolean): Store {
 		// Use "blobUrl" or "base64" for replacements
 		let replacementsSetting = this.settings.replacements && this.settings.replacements !== "none";
 		// Save original url
@@ -650,7 +673,7 @@ class Book implements IEventEmitter {
 		// Save original request method
 		let requester = this.settings.requestMethod || request.bind(this);
 		// Create new Store
-		this.storage = new Store(name, requester, this.resolve.bind(this));
+		this.storage = new Store(name as string, requester, this.resolve.bind(this));
 		// Replace request method to go through store
 		this.request = this.storage.request.bind(this.storage);
 
@@ -659,12 +682,12 @@ class Book implements IEventEmitter {
 				this.storage.requester = this.archive.request.bind(this.archive);
 			}
 			// Substitute hook
-			let substituteResources = (output: any, section: any) => {
+			let substituteResources = (output: string, section: Section) => {
 				section.output = this.resources.substitute(output, section.url);
 			};
 
 			// Set to use replacements
-			this.resources.settings.replacements = replacementsSetting || "blobUrl";
+			(this.resources.settings as any).replacements = replacementsSetting || "blobUrl";
 			// Create replacement urls
 			this.resources.replacements().
 				then(() => {
@@ -694,7 +717,7 @@ class Book implements IEventEmitter {
 	 * Get the cover url
 	 * @return {Promise<?string>} coverUrl
 	 */
-	coverUrl(): Promise<any> {
+	coverUrl(): Promise<string | null> {
 		return this.loaded.cover.then(() => {
 			if (!this.cover) {
 				return null;
@@ -713,15 +736,15 @@ class Book implements IEventEmitter {
 	 * @private
 	 * @return {Promise} completed loading urls
 	 */
-	replacements(): Promise<any> {
-		this.spine.hooks.serialize.register((output: any, section: any) => {
+	replacements(): Promise<void> {
+		this.spine.hooks.serialize.register((output: string, section: Section) => {
 			section.output = this.resources.substitute(output, section.url);
 		});
 
 		return this.resources.replacements().
 			then(() => {
 				return this.resources.replaceCss();
-			});
+			}).then(() => {});
 	}
 
 	/**
@@ -729,7 +752,7 @@ class Book implements IEventEmitter {
 	 * @param  {EpubCFI} cfiRange a epub cfi range
 	 * @return {Promise}
 	 */
-	getRange(cfiRange: string): Promise<any> {
+	getRange(cfiRange: string): Promise<Range> {
 		var cfi = new EpubCFI(cfiRange);
 		var item = this.spine.get(cfi.spinePos);
 		var _request = this.load.bind(this);
@@ -738,7 +761,7 @@ class Book implements IEventEmitter {
 				reject("CFI could not be found");
 			});
 		}
-		return item.load(_request).then(function (contents: any) {
+		return item.load(_request).then(function (contents: Element) {
 			var range = cfi.toRange(item.document);
 			return range;
 		});

@@ -3,7 +3,9 @@ import Queue from "./utils/queue";
 import EpubCFI from "./epubcfi";
 import { EVENTS } from "./utils/constants";
 import EventEmitter from "./utils/event-emitter";
-import type { IEventEmitter } from "./types";
+import type { IEventEmitter, RequestFunction } from "./types";
+import type Spine from "./spine";
+import type Section from "./section";
 
 /**
  * Find Locations for a Book
@@ -16,21 +18,21 @@ class Locations implements IEventEmitter {
 	declare off: (type: string, fn?: (...args: any[]) => void) => this;
 	declare emit: (type: string, ...args: any[]) => void;
 
-	spine: any;
-	request: any;
+	spine: Spine;
+	request: RequestFunction;
 	pause: number;
 	q: Queue;
 	epubcfi: EpubCFI;
 	_locations: string[];
-	_locationsWords: any[];
+	_locationsWords: { cfi: string; wordCount: number }[];
 	total: number;
 	break: number;
 	_current: number;
 	_wordCounter: number;
 	_currentCfi: string;
-	processingTimeout: any;
+	processingTimeout: ReturnType<typeof setTimeout> | undefined;
 
-	constructor(spine: any, request: any, pause?: number) {
+	constructor(spine: Spine, request: RequestFunction, pause?: number) {
 		this.spine = spine;
 		this.request = request;
 		this.pause = pause || 100;
@@ -65,7 +67,7 @@ class Locations implements IEventEmitter {
 
 		this.q.pause();
 
-		this.spine.each(function(section: any) {
+		this.spine.each(function(section: Section) {
 			if (section.linear) {
 				this.q.enqueue(this.process.bind(this), section);
 			}
@@ -84,7 +86,7 @@ class Locations implements IEventEmitter {
 
 	}
 
-	createRange (): any {
+	createRange (): { startContainer: Node | undefined; startOffset: number | undefined; endContainer: Node | undefined; endOffset: number | undefined } {
 		return {
 			startContainer: undefined,
 			startOffset: undefined,
@@ -93,10 +95,10 @@ class Locations implements IEventEmitter {
 		};
 	}
 
-	process(section: any): Promise<string[]> {
+	process(section: Section): Promise<string[]> {
 
 		return section.load(this.request)
-			.then(function(contents: any) {
+			.then(function(contents: Element) {
 				var completed = new defer();
 				var locations = this.parse(contents, section.cfiBase);
 				this._locations = this._locations.concat(locations);
@@ -109,7 +111,7 @@ class Locations implements IEventEmitter {
 
 	}
 
-	parse(contents: any, cfiBase: string, chars?: number): string[] {
+	parse(contents: Element, cfiBase: string, chars?: number): string[] {
 		var locations: string[] = [];
 		var range: any;
 		var doc = contents.ownerDocument;
@@ -117,8 +119,8 @@ class Locations implements IEventEmitter {
 		var counter = 0;
 		var prev: any;
 		var _break = chars || this.break;
-		var parser = function(node: any) {
-			var len = node.length;
+		var parser = function(node: Node) {
+			var len = (node as Text).length;
 			var dist;
 			var pos = 0;
 
@@ -207,7 +209,7 @@ class Locations implements IEventEmitter {
 		this._locationsWords = [];
 		this._wordCounter = 0;
 
-		this.spine.each(function(section: any) {
+		this.spine.each(function(section: Section) {
 			if (section.linear) {
 				if (start) {
 					if (section.index >= start.spinePos) {
@@ -229,13 +231,13 @@ class Locations implements IEventEmitter {
 
 	}
 
-	processWords(section: any, wordCount: number, startCfi?: any, count?: number): Promise<any> {
+	processWords(section: Section, wordCount: number, startCfi?: EpubCFI, count?: number): Promise<any> {
 		if (count && this._locationsWords.length >= count) {
 			return Promise.resolve();
 		}
 
 		return section.load(this.request)
-			.then(function(contents: any) {
+			.then(function(contents: Element) {
 				var completed = new defer();
 				var locations = this.parseWords(contents, section, wordCount, startCfi);
 				var remainingCount = count - this._locationsWords.length;
@@ -256,19 +258,19 @@ class Locations implements IEventEmitter {
 		return s.split(" ").length;
 	}
 
-	parseWords(contents: any, section: any, wordCount: number, startCfi?: any): any[] {
+	parseWords(contents: Element, section: Section, wordCount: number, startCfi?: EpubCFI): { cfi: string; wordCount: number }[] {
 		var cfiBase = section.cfiBase;
-		var locations: any[] = [];
+		var locations: { cfi: string; wordCount: number }[] = [];
 		var doc = contents.ownerDocument;
 		var body = qs(doc, "body");
 		var prev;
 		var _break = wordCount;
 		var foundStartNode = startCfi ? startCfi.spinePos !== section.index : true;
-		var startNode: any;
+		var startNode: Node | undefined;
 		if (startCfi && section.index === startCfi.spinePos) {
 			startNode = startCfi.findNode(startCfi.range ? startCfi.path.steps.concat(startCfi.start.steps) : startCfi.path.steps, contents.ownerDocument);
 		}
-		var parser = function(node: any) {
+		var parser = function(node: Node) {
 			if (!foundStartNode) {
 				if (node === startNode) {
 					foundStartNode = true;
@@ -331,7 +333,7 @@ class Locations implements IEventEmitter {
 	 * @param {EpubCFI} cfi
 	 * @return {number}
 	 */
-	locationFromCfi(cfi: any): number {
+	locationFromCfi(cfi: string | EpubCFI): number {
 		let loc;
 		if (EpubCFI.prototype.isCfiString(cfi)) {
 			cfi = new EpubCFI(cfi);
@@ -355,7 +357,7 @@ class Locations implements IEventEmitter {
 	 * @param {EpubCFI} cfi
 	 * @return {number}
 	 */
-	percentageFromCfi(cfi: any): number | null {
+	percentageFromCfi(cfi: string | EpubCFI): number | null {
 		if(this._locations.length === 0) {
 			return null;
 		}
@@ -383,8 +385,8 @@ class Locations implements IEventEmitter {
 	 * @param {number} loc
 	 * @return {EpubCFI} cfi
 	 */
-	cfiFromLocation(loc: any): any {
-		var cfi: any = -1;
+	cfiFromLocation(loc: string | number): string | number {
+		var cfi: string | number = -1;
 		// check that pg is an int
 		if(typeof loc != "number"){
 			loc = parseInt(loc);
@@ -402,7 +404,7 @@ class Locations implements IEventEmitter {
 	 * @param {number} percentage
 	 * @return {EpubCFI} cfi
 	 */
-	cfiFromPercentage(percentage: number): any {
+	cfiFromPercentage(percentage: number): string | number {
 		let loc;
 		if (percentage > 1) {
 			console.warn("Normalize cfiFromPercentage value to between 0 - 1");
@@ -445,7 +447,7 @@ class Locations implements IEventEmitter {
 		return this._current;
 	}
 
-	setCurrent(curr: any): void {
+	setCurrent(curr: string | number): void {
 		var loc;
 
 		if(typeof curr == "string"){
@@ -482,7 +484,7 @@ class Locations implements IEventEmitter {
 	/**
 	 * Set the current location
 	 */
-	set currentLocation(curr: any) {
+	set currentLocation(curr: string | number) {
 		this.setCurrent(curr);
 	}
 

@@ -9,7 +9,9 @@ import Themes from "./themes";
 import Contents from "./contents";
 import Annotations from "./annotations";
 import { EVENTS, DOM_EVENTS } from "./utils/constants";
-import type { IEventEmitter, RenditionOptions, Location } from "./types";
+import type { IEventEmitter, RenditionOptions, Location, GlobalLayout, ViewLocation, SizeObject, PackagingMetadataObject } from "./types";
+import type Book from "./book";
+import type Section from "./section";
 
 // Default Views
 import IframeView from "./managers/views/iframe";
@@ -41,28 +43,38 @@ import ContinuousViewManager from "./managers/continuous/index";
  * @param {boolean} [options.allowScriptedContent=false] enable running scripts in content
  * @param {boolean} [options.allowPopups=false] enable opening popup in content
  */
+interface RenditionHooks {
+	display: Hook;
+	serialize: Hook;
+	content: Hook;
+	unloaded: Hook;
+	layout: Hook;
+	render: Hook;
+	show: Hook;
+}
+
 class Rendition implements IEventEmitter {
-	settings: any;
-	book: any;
-	hooks: any;
-	themes: any;
-	annotations: any;
-	epubcfi: any;
-	q: any;
-	location: any;
-	starting: any;
-	started: Promise<any>;
-	manager: any;
-	ViewManager: any;
-	View: any;
-	_layout: any;
-	displaying: any;
+	settings: RenditionOptions & Record<string, any>;
+	book: Book | undefined;
+	hooks: RenditionHooks;
+	themes: Themes;
+	annotations: Annotations;
+	epubcfi: EpubCFI;
+	q: Queue;
+	location: Location | undefined;
+	starting: defer;
+	started: Promise<void>;
+	manager: DefaultViewManager | undefined;
+	ViewManager: typeof DefaultViewManager | typeof ContinuousViewManager | Function;
+	View: typeof IframeView | Function;
+	_layout: Layout | undefined;
+	displaying: defer | undefined;
 
 	declare on: IEventEmitter["on"];
 	declare off: IEventEmitter["off"];
 	declare emit: IEventEmitter["emit"];
 
-	constructor(book: any, options?: RenditionOptions) {
+	constructor(book: Book, options?: RenditionOptions) {
 
 		this.settings = extend(this.settings || {}, {
 			width: null,
@@ -86,7 +98,7 @@ class Rendition implements IEventEmitter {
 		extend(this.settings, options);
 
 		if (typeof(this.settings.manager) === "object") {
-			this.manager = this.settings.manager;
+			this.manager = this.settings.manager as DefaultViewManager;
 		}
 
 		this.book = book;
@@ -97,7 +109,7 @@ class Rendition implements IEventEmitter {
 		 * @property {Hook} hooks.content
 		 * @memberof Rendition
 		 */
-		this.hooks = {};
+		this.hooks = {} as RenditionHooks;
 		this.hooks.display = new Hook(this);
 		this.hooks.serialize = new Hook(this);
 		this.hooks.content = new Hook(this);
@@ -182,7 +194,7 @@ class Rendition implements IEventEmitter {
 	 * Set the manager function
 	 * @param {function} manager
 	 */
-	setManager(manager: any): void {
+	setManager(manager: DefaultViewManager): void {
 		this.manager = manager;
 	}
 
@@ -191,7 +203,7 @@ class Rendition implements IEventEmitter {
 	 * @param  {string|object} manager [description]
 	 * @return {method}
 	 */
-	requireManager(manager: any): any {
+	requireManager(manager: string | Function | object): typeof DefaultViewManager | typeof ContinuousViewManager | Function {
 		var viewManager;
 
 		// If manager is a string, try to load from imported managers
@@ -201,7 +213,7 @@ class Rendition implements IEventEmitter {
 			viewManager = ContinuousViewManager;
 		} else {
 			// otherwise, assume we were passed a class function
-			viewManager = manager;
+			viewManager = manager as Function;
 		}
 
 		return viewManager;
@@ -212,7 +224,7 @@ class Rendition implements IEventEmitter {
 	 * @param  {string|object} view
 	 * @return {view}
 	 */
-	requireView(view: any): any {
+	requireView(view: string | Function | object): typeof IframeView | Function {
 		var View;
 
 		// If view is a string, try to load from imported views,
@@ -220,7 +232,7 @@ class Rendition implements IEventEmitter {
 			View = IframeView;
 		} else {
 			// otherwise, assume we were passed a class function
-			View = view;
+			View = view as Function;
 		}
 
 		return View;
@@ -247,7 +259,7 @@ class Rendition implements IEventEmitter {
 			this.ViewManager = this.requireManager(this.settings.manager);
 			this.View = this.requireView(this.settings.view);
 
-			this.manager = new this.ViewManager({
+			this.manager = new (this.ViewManager as new (options: Record<string, any>) => DefaultViewManager)({
 				view: this.View,
 				queue: this.q,
 				request: this.book.load.bind(this.book),
@@ -294,7 +306,7 @@ class Rendition implements IEventEmitter {
 	 * @param  {element} element to attach to
 	 * @return {Promise}
 	 */
-	attachTo(element: any): Promise<any> {
+	attachTo(element: HTMLElement | string): Promise<void> {
 
 		return this.q.enqueue(function () {
 
@@ -323,7 +335,7 @@ class Rendition implements IEventEmitter {
 	 * @param  {string} target Url or EpubCFI
 	 * @return {Promise}
 	 */
-	display(target?: any): Promise<any> {
+	display(target?: string | number): Promise<Section> {
 		if (this.displaying) {
 			this.displaying.resolve();
 		}
@@ -336,21 +348,21 @@ class Rendition implements IEventEmitter {
 	 * @param  {string} target Url or EpubCFI
 	 * @return {Promise}
 	 */
-	_display(target?: any): any {
+	_display(target?: string | number): Promise<Section> | undefined {
 		if (!this.book) {
 			return;
 		}
 		var isCfiString = this.epubcfi.isCfiString(target);
 		var displaying = new defer();
 		var displayed = displaying.promise;
-		var section: any;
+		var section: Section | null;
 		var moveTo;
 
 		this.displaying = displaying;
 
 		// Check if this is a book percentage
 		if (this.book.locations.length() && isFloat(target)) {
-			target = this.book.locations.cfiFromPercentage(parseFloat(target));
+			target = this.book.locations.cfiFromPercentage(parseFloat(target as string));
 		}
 
 		section = this.book.spine.get(target);
@@ -360,7 +372,7 @@ class Rendition implements IEventEmitter {
 			return displayed;
 		}
 
-		this.manager.display(section, target)
+		this.manager.display(section, target as string)
 			.then(() => {
 				displaying.resolve(section);
 				this.displaying = undefined;
@@ -373,7 +385,7 @@ class Rendition implements IEventEmitter {
 				 */
 				this.emit(EVENTS.RENDITION.DISPLAYED, section);
 				this.reportLocation();
-			}, (err: any) => {
+			}, (err: Error) => {
 				/**
 				 * Emit that has been an error displaying
 				 * @event displayError
@@ -438,7 +450,7 @@ class Rendition implements IEventEmitter {
 	 */
 	afterDisplayed(view: any): void {
 
-		view.on(EVENTS.VIEWS.MARK_CLICKED, (cfiRange: any, data: any) => this.triggerMarkEvent(cfiRange, data, view.contents));
+		view.on(EVENTS.VIEWS.MARK_CLICKED, (cfiRange: string, data: object) => this.triggerMarkEvent(cfiRange, data, view.contents));
 
 		this.hooks.render.trigger(view, this)
 			.then(() => {
@@ -482,7 +494,7 @@ class Rendition implements IEventEmitter {
 	 * Report resize events and display the last seen location
 	 * @private
 	 */
-	onResized(size: any, epubcfi?: string): void {
+	onResized(size: SizeObject, epubcfi?: string): void {
 
 		/**
 		 * Emit that the rendition has been resized
@@ -507,7 +519,7 @@ class Rendition implements IEventEmitter {
 	 * Report orientation events and display the last seen location
 	 * @private
 	 */
-	onOrientationChange(orientation: any): void {
+	onOrientationChange(orientation: string): void {
 		/**
 		 * Emit that the rendition has been rotated
 		 * @event orientationchange
@@ -522,7 +534,7 @@ class Rendition implements IEventEmitter {
 	 * Usually you would be better off calling display()
 	 * @param {object} offset
 	 */
-	moveTo(offset: any): void {
+	moveTo(offset: { left: number; top: number }): void {
 		this.manager.moveTo(offset);
 	}
 
@@ -574,7 +586,7 @@ class Rendition implements IEventEmitter {
 	 * @param  {object} metadata
 	 * @return {object} properties
 	 */
-	determineLayoutProperties(metadata: any): any {
+	determineLayoutProperties(metadata: PackagingMetadataObject & Record<string, any>): GlobalLayout {
 		var properties;
 		var layout = this.settings.layout || metadata.layout || "reflowable";
 		var spread = this.settings.spread || metadata.spread || "auto";
@@ -584,18 +596,18 @@ class Rendition implements IEventEmitter {
 		var minSpreadWidth = this.settings.minSpreadWidth || metadata.minSpreadWidth || 800;
 		var direction = this.settings.direction || metadata.direction || "ltr";
 
-		if ((this.settings.width === 0 || this.settings.width > 0) &&
-				(this.settings.height === 0 || this.settings.height > 0)) {
+		if ((this.settings.width === 0 || (this.settings.width as number) > 0) &&
+				(this.settings.height === 0 || (this.settings.height as number) > 0)) {
 			// viewport = "width="+this.settings.width+", height="+this.settings.height+"";
 		}
 
 		properties = {
 			layout : layout,
-			spread : spread,
+			spread : spread as string,
 			orientation : orientation,
 			flow : flow,
 			viewport : viewport,
-			minSpreadWidth : minSpreadWidth,
+			minSpreadWidth : minSpreadWidth as number,
 			direction: direction
 		};
 
@@ -643,14 +655,14 @@ class Rendition implements IEventEmitter {
 	 * Adjust the layout of the rendition to reflowable or pre-paginated
 	 * @param  {object} settings
 	 */
-	layout(settings?: any): any {
+	layout(settings?: GlobalLayout): Layout | undefined {
 		if (settings) {
 			this._layout = new Layout(settings);
 			this._layout.spread(settings.spread, this.settings.minSpreadWidth);
 
 			// this.mapping = new Mapping(this._layout.props);
 
-			this._layout.on(EVENTS.LAYOUT.UPDATED, (props: any, changed: any) => {
+			this._layout.on(EVENTS.LAYOUT.UPDATED, (props: Record<string, any>, changed: Record<string, any>) => {
 				this.emit(EVENTS.RENDITION.LAYOUT, props, changed);
 			})
 		}
@@ -667,7 +679,7 @@ class Rendition implements IEventEmitter {
 	 * @param  {string} spread none | auto (TODO: implement landscape, portrait, both)
 	 * @param  {int} [min] min width to use spreads at
 	 */
-	spread(spread: any, min?: number): void {
+	spread(spread: string, min?: number): void {
 
 		this.settings.spread = spread;
 
@@ -707,12 +719,12 @@ class Rendition implements IEventEmitter {
 	 * @fires relocated
 	 * @fires locationChanged
 	 */
-	reportLocation(): any {
+	reportLocation(): Promise<void> {
 		return this.q.enqueue(function reportedLocation(){
 			requestAnimationFrame(function reportedLocationAfterRAF() {
 				var location = this.manager.currentLocation();
 				if (location && location.then && typeof location.then === "function") {
-					location.then(function(result: any) {
+					location.then(function(result: ViewLocation[]) {
 						let located = this.located(result);
 
 						if (!located || !located.start || !located.end) {
@@ -774,10 +786,10 @@ class Rendition implements IEventEmitter {
 	 * Get the Current Location object
 	 * @return {displayedLocation | promise} location (may be a promise)
 	 */
-	currentLocation(): any {
-		var location = this.manager.currentLocation();
+	currentLocation(): Location | undefined {
+		var location = this.manager.currentLocation() as any;
 		if (location && location.then && typeof location.then === "function") {
-			location.then(function(result: any) {
+			location.then(function(result: ViewLocation[]) {
 				let located = this.located(result);
 				return located;
 			}.bind(this));
@@ -793,14 +805,14 @@ class Rendition implements IEventEmitter {
 	 * @returns {displayedLocation}
 	 * @private
 	 */
-	located(location: any): any {
+	located(location: ViewLocation[]): Location | undefined {
 		if (!location.length) {
-			return {};
+			return undefined;
 		}
 		let start = location[0];
 		let end = location[location.length-1];
 
-		let located: any = {
+		let located: Location = {
 			start: {
 				index: start.index,
 				href: start.href,
@@ -894,12 +906,12 @@ class Rendition implements IEventEmitter {
 	 * @private
 	 * @param  {Contents} view contents
 	 */
-	passEvents(contents: any): void {
+	passEvents(contents: Contents): void {
 		DOM_EVENTS.forEach((e) => {
-			contents.on(e, (ev: any) => this.triggerViewEvent(ev, contents));
+			contents.on(e, (ev: Event) => this.triggerViewEvent(ev, contents));
 		});
 
-		contents.on(EVENTS.CONTENTS.SELECTED, (e: any) => this.triggerSelectedEvent(e, contents));
+		contents.on(EVENTS.CONTENTS.SELECTED, (e: string) => this.triggerSelectedEvent(e, contents));
 	}
 
 	/**
@@ -907,7 +919,7 @@ class Rendition implements IEventEmitter {
 	 * @private
 	 * @param  {event} e
 	 */
-	triggerViewEvent(e: any, contents: any): void {
+	triggerViewEvent(e: Event, contents: Contents): void {
 		this.emit(e.type, e, contents);
 	}
 
@@ -916,7 +928,7 @@ class Rendition implements IEventEmitter {
 	 * @private
 	 * @param  {string} cfirange
 	 */
-	triggerSelectedEvent(cfirange: string, contents: any): void {
+	triggerSelectedEvent(cfirange: string, contents: Contents): void {
 		/**
 		 * Emit that a text selection has occurred
 		 * @event selected
@@ -932,7 +944,7 @@ class Rendition implements IEventEmitter {
 	 * @private
 	 * @param  {EpubCFI} cfirange
 	 */
-	triggerMarkEvent(cfiRange: string, data: any, contents: any): void {
+	triggerMarkEvent(cfiRange: string, data: object, contents: Contents): void {
 		/**
 		 * Emit that a mark was clicked
 		 * @event markClicked
@@ -950,7 +962,7 @@ class Rendition implements IEventEmitter {
 	 * @param  {string} ignoreClass
 	 * @return {range}
 	 */
-	getRange(cfi: string, ignoreClass?: string): any {
+	getRange(cfi: string, ignoreClass?: string): Range | undefined {
 		var _cfi = new EpubCFI(cfi);
 		var found = this.manager.visible().filter(function (view: any) {
 			if(_cfi.spinePos === view.index) return true;
@@ -958,7 +970,7 @@ class Rendition implements IEventEmitter {
 
 		// Should only every return 1 item
 		if (found.length) {
-			return found[0].contents.range(_cfi, ignoreClass);
+			return found[0].contents.range(_cfi as any, ignoreClass);
 		}
 	}
 
@@ -967,7 +979,7 @@ class Rendition implements IEventEmitter {
 	 * @param  {Contents} contents
 	 * @private
 	 */
-	adjustImages(contents: any): Promise<any> {
+	adjustImages(contents: Contents): Promise<void> {
 
 		if (this._layout.name === "pre-paginated") {
 			return new Promise<void>(function(resolve){
@@ -1008,7 +1020,7 @@ class Rendition implements IEventEmitter {
 	 * Get the Contents object of each rendered view
 	 * @returns {Contents[]}
 	 */
-	getContents (): any[] {
+	getContents (): Contents[] {
 		return this.manager ? this.manager.getContents() : [];
 	}
 
@@ -1026,9 +1038,9 @@ class Rendition implements IEventEmitter {
 	 * @param  {Contents} contents
 	 * @private
 	 */
-	handleLinks(contents: any): void {
+	handleLinks(contents: Contents): void {
 		if (contents) {
-			contents.on(EVENTS.CONTENTS.LINK_CLICKED, (href: any) => {
+			contents.on(EVENTS.CONTENTS.LINK_CLICKED, (href: string) => {
 				let relative = this.book.path.relative(href);
 				this.display(relative);
 			});
@@ -1042,7 +1054,7 @@ class Rendition implements IEventEmitter {
 	 * @param  {Section} section
 	 * @private
 	 */
-	injectStylesheet(doc: Document, section: any): void {
+	injectStylesheet(doc: Document, section: Section): void {
 		let style = doc.createElement("link");
 		style.setAttribute("type", "text/css");
 		style.setAttribute("rel", "stylesheet");
@@ -1057,7 +1069,7 @@ class Rendition implements IEventEmitter {
 	 * @param  {Section} section
 	 * @private
 	 */
-	injectScript(doc: Document, section: any): void {
+	injectScript(doc: Document, section: Section): void {
 		let script = doc.createElement("script");
 		script.setAttribute("type", "text/javascript");
 		script.setAttribute("src", this.settings.script);
@@ -1072,7 +1084,7 @@ class Rendition implements IEventEmitter {
 	 * @param  {Section} section
 	 * @private
 	 */
-	injectIdentifier(doc: Document, section: any): void {
+	injectIdentifier(doc: Document, section: Section): void {
 		let ident = this.book.packaging.metadata.identifier;
 		let meta = doc.createElement("meta");
 		meta.setAttribute("name", "dc.relation.ispartof");

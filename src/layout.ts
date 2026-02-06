@@ -2,6 +2,8 @@ import { extend } from "./utils/core";
 import { EVENTS } from "./utils/constants";
 import EventEmitter from "./utils/event-emitter";
 import type { LayoutSettings, LayoutProps, IEventEmitter } from "./types";
+import type Contents from "./contents";
+import type Section from "./section";
 
 /**
  * Figures out the CSS values to apply for a layout
@@ -17,7 +19,7 @@ class Layout implements IEventEmitter {
 	declare off: (type: string, fn?: (...args: any[]) => void) => this;
 	declare emit: (type: string, ...args: any[]) => void;
 
-	settings: any;
+	settings: LayoutSettings;
 	name: string;
 	_spread: boolean;
 	_minSpreadWidth: number;
@@ -31,9 +33,9 @@ class Layout implements IEventEmitter {
 	gap: number;
 	divisor: number;
 	pageWidth: number;
-	props: Record<string, any>;
+	props: LayoutProps;
 
-	constructor(settings: any) {
+	constructor(settings: LayoutSettings) {
 		this.settings = settings;
 		this.name = settings.layout || "reflowable";
 		this._spread = (settings.spread === "none") ? false : true;
@@ -210,7 +212,7 @@ class Layout implements IEventEmitter {
 	 * @param  {Contents} contents
 	 * @return {Promise}
 	 */
-	format(contents: any, section?: any, axis?: string): any {
+	format(contents: Contents, section?: Section, axis?: string): void {
 		var formating;
 
 		if (this.name === "pre-paginated") {
@@ -261,15 +263,17 @@ class Layout implements IEventEmitter {
 	 * @private
 	 * @param  {object} props
 	 */
-	update(props: Record<string, any>): void {
+	update(props: Partial<LayoutProps>): void {
 		// Remove props that haven't changed
-		Object.keys(props).forEach((propName) => {
-			if (this.props[propName] === props[propName]) {
-				delete props[propName];
+		const propsRecord = props as unknown as Record<string, unknown>;
+		const thisRecord = this.props as unknown as Record<string, unknown>;
+		Object.keys(propsRecord).forEach((propName) => {
+			if (thisRecord[propName] === propsRecord[propName]) {
+				delete propsRecord[propName];
 			}
 		});
 
-		if(Object.keys(props).length > 0) {
+		if(Object.keys(propsRecord).length > 0) {
 			let newProps = extend(this.props, props);
 			this.emit(EVENTS.LAYOUT.UPDATED, newProps, props);
 		}

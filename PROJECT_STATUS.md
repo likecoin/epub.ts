@@ -16,11 +16,12 @@
 - [x] B5: Level 4-5 managers + rendition
 - [x] B6: Level 6 top-level modules, remove types/
 
-### Stage C: Improvements (not started)
+### Stage C: Improvements
+- [x] Enable `noImplicitAny` (270 implicit-any params annotated)
+- [x] Replace ~528 explicit `any` with proper types (~123 remain where genuinely needed)
 - [ ] Replace `localforage` with lighter IndexedDB wrapper
 - [ ] Replace `@xmldom/xmldom` with browser-native DOMParser
 - [ ] Enable `strictNullChecks`
-- [ ] Enable `noImplicitAny`
 - [ ] Full `strict: true`
 - [ ] Node.js support (parsing-only entry point)
 - [ ] Improve test coverage

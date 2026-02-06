@@ -1,7 +1,7 @@
 import {uuid, isNumber, isElement, windowBounds, extend} from "../../utils/core";
 import type { StageOptions } from "../../types";
 function throttle(func: Function, wait: number): () => void {
-	var timeout: any = null;
+	var timeout: ReturnType<typeof setTimeout> | null = null;
 	var previous = 0;
 	return function() {
 		var now = Date.now();
@@ -24,7 +24,7 @@ function throttle(func: Function, wait: number): () => void {
 }
 
 class Stage {
-	settings: any;
+	settings: StageOptions;
 	id: string;
 	container: HTMLDivElement;
 	wrapper: HTMLDivElement;
@@ -51,9 +51,9 @@ class Stage {
 	* Creates an element to render to.
 	* Resizes to passed width and height or to the elements size
 	*/
-	create(options: any): HTMLDivElement {
-		let height  = options.height;// !== false ? options.height : "100%";
-		let width   = options.width;// !== false ? options.width : "100%";
+	create(options: StageOptions): HTMLDivElement {
+		let height: string | number | undefined  = options.height;// !== false ? options.height : "100%";
+		let width: string | number | undefined   = options.width;// !== false ? options.width : "100%";
 		let overflow  = options.overflow || false;
 		let axis = options.axis || "vertical";
 		let direction = options.direction;
@@ -89,11 +89,11 @@ class Stage {
 		}
 
 		if(width){
-			container.style.width = width;
+			container.style.width = width as string;
 		}
 
 		if(height){
-			container.style.height = height;
+			container.style.height = height as string;
 		}
 
 		if (overflow) {
@@ -104,7 +104,7 @@ class Stage {
 				container.style.overflowY = "hidden";
 				container.style.overflowX = overflow;
 			} else {
-				container.style.overflow = overflow;
+				container.style.overflow = overflow as string;
 			}
 		}
 
@@ -133,11 +133,11 @@ class Stage {
 	}
 
 
-	getElement(_element: any): HTMLElement {
-		var element;
+	getElement(_element: HTMLElement | string): HTMLElement {
+		var element: HTMLElement | null = null;
 
 		if(isElement(_element)) {
-			element = _element;
+			element = _element as HTMLElement;
 		} else if (typeof _element === "string") {
 			element = document.getElementById(_element);
 		}
@@ -149,7 +149,7 @@ class Stage {
 		return element;
 	}
 
-	attachTo(what: any): HTMLElement | void {
+	attachTo(what: HTMLElement | string): HTMLElement | void {
 
 		var element = this.getElement(what);
 		var base;
@@ -192,7 +192,7 @@ class Stage {
 		window.addEventListener("orientationchange", this.orientationChangeFunc, false);
 	}
 
-	size(width?: any, height?: any): { width: number; height: number } {
+	size(width?: number | string | null, height?: number | string | null): { width: number; height: number } {
 		var bounds;
 		let _width = width || this.settings.width;
 		let _height = height || this.settings.height;
@@ -208,8 +208,8 @@ class Stage {
 		} else {
 			if (isNumber(width)) {
 				this.container.style.width = width + "px";
-			} else {
-				this.container.style.width = width;
+			} else if (width) {
+				this.container.style.width = width as string;
 			}
 		}
 
@@ -224,8 +224,8 @@ class Stage {
 		} else {
 			if (isNumber(height)) {
 				this.container.style.height = height + "px";
-			} else {
-				this.container.style.height = height;
+			} else if (height) {
+				this.container.style.height = height as string;
 			}
 		}
 
@@ -269,10 +269,10 @@ class Stage {
 		}
 
 		return {
-			width: width -
+			width: (width as number) -
 							this.containerPadding.left -
 							this.containerPadding.right,
-			height: height -
+			height: (height as number) -
 							this.containerPadding.top -
 							this.containerPadding.bottom
 		};
@@ -304,7 +304,7 @@ class Stage {
 		return style.sheet;
 	}
 
-	addStyleRules(selector: string, rulesArray: any[]): void {
+	addStyleRules(selector: string, rulesArray: Record<string, string>[]): void {
 		var scope = "#" + this.id + " ";
 		var rules = "";
 

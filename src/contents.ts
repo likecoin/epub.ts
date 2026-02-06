@@ -4,7 +4,8 @@ import EpubCFI from "./epubcfi";
 import Mapping from "./mapping";
 import {replaceLinks} from "./utils/replacements";
 import { EPUBJS_VERSION, EVENTS, DOM_EVENTS } from "./utils/constants";
-import type { ViewportSettings, IEventEmitter } from "./types";
+import type { ViewportSettings, LayoutProps, EpubCFIPair, IEventEmitter } from "./types";
+import type Section from "./section";
 
 const hasNavigator = typeof (navigator) !== "undefined";
 
@@ -37,14 +38,14 @@ class Contents implements IEventEmitter {
 	cfiBase: string;
 	called: number;
 	active: boolean;
-	observer: any;
-	expanding: any;
+	observer: ResizeObserver | MutationObserver | undefined;
+	expanding: ReturnType<typeof setTimeout> | undefined;
 	onResize: ((size: { width: number; height: number }) => void) | undefined;
 	_expanding: boolean;
 	_resizeCheck: (() => void) | undefined;
 	_triggerEvent: ((e: Event) => void) | undefined;
 	_onSelectionChange: ((e: Event) => void) | undefined;
-	selectionEndTimeout: any;
+	selectionEndTimeout: ReturnType<typeof setTimeout> | undefined;
 	_layoutStyle: string;
 
 	constructor(doc: Document, content?: HTMLElement, cfiBase?: string, sectionIndex?: number) {
@@ -82,7 +83,7 @@ class Contents implements IEventEmitter {
 		* @param {number} [w]
 		* @returns {number} width
 		*/
-	width(w?: any): number {
+	width(w?: number | string): number {
 		// var frame = this.documentElement;
 		var frame = this.content;
 
@@ -91,7 +92,7 @@ class Contents implements IEventEmitter {
 		}
 
 		if (w) {
-			frame.style.width = w;
+			frame.style.width = w as string;
 			// this.content.style.width = w;
 		}
 
@@ -105,7 +106,7 @@ class Contents implements IEventEmitter {
 		* @param {number} [h]
 		* @returns {number} height
 		*/
-	height(h?: any): number {
+	height(h?: number | string): number {
 		// var frame = this.documentElement;
 		var frame = this.content;
 
@@ -114,7 +115,7 @@ class Contents implements IEventEmitter {
 		}
 
 		if (h) {
-			frame.style.height = h;
+			frame.style.height = h as string;
 			// this.content.style.height = h;
 		}
 
@@ -127,7 +128,7 @@ class Contents implements IEventEmitter {
 		* @param {number} [w]
 		* @returns {number} width
 		*/
-	contentWidth(w?: any): number {
+	contentWidth(w?: number | string): number {
 
 		var content = this.content || this.document.body;
 
@@ -136,7 +137,7 @@ class Contents implements IEventEmitter {
 		}
 
 		if (w) {
-			content.style.width = w;
+			content.style.width = w as string;
 		}
 
 		return parseInt(this.window.getComputedStyle(content)["width"]);
@@ -149,7 +150,7 @@ class Contents implements IEventEmitter {
 		* @param {number} [h]
 		* @returns {number} height
 		*/
-	contentHeight(h?: any): number {
+	contentHeight(h?: number | string): number {
 
 		var content = this.content || this.document.body;
 
@@ -158,7 +159,7 @@ class Contents implements IEventEmitter {
 		}
 
 		if (h) {
-			content.style.height = h;
+			content.style.height = h as string;
 		}
 
 		return parseInt(this.window.getComputedStyle(content)["height"]);
@@ -295,11 +296,11 @@ class Contents implements IEventEmitter {
 		* @param {string} [options.maximum]
 		* @param {string} [options.scalable]
 		*/
-	viewport(options?: any): any {
+	viewport(options?: Partial<Record<keyof ViewportSettings, string | number>>): ViewportSettings {
 		var _width, _height, _scale, _minimum, _maximum, _scalable;
 		// var width, height, scale, minimum, maximum, scalable;
 		var $viewport = this.document.querySelector("meta[name='viewport']");
-		var parsed: any = {
+		var parsed: Partial<ViewportSettings> = {
 			"width": undefined,
 			"height": undefined,
 			"scale": undefined,
@@ -307,8 +308,8 @@ class Contents implements IEventEmitter {
 			"maximum": undefined,
 			"scalable": undefined
 		};
-		var newContent = [];
-		var settings: any = {};
+		var newContent: string[] = [];
+		var settings: Record<string, string | number> = {};
 
 		/*
 		* check for the viewport size
@@ -389,7 +390,7 @@ class Contents implements IEventEmitter {
 		}
 
 
-		return settings;
+		return settings as unknown as ViewportSettings;
 	}
 
 	/**
@@ -518,7 +519,7 @@ class Contents implements IEventEmitter {
 	 */
 	mediaQueryListeners(): void {
 		var sheets = this.document.styleSheets;
-		var mediaChangeHandler = function(m: any){
+		var mediaChangeHandler = function(m: MediaQueryListEvent){
 			if(m.matches && !this._expanding) {
 				setTimeout(this.expand.bind(this), 1);
 			}
@@ -715,7 +716,7 @@ class Contents implements IEventEmitter {
 	 * @param {string} src url
 	 */
 	addStylesheet(src: string): Promise<boolean> {
-		return new Promise(function(resolve: any, reject: any){
+		return new Promise(function(resolve: (value: boolean) => void, reject: (reason?: unknown) => void){
 			var $stylesheet;
 			var ready = false;
 
@@ -750,14 +751,14 @@ class Contents implements IEventEmitter {
 		}.bind(this));
 	}
 
-	_getStylesheetNode(key?: string): any {
-		var styleEl;
+	_getStylesheetNode(key?: string): HTMLStyleElement | false {
+		var styleEl: HTMLStyleElement;
 		key = "epubjs-inserted-css-" + (key || '');
 
 		if(!this.document) return false;
 
 		// Check if link already exists
-		styleEl = this.document.getElementById(key);
+		styleEl = this.document.getElementById(key) as HTMLStyleElement;
 		if (!styleEl) {
 			styleEl = this.document.createElement("style");
 			styleEl.id = key;
@@ -775,8 +776,8 @@ class Contents implements IEventEmitter {
 	addStylesheetCss(serializedCss: string, key?: string): boolean {
 		if(!this.document || !serializedCss) return false;
 
-		var styleEl;
-		styleEl = this._getStylesheetNode(key);
+		var styleEl = this._getStylesheetNode(key);
+		if (!styleEl) return false;
 		styleEl.innerHTML = serializedCss;
 
 		return true;
@@ -790,12 +791,12 @@ class Contents implements IEventEmitter {
 	 * @param {string} key If the key is the same, the CSS will be replaced instead of inserted
 	 */
 	addStylesheetRules(rules: any, key?: string): void {
-		var styleSheet: any;
+		var styleSheet: CSSStyleSheet;
 
 		if(!this.document || !rules || rules.length === 0) return;
 
 		// Grab style sheet
-		styleSheet = this._getStylesheetNode(key).sheet;
+		styleSheet = (this._getStylesheetNode(key) as HTMLStyleElement).sheet as CSSStyleSheet;
 
 		if (Object.prototype.toString.call(rules) === "[object Array]") {
 			for (var i = 0, rl = rules.length; i < rl; i++) {
@@ -844,7 +845,7 @@ class Contents implements IEventEmitter {
 	 */
 	addScript(src: string): Promise<boolean> {
 
-		return new Promise(function(resolve: any, reject: any){
+		return new Promise(function(resolve: (value: boolean) => void, reject: (reason?: unknown) => void){
 			var $script;
 			var ready = false;
 
@@ -1032,7 +1033,7 @@ class Contents implements IEventEmitter {
 	}
 
 	// TODO: find where this is used - remove?
-	map(layout: any): any {
+	map(layout: LayoutProps): EpubCFIPair[] {
 		var map = new Mapping(layout);
 		return map.section(undefined as any);
 	}
@@ -1043,7 +1044,7 @@ class Contents implements IEventEmitter {
 	 * @param {number} [height]
 	 */
 	size(width?: number, height?: number): void {
-		var viewport: any = { scale: 1.0, scalable: "no" };
+		var viewport: Partial<Record<keyof ViewportSettings, string | number>> = { scale: 1.0, scalable: "no" };
 
 		this.layoutStyle("scrolling");
 
@@ -1151,7 +1152,7 @@ class Contents implements IEventEmitter {
 	 * @param {number} width
 	 * @param {number} height
 	 */
-	fit(width: number, height: number, section?: any): void {
+	fit(width: number, height: number, section?: Section): void {
 		var viewport = this.viewport();
 		var viewportWidth = parseInt(viewport.width);
 		var viewportHeight = parseInt(viewport.height);
@@ -1198,8 +1199,8 @@ class Contents implements IEventEmitter {
 		}
 	}
 
-	mapPage(cfiBase: string, layout: any, start: number, end: number, dev?: boolean): any {
-		var mapping = new Mapping(layout, dev as any);
+	mapPage(cfiBase: string, layout: LayoutProps, start: number, end: number, dev?: boolean): EpubCFIPair | undefined {
+		var mapping = new Mapping(layout, undefined, undefined, dev);
 
 		return mapping.page(this, cfiBase, start, end);
 	}
@@ -1249,12 +1250,12 @@ class Contents implements IEventEmitter {
 	 * @param {string} version
 	 * @private
 	 */
-	epubReadingSystem(name: string, version: string): any {
+	epubReadingSystem(name: string, version: string): void {
 		(navigator as any).epubReadingSystem = {
 			name: name,
 			version: version,
 			layoutStyle: this.layoutStyle(),
-			hasFeature: function (feature: any) {
+			hasFeature: function (feature: string) {
 				switch (feature) {
 					case "dom-manipulation":
 						return true;

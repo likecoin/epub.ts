@@ -3,13 +3,15 @@ import {extend, borders, uuid, isNumber, bounds, defer, createBlobUrl, revokeBlo
 import EpubCFI from "../../epubcfi";
 import Contents from "../../contents";
 import { EVENTS } from "../../utils/constants";
-import { Pane, Highlight, Underline } from "../../marks-pane";
-import type { IEventEmitter, ViewSettings } from "../../types";
+import { Pane, Highlight, Underline, Mark } from "../../marks-pane";
+import type { IEventEmitter, ViewSettings, ReframeBounds, RequestFunction } from "../../types";
+import type Section from "../../section";
+import type Layout from "../../layout";
 
 class IframeView implements IEventEmitter {
-	settings: any;
+	settings: ViewSettings;
 	id: string;
-	section: any;
+	section: Section;
 	index: number;
 	element: HTMLElement;
 	added: boolean;
@@ -17,13 +19,13 @@ class IframeView implements IEventEmitter {
 	rendered: boolean;
 	fixedWidth: number;
 	fixedHeight: number;
-	epubcfi: any;
-	layout: any;
-	pane: any;
-	highlights: Record<string, any>;
-	underlines: Record<string, any>;
-	marks: Record<string, any>;
-	iframe: any;
+	epubcfi: EpubCFI;
+	layout: Layout;
+	pane: Pane | undefined;
+	highlights: Record<string, { mark: Mark; element: SVGElement | null; listeners: (Function | undefined)[] }>;
+	underlines: Record<string, { mark: Mark; element: SVGElement | null; listeners: (Function | undefined)[] }>;
+	marks: Record<string, { element: HTMLAnchorElement; range: Range; listeners: (Function | undefined)[] }>;
+	iframe: HTMLIFrameElement | undefined;
 	resizing: boolean;
 	_width: number;
 	_height: number;
@@ -33,16 +35,16 @@ class IframeView implements IEventEmitter {
 	_contentHeight: number;
 	_needsReframe: boolean;
 	_expanding: boolean;
-	elementBounds: any;
+	elementBounds: { width: number; height: number };
 	supportsSrcdoc: boolean;
-	sectionRender: Promise<any>;
+	sectionRender: Promise<string>;
 	lockedWidth: number;
 	lockedHeight: number;
-	prevBounds: any;
+	prevBounds: ReframeBounds | undefined;
 	blobUrl: string;
 	document: Document;
 	window: Window;
-	contents: any;
+	contents: Contents | undefined;
 	rendering: boolean;
 	writingMode: string;
 	stopExpanding: boolean;
@@ -52,7 +54,7 @@ class IframeView implements IEventEmitter {
 	declare off: IEventEmitter["off"];
 	declare emit: IEventEmitter["emit"];
 
-	constructor(section: any, options?: ViewSettings) {
+	constructor(section: Section, options?: ViewSettings) {
 		this.settings = extend({
 			ignoreClass : "",
 			axis: undefined, //options.layout && options.layout.props.flow === "scrolled" ? "vertical" : "horizontal",
@@ -86,7 +88,7 @@ class IframeView implements IEventEmitter {
 		// Blank Cfi for Parsing
 		this.epubcfi = new EpubCFI();
 
-		this.layout = this.settings.layout;
+		this.layout = this.settings.layout as unknown as Layout;
 		// Dom events to listen for
 		// this.listenedEvents = ["keydown", "keyup", "keypressed", "mouseup", "mousedown", "click", "touchend", "touchstart"];
 
@@ -118,7 +120,7 @@ class IframeView implements IEventEmitter {
 		return element;
 	}
 
-	create(): any {
+	create(): HTMLIFrameElement {
 
 		if(this.iframe) {
 			return this.iframe;
@@ -132,7 +134,7 @@ class IframeView implements IEventEmitter {
 		this.iframe.id = this.id;
 		this.iframe.scrolling = "no"; // Might need to be removed: breaks ios width calculations
 		this.iframe.style.overflow = "hidden";
-		this.iframe.seamless = "seamless";
+		(this.iframe as any).seamless = "seamless";
 		// Back up if seamless isn't supported
 		this.iframe.style.border = "none";
 
@@ -186,7 +188,7 @@ class IframeView implements IEventEmitter {
 		return this.iframe;
 	}
 
-	render(request: any, show?: boolean): Promise<any> {
+	render(request: RequestFunction, show?: boolean): Promise<void> {
 
 		// view.onLayout = this.layout.format.bind(this.layout);
 		this.create();
@@ -200,7 +202,7 @@ class IframeView implements IEventEmitter {
 
 		// Render Chain
 		return this.sectionRender
-			.then(function(contents: any){
+			.then(function(contents: string){
 				return this.load(contents);
 			}.bind(this))
 			.then(function(){
@@ -243,7 +245,7 @@ class IframeView implements IEventEmitter {
 					resolve();
 				});
 
-			}.bind(this), function(e: any){
+			}.bind(this), function(e: Error){
 				this.emit(EVENTS.VIEWS.LOAD_ERROR, e);
 				return new Promise((resolve, reject) => {
 					reject(e);
@@ -427,7 +429,7 @@ class IframeView implements IEventEmitter {
 	}
 
 
-	load(contents: string): Promise<any> {
+	load(contents: string): Promise<Contents> {
 		var loading = new defer();
 		var loaded = loading.promise;
 
@@ -436,7 +438,7 @@ class IframeView implements IEventEmitter {
 			return loaded;
 		}
 
-		this.iframe.onload = function(event: any) {
+		this.iframe.onload = function(event: Event) {
 
 			this.onLoad(event, loading);
 
@@ -477,7 +479,7 @@ class IframeView implements IEventEmitter {
 		return loaded;
 	}
 
-	onLoad(event: any, promise: any): void {
+	onLoad(event: Event, promise: { resolve: (value?: any) => void; reject: (reason?: any) => void }): void {
 
 		this.window = this.iframe.contentWindow;
 		this.document = this.iframe.contentDocument;
@@ -505,7 +507,7 @@ class IframeView implements IEventEmitter {
 			}
 		});
 
-		this.contents.on(EVENTS.CONTENTS.RESIZE, (e: any) => {
+		this.contents.on(EVENTS.CONTENTS.RESIZE, (e: Event) => {
 			if(this.displayed && this.iframe) {
 				this.expand();
 				if (this.contents) {
@@ -517,7 +519,7 @@ class IframeView implements IEventEmitter {
 		promise.resolve(this.contents);
 	}
 
-	setLayout(layout: any): void {
+	setLayout(layout: Layout): void {
 		this.layout = layout;
 
 		if (this.contents) {
@@ -549,11 +551,11 @@ class IframeView implements IEventEmitter {
 		//TODO: Add content listeners for expanding
 	}
 
-	removeListeners(layoutFunc?: any): void {
+	removeListeners(layoutFunc?: Function): void {
 		//TODO: remove content listeners for expanding
 	}
 
-	display(request: any): Promise<any> {
+	display(request: RequestFunction): Promise<IframeView> {
 		var displayed = new defer();
 
 		if (!this.displayed) {
@@ -623,7 +625,7 @@ class IframeView implements IEventEmitter {
 		return this.element.getBoundingClientRect();
 	}
 
-	locationOf(target: any): { left: number; top: number } {
+	locationOf(target: string): { left: number; top: number } {
 		var parentPos = this.iframe.getBoundingClientRect();
 		var targetPos = this.contents.locationOf(target, this.settings.ignoreClass);
 
@@ -633,15 +635,15 @@ class IframeView implements IEventEmitter {
 		};
 	}
 
-	onDisplayed(view: any): void {
+	onDisplayed(view: IframeView): void {
 		// Stub, override with a custom functions
 	}
 
-	onResize(view: any, e?: any): void {
+	onResize(view: IframeView, e?: ReframeBounds): void {
 		// Stub, override with a custom functions
 	}
 
-	bounds(force?: boolean): any {
+	bounds(force?: boolean): { width: number; height: number } {
 		if(force || !this.elementBounds) {
 			this.elementBounds = bounds(this.element);
 		}
@@ -649,7 +651,7 @@ class IframeView implements IEventEmitter {
 		return this.elementBounds;
 	}
 
-	highlight(cfiRange: string, data: any = {}, cb?: Function, className: string = "epubjs-hl", styles: any = {}): any {
+	highlight(cfiRange: string, data: Record<string, string> = {}, cb?: Function, className: string = "epubjs-hl", styles: Record<string, string> = {}): Mark | undefined {
 		if (!this.contents) {
 			return;
 		}
@@ -672,17 +674,17 @@ class IframeView implements IEventEmitter {
 		this.highlights[cfiRange] = { "mark": h, "element": h.element, "listeners": [emitter, cb] };
 
 		h.element.setAttribute("ref", className);
-		h.element.addEventListener("click", emitter);
-		h.element.addEventListener("touchstart", emitter);
+		h.element.addEventListener("click", emitter as EventListener);
+		h.element.addEventListener("touchstart", emitter as EventListener);
 
 		if (cb) {
-			h.element.addEventListener("click", cb);
-			h.element.addEventListener("touchstart", cb);
+			h.element.addEventListener("click", cb as EventListener);
+			h.element.addEventListener("touchstart", cb as EventListener);
 		}
 		return h;
 	}
 
-	underline(cfiRange: string, data: any = {}, cb?: Function, className: string = "epubjs-ul", styles: any = {}): any {
+	underline(cfiRange: string, data: Record<string, string> = {}, cb?: Function, className: string = "epubjs-ul", styles: Record<string, string> = {}): Mark | undefined {
 		if (!this.contents) {
 			return;
 		}
@@ -704,17 +706,17 @@ class IframeView implements IEventEmitter {
 		this.underlines[cfiRange] = { "mark": h, "element": h.element, "listeners": [emitter, cb] };
 
 		h.element.setAttribute("ref", className);
-		h.element.addEventListener("click", emitter);
-		h.element.addEventListener("touchstart", emitter);
+		h.element.addEventListener("click", emitter as EventListener);
+		h.element.addEventListener("touchstart", emitter as EventListener);
 
 		if (cb) {
-			h.element.addEventListener("click", cb);
-			h.element.addEventListener("touchstart", cb);
+			h.element.addEventListener("click", cb as EventListener);
+			h.element.addEventListener("touchstart", cb as EventListener);
 		}
 		return h;
 	}
 
-	mark(cfiRange: string, data: any = {}, cb?: Function): any {
+	mark(cfiRange: string, data: Record<string, string> = {}, cb?: Function): any {
 		if (!this.contents) {
 			return;
 		}
@@ -731,7 +733,7 @@ class IframeView implements IEventEmitter {
 		let container = range.commonAncestorContainer;
 		let parent = (container.nodeType === 1) ? container : container.parentNode;
 
-		let emitter = (e: any) => {
+		let emitter = (e: Event) => {
 			this.emit(EVENTS.VIEWS.MARK_CLICKED, cfiRange, data);
 		};
 
@@ -801,15 +803,14 @@ class IframeView implements IEventEmitter {
 	}
 
 	unhighlight(cfiRange: string): void {
-		let item: any;
 		if (cfiRange in this.highlights) {
-			item = this.highlights[cfiRange];
+			let item = this.highlights[cfiRange];
 
 			this.pane.removeMark(item.mark);
-			item.listeners.forEach((l: any) => {
+			item.listeners.forEach((l: Function | undefined) => {
 				if (l) {
-					item.element.removeEventListener("click", l);
-					item.element.removeEventListener("touchstart", l);
+					item.element.removeEventListener("click", l as EventListener);
+					item.element.removeEventListener("touchstart", l as EventListener);
 				};
 			});
 			delete this.highlights[cfiRange];
@@ -817,14 +818,13 @@ class IframeView implements IEventEmitter {
 	}
 
 	ununderline(cfiRange: string): void {
-		let item: any;
 		if (cfiRange in this.underlines) {
-			item = this.underlines[cfiRange];
+			let item = this.underlines[cfiRange];
 			this.pane.removeMark(item.mark);
-			item.listeners.forEach((l: any) => {
+			item.listeners.forEach((l: Function | undefined) => {
 				if (l) {
-					item.element.removeEventListener("click", l);
-					item.element.removeEventListener("touchstart", l);
+					item.element.removeEventListener("click", l as EventListener);
+					item.element.removeEventListener("touchstart", l as EventListener);
 				};
 			});
 			delete this.underlines[cfiRange];
@@ -832,14 +832,13 @@ class IframeView implements IEventEmitter {
 	}
 
 	unmark(cfiRange: string): void {
-		let item: any;
 		if (cfiRange in this.marks) {
-			item = this.marks[cfiRange];
+			let item = this.marks[cfiRange];
 			this.element.removeChild(item.element);
-			item.listeners.forEach((l: any) => {
+			item.listeners.forEach((l: Function | undefined) => {
 				if (l) {
-					item.element.removeEventListener("click", l);
-					item.element.removeEventListener("touchstart", l);
+					item.element.removeEventListener("click", l as EventListener);
+					item.element.removeEventListener("touchstart", l as EventListener);
 				};
 			});
 			delete this.marks[cfiRange];

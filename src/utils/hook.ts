@@ -50,7 +50,7 @@ class Hook {
 	 * Triggers a hook to run all functions
 	 * @example this.content.trigger(args).then(function(){...});
 	 */
-	trigger(): Promise<any[]> {
+	trigger(..._args: any[]): Promise<any[]> {
 		var args = arguments;
 		var context = this.context;
 		var promises: any[] = [];

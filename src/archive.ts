@@ -2,19 +2,18 @@ import {defer, isXml, parse} from "./utils/core";
 import request from "./utils/request";
 import mime from "./utils/mime";
 import Path from "./utils/path";
-// @ts-ignore
-import JSZip from "jszip/dist/jszip";
+import JSZip from "jszip";
 
 /**
  * Handles Unzipping a requesting files from an Epub Archive
  * @class
  */
 class Archive {
-	zip: any;
+	zip: JSZip;
 	urlCache: Record<string, string>;
 
 	constructor() {
-		this.zip = undefined;
+		this.zip = undefined!;
 		this.urlCache = {};
 
 		this.checkRequirements();
@@ -40,7 +39,7 @@ class Archive {
 	 * @param  {boolean} [isBase64] tells JSZip if the input data is base64 encoded
 	 * @return {Promise} zipfile
 	 */
-	open(input: any, isBase64?: boolean): Promise<any> {
+	open(input: ArrayBuffer | string | Blob, isBase64?: boolean): Promise<JSZip> {
 		return this.zip.loadAsync(input, {"base64": isBase64});
 	}
 
@@ -50,9 +49,9 @@ class Archive {
 	 * @param  {boolean} [isBase64] tells JSZip if the input data is base64 encoded
 	 * @return {Promise} zipfile
 	 */
-	openUrl(zipUrl: string, isBase64?: boolean): Promise<any> {
+	openUrl(zipUrl: string, isBase64?: boolean): Promise<JSZip> {
 		return request(zipUrl, "binary")
-			.then(function(data: any){
+			.then(function(data: ArrayBuffer){
 				return this.zip.loadAsync(data, {"base64": isBase64});
 			}.bind(this));
 	}
@@ -80,7 +79,7 @@ class Archive {
 		}
 
 		if (response) {
-			response.then(function (r: any) {
+			response.then(function (r: string | Blob) {
 				let result = this.handleResponse(r, type);
 				deferred.resolve(result);
 			}.bind(this));
@@ -136,8 +135,8 @@ class Archive {
 
 		if(entry) {
 			mimeType = mimeType || mime.lookup(entry.name);
-			return entry.async("uint8array").then(function(uint8array: any) {
-				return new Blob([uint8array], {type : mimeType});
+			return entry.async("uint8array").then(function(uint8array: Uint8Array) {
+				return new Blob([uint8array as BlobPart], {type : mimeType});
 			});
 		}
 	}
@@ -153,7 +152,7 @@ class Archive {
 		var entry = this.zip.file(decodededUrl);
 
 		if(entry) {
-			return entry.async("string").then(function(text: any) {
+			return entry.async("string").then(function(text: string) {
 				return text;
 			});
 		}
@@ -171,7 +170,7 @@ class Archive {
 
 		if(entry) {
 			mimeType = mimeType || mime.lookup(entry.name);
-			return entry.async("base64").then(function(data: any) {
+			return entry.async("base64").then(function(data: string) {
 				return "data:" + mimeType + ";base64," + data;
 			});
 		}
@@ -183,7 +182,7 @@ class Archive {
 	 * @param  {object} [options.base64] use base64 encoding or blob url
 	 * @return {Promise} url promise with Url string
 	 */
-	createUrl(url: string, options?: any): Promise<string> {
+	createUrl(url: string, options?: { base64?: boolean }): Promise<string> {
 		var deferred = new defer();
 		var _URL = window.URL || (window as any).webkitURL || (window as any).mozURL;
 		var tempUrl;
@@ -199,7 +198,7 @@ class Archive {
 			response = this.getBase64(url);
 
 			if (response) {
-				response.then(function(tempUrl: any) {
+				response.then(function(tempUrl: string) {
 
 					this.urlCache[url] = tempUrl;
 					deferred.resolve(tempUrl);
@@ -213,7 +212,7 @@ class Archive {
 			response = this.getBlob(url);
 
 			if (response) {
-				response.then(function(blob: any) {
+				response.then(function(blob: Blob) {
 
 					tempUrl = _URL.createObjectURL(blob);
 					this.urlCache[url] = tempUrl;
@@ -250,7 +249,7 @@ class Archive {
 		for (let fromCache in this.urlCache) {
 			_URL.revokeObjectURL(fromCache);
 		}
-		this.zip = undefined;
+		(this as any).zip = undefined;
 		this.urlCache = {};
 	}
 }

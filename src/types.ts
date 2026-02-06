@@ -94,14 +94,14 @@ export interface SpineItem {
 	properties?: string[];
 	linear?: string;
 	id?: string;
-	next: () => SpineItem;
-	prev: () => SpineItem;
+	next: () => SpineItem | undefined;
+	prev: () => SpineItem | undefined;
 }
 
 // ===== Page List =====
 export interface PageListItem {
 	href: string;
-	page: string;
+	page: number;
 	cfi?: string;
 	packageUrl?: string;
 }
@@ -127,7 +127,7 @@ export interface RenditionOptions {
 	view?: string | Function | object;
 	flow?: string;
 	layout?: string;
-	spread?: string;
+	spread?: string | boolean;
 	minSpreadWidth?: number;
 	stylesheet?: string;
 	resizeOnOrientationChange?: boolean;
@@ -144,8 +144,9 @@ export interface DisplayedLocation {
 	index: number;
 	href: string;
 	cfi: string;
-	location: number;
-	percentage: number;
+	location?: number;
+	percentage?: number;
+	page?: number;
 	displayed: {
 		page: number;
 		total: number;
@@ -155,16 +156,18 @@ export interface DisplayedLocation {
 export interface Location {
 	start: DisplayedLocation;
 	end: DisplayedLocation;
-	atStart: boolean;
-	atEnd: boolean;
+	atStart?: boolean;
+	atEnd?: boolean;
 }
 
 // ===== Layout =====
 export interface LayoutSettings {
-	layout: string;
-	spread: string;
-	minSpreadWidth: number;
-	evenSpreads: boolean;
+	layout?: string;
+	spread?: string;
+	minSpreadWidth?: number;
+	evenSpreads?: boolean;
+	flow?: string;
+	direction?: string;
 }
 
 export interface LayoutProps {
@@ -218,13 +221,23 @@ export interface EpubCFIComponent {
 	};
 }
 
+// ===== Function Types =====
+export type RequestFunction = (url: string, type?: string, withCredentials?: boolean, headers?: Record<string, string>) => Promise<any>;
+
+// ===== Bounds/Sizing =====
+export interface SizeObject { width: number; height: number; }
+export interface ReframeBounds extends SizeObject { widthDelta: number; heightDelta: number; }
+
+// ===== Themes =====
+export interface ThemeEntry { rules?: Record<string, Record<string, string>>; url?: string; serialized?: string; injected?: boolean; }
+
 // ===== View / Manager =====
 export interface ViewSettings {
 	ignoreClass?: string;
 	axis?: string;
 	direction?: string;
 	flow?: string;
-	layout?: any;
+	layout?: LayoutProps;
 	method?: string;
 	width?: number;
 	height?: number;
@@ -232,7 +245,7 @@ export interface ViewSettings {
 	forceRight?: boolean;
 	allowScriptedContent?: boolean;
 	allowPopups?: boolean;
-	globalLayoutProperties?: any;
+	globalLayoutProperties?: GlobalLayout;
 }
 
 export interface ViewLocation {
@@ -249,8 +262,8 @@ export interface ManagerOptions extends ViewSettings {
 	hidden?: boolean;
 	fullsize?: boolean;
 	snap?: boolean | object;
-	view?: any;
-	request?: (...args: any[]) => any;
+	view?: string | Function | object;
+	request?: RequestFunction;
 	[key: string]: any;
 }
 
@@ -268,6 +281,7 @@ export interface StageOptions {
 	axis?: string;
 	fullsize?: boolean;
 	direction?: string;
+	dir?: string;
 	writingMode?: string;
 }
 
@@ -276,6 +290,10 @@ export interface GlobalLayout {
 	layout: string;
 	spread: string;
 	orientation: string;
+	flow: string;
+	viewport: string;
+	minSpreadWidth: number;
+	direction: string;
 }
 
 // ===== Search Result =====

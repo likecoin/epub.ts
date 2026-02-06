@@ -4,7 +4,7 @@ import mime from "./utils/mime";
 import Path from "./utils/path";
 import EventEmitter from "./utils/event-emitter";
 import localforage from "localforage";
-import type { IEventEmitter } from "./types";
+import type { IEventEmitter, RequestFunction } from "./types";
 
 /**
  * Handles saving and requesting files from local storage
@@ -21,12 +21,12 @@ class Store implements IEventEmitter {
 	urlCache: Record<string, string>;
 	storage: any;
 	name: string;
-	requester: any;
-	resolver: any;
+	requester: RequestFunction;
+	resolver: (href: string) => string;
 	online: boolean;
 	_status: ((event: Event) => void) | undefined;
 
-	constructor(name: string, requester?: any, resolver?: any) {
+	constructor(name: string, requester?: RequestFunction, resolver?: (href: string) => string) {
 		this.urlCache = {};
 
 		this.storage = undefined;
@@ -101,8 +101,8 @@ class Store implements IEventEmitter {
 	 * @param  {boolean} [force] force resaving resources
 	 * @return {Promise<object>} store objects
 	 */
-	add(resources: any, force?: boolean): Promise<any[]> {
-		let mapped = resources.resources.map((item: any) => {
+	add(resources: { resources: Array<{ href: string }> }, force?: boolean): Promise<any[]> {
+		let mapped = resources.resources.map((item: { href: string }) => {
 			let { href } = item;
 			let url = this.resolver(href);
 			let encodedUrl = window.encodeURIComponent(url);
@@ -129,7 +129,7 @@ class Store implements IEventEmitter {
 	 * @param  {object} [headers]
 	 * @return {Promise<Blob>}
 	 */
-	put(url: string, withCredentials?: boolean, headers?: object): Promise<any> {
+	put(url: string, withCredentials?: boolean, headers?: Record<string, string>): Promise<any> {
 		let encodedUrl = window.encodeURIComponent(url);
 
 		return this.storage.getItem(encodedUrl).then((result: any) => {
@@ -150,7 +150,7 @@ class Store implements IEventEmitter {
 	 * @param  {object} [headers]
 	 * @return {Promise<Blob | string | JSON | Document | XMLDocument>}
 	 */
-	request(url: string, type?: string, withCredentials?: boolean, headers?: object): Promise<any> {
+	request(url: string, type?: string, withCredentials?: boolean, headers?: Record<string, string>): Promise<any> {
 		if (this.online) {
 			// From network
 			return this.requester(url, type, withCredentials, headers).then((data: any) => {
@@ -319,7 +319,7 @@ class Store implements IEventEmitter {
 	 * @param  {object} [options.base64] use base64 encoding or blob url
 	 * @return {Promise} url promise with Url string
 	 */
-	createUrl(url: string, options?: any): Promise<string> {
+	createUrl(url: string, options?: { base64?: boolean }): Promise<string> {
 		var deferred = new defer();
 		var _URL = window.URL || (window as any).webkitURL || (window as any).mozURL;
 		var tempUrl;
@@ -335,7 +335,7 @@ class Store implements IEventEmitter {
 			response = this.getBase64(url);
 
 			if (response) {
-				response.then(function(tempUrl: any) {
+				response.then(function(tempUrl: string) {
 
 					this.urlCache[url] = tempUrl;
 					deferred.resolve(tempUrl);
@@ -349,7 +349,7 @@ class Store implements IEventEmitter {
 			response = this.getBlob(url);
 
 			if (response) {
-				response.then(function(blob: any) {
+				response.then(function(blob: Blob) {
 
 					tempUrl = _URL.createObjectURL(blob);
 					this.urlCache[url] = tempUrl;

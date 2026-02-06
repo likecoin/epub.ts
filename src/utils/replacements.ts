@@ -2,7 +2,7 @@ import { qs, qsa } from "./core";
 import Url from "./url";
 import Path from "./path";
 
-export function replaceBase(doc: Document, section: any): void {
+export function replaceBase(doc: Document, section: { url: string }): void {
 	var base;
 	var head;
 	var url = section.url;
@@ -28,7 +28,7 @@ export function replaceBase(doc: Document, section: any): void {
 	base.setAttribute("href", url);
 }
 
-export function replaceCanonical(doc: Document, section: any): void {
+export function replaceCanonical(doc: Document, section: { canonical: string }): void {
 	var head;
 	var link;
 	var url = section.canonical;
@@ -50,7 +50,7 @@ export function replaceCanonical(doc: Document, section: any): void {
 	}
 }
 
-export function replaceMeta(doc: Document, section: any): void {
+export function replaceMeta(doc: Document, section: { idref: string }): void {
 	var head;
 	var meta;
 	var id = section.idref;
@@ -72,7 +72,7 @@ export function replaceMeta(doc: Document, section: any): void {
 }
 
 // TODO: move me to Contents
-export function replaceLinks(contents: any, fn: (path: string) => void): void {
+export function replaceLinks(contents: Element, fn: (path: string) => void): void {
 
 	var links = contents.querySelectorAll("a[href]");
 
@@ -82,7 +82,7 @@ export function replaceLinks(contents: any, fn: (path: string) => void): void {
 
 	var base = qs(contents.ownerDocument, "base");
 	var location = base ? base.getAttribute("href") : undefined;
-	var replaceLink = function(link: any){
+	var replaceLink = function(link: Element){
 		var href = link.getAttribute("href");
 
 		if(href.indexOf("mailto:") === 0){
@@ -96,14 +96,14 @@ export function replaceLinks(contents: any, fn: (path: string) => void): void {
 			link.setAttribute("target", "_blank");
 
 		}else{
-			var linkUrl: any;
+			var linkUrl: Url | undefined;
 			try {
 				linkUrl = new Url(href, location);	
 			} catch(error) {
 				// NOOP
 			}
 
-			link.onclick = function(){
+			(link as HTMLElement).onclick = function(){
 
 				if(linkUrl && linkUrl.hash) {
 					fn(linkUrl.Path.path + linkUrl.hash);

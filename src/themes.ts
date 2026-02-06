@@ -1,4 +1,7 @@
 import Url from "./utils/url";
+import type Rendition from "./rendition";
+import type Contents from "./contents";
+import type { ThemeEntry } from "./types";
 
 /**
  * Themes to apply to displayed content
@@ -6,13 +9,13 @@ import Url from "./utils/url";
  * @param {Rendition} rendition
  */
 class Themes {
-	rendition: any;
-	_themes: Record<string, any>;
-	_overrides: Record<string, any>;
+	rendition: Rendition;
+	_themes: Record<string, ThemeEntry>;
+	_overrides: Record<string, { value: string; priority: boolean }>;
 	_current: string;
-	_injected: any[];
+	_injected: string[];
 
-	constructor(rendition: any) {
+	constructor(rendition: Rendition) {
 		this.rendition = rendition;
 		this._themes = {
 			"default" : {
@@ -60,7 +63,7 @@ class Themes {
 	 * @example themes.register("http://example.com/default.css")
 	 * @example themes.register({ "body": { "color": "purple"}})
 	 */
-	default (theme: any): void {
+	default (theme: string | Record<string, Record<string, string>>): void {
 		if (!theme) {
 			return;
 		}
@@ -76,13 +79,14 @@ class Themes {
 	 * Register themes object
 	 * @param {object} themes
 	 */
-	registerThemes (themes: Record<string, any>): void {
+	registerThemes (themes: Record<string, string | Record<string, Record<string, string>>>): void {
 		for (var theme in themes) {
 			if (themes.hasOwnProperty(theme)) {
-				if (typeof(themes[theme]) === "string") {
-					this.registerUrl(theme, themes[theme]);
+				var value = themes[theme];
+				if (typeof(value) === "string") {
+					this.registerUrl(theme, value);
 				} else {
-					this.registerRules(theme, themes[theme]);
+					this.registerRules(theme, value);
 				}
 			}
 		}
@@ -95,7 +99,7 @@ class Themes {
 	 */
 	registerCss (name: string, css: string): void {
 		this._themes[name] = { "serialized" : css };
-		if ((this._injected as Record<string, any>)[name] || name == 'default') {
+		if ((this._injected as unknown as Record<string, boolean>)[name] || name == 'default') {
 			this.update(name);
 		}
 	}
@@ -108,7 +112,7 @@ class Themes {
 	registerUrl (name: string, input: string): void {
 		var url = new Url(input);
 		this._themes[name] = { "url": url.toString() };
-		if ((this._injected as Record<string, any>)[name] || name == 'default') {
+		if ((this._injected as unknown as Record<string, boolean>)[name] || name == 'default') {
 			this.update(name);
 		}
 	}
@@ -118,10 +122,10 @@ class Themes {
 	 * @param {string} name
 	 * @param {object} rules
 	 */
-	registerRules (name: string, rules: object): void {
+	registerRules (name: string, rules: Record<string, Record<string, string>>): void {
 		this._themes[name] = { "rules": rules };
 		// TODO: serialize css rules
-		if ((this._injected as Record<string, any>)[name] || name == 'default') {
+		if ((this._injected as unknown as Record<string, boolean>)[name] || name == 'default') {
 			this.update(name);
 		}
 	}
@@ -138,7 +142,7 @@ class Themes {
 		this.update(name);
 
 		contents = this.rendition.getContents();
-		contents.forEach( (content: any) => {
+		contents.forEach( (content: Contents) => {
 			content.removeClass(prev);
 			content.addClass(name);
 		});
@@ -150,7 +154,7 @@ class Themes {
 	 */
 	update (name: string): void {
 		var contents = this.rendition.getContents();
-		contents.forEach( (content: any) => {
+		contents.forEach( (content: Contents) => {
 			this.add(name, content);
 		});
 	}
@@ -159,8 +163,8 @@ class Themes {
 	 * Inject all themes into contents
 	 * @param {Contents} contents
 	 */
-	inject (contents: any): void {
-		var links: any[] = [];
+	inject (contents: Contents): void {
+		var links: string[] = [];
 		var themes = this._themes;
 		var theme;
 
@@ -184,7 +188,7 @@ class Themes {
 	 * @param {string} name
 	 * @param {Contents} contents
 	 */
-	add (name: string, contents: any): void {
+	add (name: string, contents: Contents): void {
 		var theme = this._themes[name];
 
 		if (!theme || !contents) {
@@ -208,7 +212,7 @@ class Themes {
 	 * @param {string} value
 	 * @param {boolean} priority
 	 */
-	override (name: string, value: any, priority?: boolean): void {
+	override (name: string, value: string, priority?: boolean): void {
 		var contents = this.rendition.getContents();
 
 		this._overrides[name] = {
@@ -216,7 +220,7 @@ class Themes {
 			priority: priority === true
 		};
 
-		contents.forEach( (content: any) => {
+		contents.forEach( (content: Contents) => {
 			content.css(name, this._overrides[name].value, this._overrides[name].priority);
 		});
 	}
@@ -226,7 +230,7 @@ class Themes {
 
 		delete this._overrides[name];
 
-		contents.forEach( (content: any) => {
+		contents.forEach( (content: Contents) => {
 			content.css(name);
 		});
 	}
@@ -235,7 +239,7 @@ class Themes {
 	 * Add all overrides
 	 * @param {Content} content
 	 */
-	overrides (contents: any): void {
+	overrides (contents: Contents): void {
 		var overrides = this._overrides;
 
 		for (var rule in overrides) {
@@ -249,7 +253,7 @@ class Themes {
 	 * Adjust the font size of a rendition
 	 * @param {number} size
 	 */
-	fontSize (size: any): void {
+	fontSize (size: string): void {
 		this.override("font-size", size);
 	}
 
@@ -262,11 +266,11 @@ class Themes {
 	}
 
 	destroy(): void {
-		this.rendition = undefined;
-		this._themes = undefined;
-		this._overrides = undefined;
-		this._current = undefined;
-		this._injected = undefined;
+		(this as any).rendition = undefined;
+		(this as any)._themes = undefined;
+		(this as any)._overrides = undefined;
+		(this as any)._current = undefined;
+		(this as any)._injected = undefined;
 	}
 
 }

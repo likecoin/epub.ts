@@ -1,6 +1,9 @@
+import type IframeView from "../views/iframe";
+import type Section from "../../section";
+
 class Views {
 	container: HTMLElement;
-	_views: any[];
+	_views: IframeView[];
 	length: number;
 	hidden: boolean;
 
@@ -11,31 +14,31 @@ class Views {
 		this.hidden = false;
 	}
 
-	all(): any[] {
+	all(): IframeView[] {
 		return this._views;
 	}
 
-	first(): any {
+	first(): IframeView | undefined {
 		return this._views[0];
 	}
 
-	last(): any {
+	last(): IframeView | undefined {
 		return this._views[this._views.length-1];
 	}
 
-	indexOf(view: any): number {
+	indexOf(view: IframeView): number {
 		return this._views.indexOf(view);
 	}
 
-	slice(...args: any[]): any[] {
-		return this._views.slice.apply(this._views, arguments);
+	slice(...args: [start?: number, end?: number]): IframeView[] {
+		return this._views.slice.apply(this._views, args);
 	}
 
-	get(i: number): any {
+	get(i: number): IframeView {
 		return this._views[i];
 	}
 
-	append(view: any): any {
+	append(view: IframeView): IframeView {
 		this._views.push(view);
 		if(this.container){
 			this.container.appendChild(view.element);
@@ -44,7 +47,7 @@ class Views {
 		return view;
 	}
 
-	prepend(view: any): any {
+	prepend(view: IframeView): IframeView {
 		this._views.unshift(view);
 		if(this.container){
 			this.container.insertBefore(view.element, this.container.firstChild);
@@ -53,7 +56,7 @@ class Views {
 		return view;
 	}
 
-	insert(view: any, index: number): any {
+	insert(view: IframeView, index: number): IframeView {
 		this._views.splice(index, 0, view);
 
 		if(this.container){
@@ -68,7 +71,7 @@ class Views {
 		return view;
 	}
 
-	remove(view: any): void {
+	remove(view: IframeView): void {
 		var index = this._views.indexOf(view);
 
 		if(index > -1) {
@@ -81,26 +84,25 @@ class Views {
 		this.length--;
 	}
 
-	destroy(view: any): void {
+	destroy(view: IframeView): void {
 		if(view.displayed){
 			view.destroy();
 		}
-		
+
 		if(this.container){
 			 this.container.removeChild(view.element);
 		}
-		view = null;
 	}
 
 	// Iterators
 
-	forEach(...args: any[]): void {
-		return this._views.forEach.apply(this._views, arguments);
+	forEach(callbackfn: (value: IframeView, index: number, array: IframeView[]) => void): void {
+		return this._views.forEach(callbackfn);
 	}
 
 	clear(): void {
 		// Remove all views
-		var view;
+		var view: IframeView;
 		var len = this.length;
 
 		if(!this.length) return;
@@ -114,9 +116,9 @@ class Views {
 		this.length = 0;
 	}
 
-	find(section: any): any {
+	find(section: Section): IframeView | undefined {
 
-		var view;
+		var view: IframeView;
 		var len = this.length;
 
 		for (var i = 0; i < len; i++) {
@@ -128,9 +130,9 @@ class Views {
 
 	}
 
-	displayed(): any[] {
-		var displayed = [];
-		var view;
+	displayed(): IframeView[] {
+		var displayed: IframeView[] = [];
+		var view: IframeView;
 		var len = this.length;
 
 		for (var i = 0; i < len; i++) {

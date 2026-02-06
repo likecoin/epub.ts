@@ -13,7 +13,7 @@
 
 ## Conventions
 - ES6 classes with event-emitter mixin (migrating to mitt)
-- Moderate TS strictness (noImplicitAny: false)
+- Moderate TS strictness (noImplicitAny: true)
 - API-compatible with epubjs v0.3.93
 - Tabs for indentation, double quotes for strings
 - BSD-2-Clause license

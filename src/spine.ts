@@ -2,7 +2,7 @@ import EpubCFI from "./epubcfi";
 import Hook from "./utils/hook";
 import Section from "./section";
 import {replaceBase, replaceCanonical, replaceMeta} from "./utils/replacements";
-import type { PackagingSpineItem, PackagingManifestObject } from "./types";
+import type { PackagingSpineItem, PackagingManifestObject, PackagingObject, SpineItem } from "./types";
 
 /**
  * A collection of Spine Items
@@ -14,8 +14,8 @@ class Spine {
 	hooks: { serialize: Hook; content: Hook };
 	epubcfi: EpubCFI;
 	loaded: boolean;
-	items: any[];
-	manifest: any;
+	items: SpineItem[];
+	manifest: PackagingManifestObject;
 	spineNodeIndex: number;
 	baseUrl: string;
 	length: number;
@@ -51,9 +51,9 @@ class Spine {
 	 * @param  {method} resolver URL resolver
 	 * @param  {method} canonical Resolve canonical url
 	 */
-	unpack(_package: any, resolver: (href: string, absolute?: boolean) => string, canonical: (href: string) => string): void {
+	unpack(_package: PackagingObject & { baseUrl?: string; basePath?: string }, resolver: (href: string, absolute?: boolean) => string, canonical: (href: string) => string): void {
 
-		this.items = _package.spine;
+		this.items = _package.spine as unknown as SpineItem[];
 		this.manifest = _package.manifest;
 		this.spineNodeIndex = _package.spineNodeIndex;
 		this.baseUrl = _package.baseUrl || _package.basePath || "";
@@ -105,11 +105,11 @@ class Spine {
 					return;
 				}.bind(this);
 			} else {
-				item.prev = function() {
-					return;
+				item.prev = function(): SpineItem | undefined {
+					return undefined;
 				}
-				item.next = function() {
-					return;
+				item.next = function(): SpineItem | undefined {
+					return undefined;
 				}
 			}
 
@@ -133,7 +133,7 @@ class Spine {
 	 * @example spine.get("chap1.html");
 	 * @example spine.get("#id1234");
 	 */
-	get(target?: any): Section | null {
+	get(target?: string | number): Section | null {
 		var index = 0;
 
 		if (typeof target === "undefined") {
@@ -145,10 +145,10 @@ class Spine {
 				index += 1;
 			}
 		} else if(this.epubcfi.isCfiString(target)) {
-			let cfi = new EpubCFI(target);
+			let cfi = new EpubCFI(target as string);
 			index = cfi.spinePos;
-		} else if(typeof target === "number" || isNaN(target) === false){
-			index = target;
+		} else if(typeof target === "number" || isNaN(Number(target)) === false){
+			index = Number(target);
 		} else if(typeof target === "string" && target.indexOf("#") === 0) {
 			index = this.spineById[target.substring(1)];
 		} else if(typeof target === "string") {
@@ -262,7 +262,7 @@ class Spine {
 	}
 
 	destroy(): void {
-		this.each((section: any) => section.destroy());
+		this.each((section: Section) => section.destroy());
 
 		this.spineItems = undefined
 		this.spineByHref = undefined

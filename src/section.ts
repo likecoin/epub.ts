@@ -5,7 +5,7 @@ import { sprint } from "./utils/core";
 import { replaceBase } from "./utils/replacements";
 import Request from "./utils/request";
 import { DOMParser as XMLDOMSerializer } from "@xmldom/xmldom";
-import type { SpineItem, GlobalLayout, SearchResult } from "./types";
+import type { SpineItem, GlobalLayout, SearchResult, RequestFunction } from "./types";
 
 /**
  * Represents a Section of the Book
@@ -26,12 +26,12 @@ class Section {
 	prev: () => SpineItem;
 	cfiBase: string;
 	hooks: { serialize: Hook; content: Hook };
-	document: any;
-	contents: any;
-	output: any;
-	request: any;
+	document: Document | undefined;
+	contents: Element | undefined;
+	output: string | undefined;
+	request: RequestFunction;
 
-	constructor(item: any, hooks?: { serialize: Hook; content: Hook }){
+	constructor(item: SpineItem, hooks?: { serialize: Hook; content: Hook }){
 		this.idref = item.idref;
 		this.linear = item.linear === "yes";
 		this.properties = item.properties;
@@ -62,7 +62,7 @@ class Section {
 	 * @param  {method} [_request] a request method to use for loading
 	 * @return {document} a promise with the xml document
 	 */
-	load(_request?: any): Promise<any> {
+	load(_request?: RequestFunction): Promise<Element> {
 		var request = _request || this.request || Request;
 		var loading = new defer();
 		var loaded = loading.promise;
@@ -71,7 +71,7 @@ class Section {
 			loading.resolve(this.contents);
 		} else {
 			request(this.url)
-				.then(function(xml: any){
+				.then(function(xml: Document){
 					// var directory = new Url(this.url).directory;
 
 					this.document = xml;
@@ -82,7 +82,7 @@ class Section {
 				.then(function(){
 					loading.resolve(this.contents);
 				}.bind(this))
-				.catch(function(error: any){
+				.catch(function(error: Error){
 					loading.reject(error);
 				});
 		}
@@ -94,7 +94,7 @@ class Section {
 	 * Adds a base tag for resolving urls in the section
 	 * @private
 	 */
-	base(): any {
+	base(): void {
 		return replaceBase(this.document, this);
 	}
 
@@ -103,13 +103,13 @@ class Section {
 	 * @param  {method} [_request] a request method to use for loading
 	 * @return {string} output a serialized XML Document
 	 */
-	render(_request?: any): Promise<string> {
+	render(_request?: RequestFunction): Promise<string> {
 		var rendering = new defer();
 		var rendered = rendering.promise;
 		this.output; // TODO: better way to return this from hooks?
 
 		this.load(_request).
-			then(function(contents: any){
+			then(function(contents: Element){
 				var userAgent = (typeof navigator !== 'undefined' && navigator.userAgent) || '';
 				var isIE = userAgent.indexOf('Trident') >= 0;
 				var Serializer;
@@ -128,7 +128,7 @@ class Section {
 			then(function(){
 				rendering.resolve(this.output);
 			}.bind(this))
-			.catch(function(error: any){
+			.catch(function(error: Error){
 				rendering.reject(error);
 			});
 
@@ -142,9 +142,9 @@ class Section {
 	 */
 	find(_query: string): SearchResult[] {
 		var section = this;
-		var matches: any[] = [];
+		var matches: SearchResult[] = [];
 		var query = _query.toLowerCase();
-		var find = function(node: any){
+		var find = function(node: Node){
 			var text = node.textContent.toLowerCase();
 			var range = section.document.createRange();
 			var cfi;
@@ -203,12 +203,12 @@ class Section {
 		if (typeof(document.createTreeWalker) == "undefined") {
 			return this.find(_query);
 		}
-		let matches: any[] = [];
+		let matches: SearchResult[] = [];
 		const excerptLimit = 150;
 		const section = this;
 		const query = _query.toLowerCase();
-		const search = function(nodeList: any){
-			const textWithCase =  nodeList.reduce((acc: any ,current: any)=>{
+		const search = function(nodeList: Node[]){
+			const textWithCase =  nodeList.reduce((acc: string ,current: Node)=>{
 				return acc + current.textContent;
 			},"");
 			const text = textWithCase.toLowerCase();
@@ -216,10 +216,10 @@ class Section {
 			if (pos != -1){
 				const startNodeIndex = 0 , endPos = pos + query.length;
 				let endNodeIndex = 0 , l = 0;
-				if (pos < nodeList[startNodeIndex].length){
+				if (pos < (nodeList[startNodeIndex] as Text).length){
 					let cfi;
 					while( endNodeIndex < nodeList.length - 1 ){
-						l += nodeList[endNodeIndex].length;
+						l += (nodeList[endNodeIndex] as Text).length;
 						if ( endPos <= l){
 							break;
 						}
@@ -229,11 +229,11 @@ class Section {
 					let startNode = nodeList[startNodeIndex] , endNode = nodeList[endNodeIndex];
 					let range = section.document.createRange();
 					range.setStart(startNode,pos);
-					let beforeEndLengthCount =  nodeList.slice(0, endNodeIndex).reduce((acc: any,current: any)=>{return acc+current.textContent.length;},0) ;
+					let beforeEndLengthCount =  nodeList.slice(0, endNodeIndex).reduce((acc: number,current: Node)=>{return acc+current.textContent.length;},0) ;
 					range.setEnd(endNode, beforeEndLengthCount > endPos ? endPos : endPos - beforeEndLengthCount );
 					cfi = section.cfiFromRange(range);
 
-					let excerpt = nodeList.slice(0, endNodeIndex+1).reduce((acc: any,current: any)=>{return acc+current.textContent ;},"");
+					let excerpt = nodeList.slice(0, endNodeIndex+1).reduce((acc: string,current: Node)=>{return acc+current.textContent ;},"");
 					if (excerpt.length > excerptLimit){
 						excerpt = excerpt.substring(pos - excerptLimit/2, pos + excerptLimit/2);
 						excerpt = "..." + excerpt + "...";
@@ -246,8 +246,8 @@ class Section {
 			}
 		}
 
-		const treeWalker = (document as any).createTreeWalker(section.document, NodeFilter.SHOW_TEXT, null, false);
-		let node , nodeList = [];
+		const treeWalker = document.createTreeWalker(section.document, NodeFilter.SHOW_TEXT, null);
+		let node: Node | null , nodeList: Node[] = [];
 		while (node = treeWalker.nextNode()) {
 			nodeList.push(node);
 			if (nodeList.length == maxSeqEle){

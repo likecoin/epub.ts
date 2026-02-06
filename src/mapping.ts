@@ -1,6 +1,6 @@
 import EpubCFI from "./epubcfi";
 import { nodeBounds } from "./utils/core";
-import type { EpubCFIPair, RangePair } from "./types";
+import type { EpubCFIPair, RangePair, LayoutProps } from "./types";
 
 /**
  * Map text locations to CFI ranges
@@ -11,12 +11,12 @@ import type { EpubCFIPair, RangePair } from "./types";
  * @param {boolean} [dev] toggle developer highlighting
  */
 class Mapping {
-	layout: any;
+	layout: LayoutProps;
 	horizontal: boolean;
 	direction: string;
 	_dev: boolean;
 
-	constructor(layout: any, direction?: string, axis?: string, dev: boolean = false) {
+	constructor(layout: LayoutProps, direction?: string, axis?: string, dev: boolean = false) {
 		this.layout = layout;
 		this.horizontal = (axis === "horizontal") ? true : false;
 		this.direction = direction || "ltr";
@@ -76,7 +76,7 @@ class Mapping {
 	 * @param {function} func walk function
 	 * @return {*} returns the result of the walk function
 	 */
-	walk(root: any, func: (node: any) => any): any {
+	walk(root: Node, func: (node: Node) => Node | undefined): Node | undefined {
 		// IE11 has strange issue, if root is text node IE throws exception on
 		// calling treeWalker.nextNode(), saying
 		// Unexpected call to method or property access instead of returning null value
@@ -86,8 +86,8 @@ class Mapping {
 		// safeFilter is required so that it can work in IE as filter is a function for IE
 		// and for other browser filter is an object.
 		var filter = {
-			acceptNode: function(node: any) {
-				if (node.data.trim().length > 0) {
+			acceptNode: function(node: Node) {
+				if ((node as Text).data.trim().length > 0) {
 					return NodeFilter.FILTER_ACCEPT;
 				} else {
 					return NodeFilter.FILTER_REJECT;
@@ -97,7 +97,7 @@ class Mapping {
 		var safeFilter = filter.acceptNode;
 		(safeFilter as any).acceptNode = filter.acceptNode;
 
-		var treeWalker = (document as any).createTreeWalker(root, NodeFilter.SHOW_TEXT, safeFilter, false);
+		var treeWalker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, safeFilter);
 		var node;
 		var result;
 		while ((node = treeWalker.nextNode())) {
@@ -137,7 +137,7 @@ class Mapping {
 	 * @param {number} end position to end at
 	 * @return {Range}
 	 */
-	findStart(root: any, start: number, end: number): any {
+	findStart(root: Node, start: number, end: number): Range {
 		var stack = [root];
 		var $el;
 		var found;
@@ -220,7 +220,7 @@ class Mapping {
 	 * @param {number} end position to end at
 	 * @return {Range}
 	 */
-	findEnd(root: any, start: number, end: number): any {
+	findEnd(root: Node, start: number, end: number): Range {
 		var stack = [root];
 		var $el;
 		var $prev = root;
@@ -303,7 +303,7 @@ class Mapping {
 	 * @param {number} end position to end at
 	 * @return {Range}
 	 */
-	findTextStartRange(node: any, start: number, end: number): Range {
+	findTextStartRange(node: Node, start: number, end: number): Range {
 		var ranges = this.splitTextNodeIntoRanges(node);
 		var range;
 		var pos;
@@ -352,7 +352,7 @@ class Mapping {
 	 * @param {number} end position to end at
 	 * @return {Range}
 	 */
-	findTextEndRange(node: any, start: number, end: number): Range {
+	findTextEndRange(node: Node, start: number, end: number): Range {
 		var ranges = this.splitTextNodeIntoRanges(node);
 		var prev;
 		var range;
@@ -416,11 +416,11 @@ class Mapping {
 	 * @param {string} [_splitter] what to split on
 	 * @return {Range[]}
 	 */
-	splitTextNodeIntoRanges(node: any, _splitter?: string): Range[] {
-		var ranges = [];
+	splitTextNodeIntoRanges(node: Node, _splitter?: string): Range[] {
+		var ranges: Range[] = [];
 		var textContent = node.textContent || "";
 		var text = textContent.trim();
-		var range;
+		var range: Range | null;
 		var doc = node.ownerDocument;
 		var splitter = _splitter || " ";
 
@@ -436,7 +436,7 @@ class Mapping {
 		range.setStart(node, 0);
 		range.setEnd(node, pos);
 		ranges.push(range);
-		range = false;
+		range = null;
 
 		while ( pos != -1 ) {
 
@@ -469,7 +469,7 @@ class Mapping {
 	 * @param {object} rangePair { start: Range, end: Range }
 	 * @return {object} { start: "epubcfi(...)", end: "epubcfi(...)" }
 	 */
-	rangePairToCfiPair(cfiBase: string, rangePair: any): EpubCFIPair {
+	rangePairToCfiPair(cfiBase: string, rangePair: RangePair): EpubCFIPair {
 
 		var startRange = rangePair.start;
 		var endRange = rangePair.end;
@@ -487,7 +487,7 @@ class Mapping {
 
 	}
 
-	rangeListToCfiList(cfiBase: string, columns: any[]): EpubCFIPair[] {
+	rangeListToCfiList(cfiBase: string, columns: RangePair[]): EpubCFIPair[] {
 		var map = [];
 		var cifPair;
 

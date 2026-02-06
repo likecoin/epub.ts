@@ -6,27 +6,31 @@ import Queue from "../../utils/queue";
 import Stage from "../helpers/stage";
 import Views from "../helpers/views";
 import { EVENTS } from "../../utils/constants";
-import type { IEventEmitter, ManagerOptions, ViewSettings } from "../../types";
+import type Layout from "../../layout";
+import type Section from "../../section";
+import type Contents from "../../contents";
+import type IframeView from "../views/iframe";
+import type { IEventEmitter, ManagerOptions, ViewSettings, ViewLocation, RequestFunction, SizeObject, ReframeBounds, LayoutProps, SpineItem } from "../../types";
 
 class DefaultViewManager implements IEventEmitter {
 	name: string;
-	optsSettings: any;
-	View: any;
-	request: any;
-	renditionQueue: any;
-	q: any;
-	settings: any;
-	viewSettings: any;
+	optsSettings: ManagerOptions;
+	View: new (section: Section, options?: ViewSettings) => IframeView;
+	request: RequestFunction;
+	renditionQueue: Queue;
+	q: Queue;
+	settings: ManagerOptions;
+	viewSettings: Omit<ViewSettings, "layout"> & { layout?: Layout | LayoutProps };
 	rendered: boolean;
-	stage: any;
+	stage: Stage;
 	container: HTMLElement;
-	views: any;
-	_bounds: any;
-	_stageSize: any;
+	views: Views;
+	_bounds: { left: number; right: number; top: number; bottom: number; width: number; height: number };
+	_stageSize: SizeObject;
 	overflow: string;
-	layout: any;
-	mapping: any;
-	location: any;
+	layout: Layout;
+	mapping: Mapping;
+	location: ViewLocation[];
 	isPaginated: boolean;
 	scrollLeft: number;
 	scrollTop: number;
@@ -37,17 +41,17 @@ class DefaultViewManager implements IEventEmitter {
 	orientationTimeout: ReturnType<typeof setTimeout>;
 	resizeTimeout: ReturnType<typeof setTimeout>;
 	afterScrolled: ReturnType<typeof setTimeout>;
-	winBounds: any;
+	winBounds: { top: number; left: number; right: number; bottom: number; width: number; height: number };
 
 	declare on: IEventEmitter["on"];
 	declare off: IEventEmitter["off"];
 	declare emit: IEventEmitter["emit"];
 
-	constructor(options: any) {
+	constructor(options: ManagerOptions) {
 
 		this.name = "default";
 		this.optsSettings = options.settings;
-		this.View = options.view;
+		this.View = options.view as unknown as new (section: Section, options?: ViewSettings) => IframeView;
 		this.request = options.request;
 		this.renditionQueue = options.queue;
 		this.q = new Queue(this);
@@ -85,7 +89,7 @@ class DefaultViewManager implements IEventEmitter {
 
 	}
 
-	render(element: any, size: any): void {
+	render(element: HTMLElement, size: SizeObject): void {
 		let tag = element.tagName;
 
 		if (typeof this.settings.fullsize === "undefined" &&
@@ -152,7 +156,7 @@ class DefaultViewManager implements IEventEmitter {
 	addEventListeners(): void {
 		var scroller;
 
-		window.addEventListener("unload", function(e: any){
+		window.addEventListener("unload", function(e: Event){
 			this.destroy();
 		}.bind(this));
 
@@ -203,7 +207,7 @@ class DefaultViewManager implements IEventEmitter {
 		*/
 	}
 
-	onOrientationChange(e?: any): void {
+	onOrientationChange(e?: Event): void {
 		let {orientation} = window;
 
 		if(this.optsSettings.resizeOnOrientationChange) {
@@ -228,11 +232,11 @@ class DefaultViewManager implements IEventEmitter {
 
 	}
 
-	onResized(e?: any): void {
+	onResized(e?: Event): void {
 		this.resize();
 	}
 
-	resize(width?: any, height?: any, epubcfi?: string): void {
+	resize(width?: number, height?: number, epubcfi?: string): void {
 		let stageSize = this.stage.size(width, height);
 
 		// For Safari, wait for orientation to catch up
@@ -271,11 +275,11 @@ class DefaultViewManager implements IEventEmitter {
 		}, epubcfi);
 	}
 
-	createView(section: any, forceRight?: boolean): any {
+	createView(section: Section, forceRight?: boolean): IframeView {
 		return new this.View(section, extend(this.viewSettings, { forceRight }) );
 	}
 
-	handleNextPrePaginated(forceRight: boolean, section: any, action: Function): any {
+	handleNextPrePaginated(forceRight: boolean, section: Section, action: Function): any {
 		let next;
 
 		if (this.layout.name === "pre-paginated" && this.layout.divisor > 1) {
@@ -290,7 +294,7 @@ class DefaultViewManager implements IEventEmitter {
 		}
 	}
 
-	display(section: any, target?: any): Promise<any> {
+	display(section: Section, target?: string): Promise<any> {
 
 		var displaying = new defer();
 		var displayed = displaying.promise;
@@ -333,7 +337,7 @@ class DefaultViewManager implements IEventEmitter {
 		}
 
 		this.add(section, forceRight)
-			.then(function(view: any){
+			.then(function(view: IframeView){
 
 				// Move to correct place within the section, if needed
 				if(target) {
@@ -364,15 +368,15 @@ class DefaultViewManager implements IEventEmitter {
 		return displayed;
 	}
 
-	afterDisplayed(view: any): void {
+	afterDisplayed(view: IframeView): void {
 		this.emit(EVENTS.MANAGERS.ADDED, view);
 	}
 
-	afterResized(view: any): void {
+	afterResized(view: IframeView): void {
 		this.emit(EVENTS.MANAGERS.RESIZE, view.section);
 	}
 
-	moveTo(offset: any, width?: number): void {
+	moveTo(offset: { left: number; top: number }, width?: number): void {
 		var distX = 0,
 				distY = 0;
 
@@ -403,7 +407,7 @@ class DefaultViewManager implements IEventEmitter {
 		this.scrollTo(distX, distY, true);
 	}
 
-	add(section: any, forceRight?: boolean): Promise<any> {
+	add(section: Section, forceRight?: boolean): Promise<any> {
 		var view = this.createView(section, forceRight);
 
 		this.views.append(view);
@@ -412,39 +416,39 @@ class DefaultViewManager implements IEventEmitter {
 		view.onDisplayed = this.afterDisplayed.bind(this);
 		view.onResize = this.afterResized.bind(this);
 
-		view.on(EVENTS.VIEWS.AXIS, (axis: any) => {
+		view.on(EVENTS.VIEWS.AXIS, (axis: string) => {
 			this.updateAxis(axis);
 		});
 
-		view.on(EVENTS.VIEWS.WRITING_MODE, (mode: any) => {
+		view.on(EVENTS.VIEWS.WRITING_MODE, (mode: string) => {
 			this.updateWritingMode(mode);
 		});
 
 		return view.display(this.request);
 	}
 
-	append(section: any, forceRight?: boolean): Promise<any> {
+	append(section: Section, forceRight?: boolean): Promise<any> {
 		var view = this.createView(section, forceRight);
 		this.views.append(view);
 
 		view.onDisplayed = this.afterDisplayed.bind(this);
 		view.onResize = this.afterResized.bind(this);
 
-		view.on(EVENTS.VIEWS.AXIS, (axis: any) => {
+		view.on(EVENTS.VIEWS.AXIS, (axis: string) => {
 			this.updateAxis(axis);
 		});
 
-		view.on(EVENTS.VIEWS.WRITING_MODE, (mode: any) => {
+		view.on(EVENTS.VIEWS.WRITING_MODE, (mode: string) => {
 			this.updateWritingMode(mode);
 		});
 
 		return view.display(this.request);
 	}
 
-	prepend(section: any, forceRight?: boolean): Promise<any> {
+	prepend(section: Section, forceRight?: boolean): Promise<any> {
 		var view = this.createView(section, forceRight);
 
-		view.on(EVENTS.VIEWS.RESIZED, (bounds: any) => {
+		view.on(EVENTS.VIEWS.RESIZED, (bounds: ReframeBounds) => {
 			this.counter(bounds);
 		});
 
@@ -453,18 +457,18 @@ class DefaultViewManager implements IEventEmitter {
 		view.onDisplayed = this.afterDisplayed.bind(this);
 		view.onResize = this.afterResized.bind(this);
 
-		view.on(EVENTS.VIEWS.AXIS, (axis: any) => {
+		view.on(EVENTS.VIEWS.AXIS, (axis: string) => {
 			this.updateAxis(axis);
 		});
 
-		view.on(EVENTS.VIEWS.WRITING_MODE, (mode: any) => {
+		view.on(EVENTS.VIEWS.WRITING_MODE, (mode: string) => {
 			this.updateWritingMode(mode);
 		});
 
 		return view.display(this.request);
 	}
 
-	counter(bounds: any): void {
+	counter(bounds: ReframeBounds): void {
 		if(this.settings.axis === "vertical") {
 			this.scrollBy(0, bounds.heightDelta, true);
 		} else {
@@ -673,7 +677,7 @@ class DefaultViewManager implements IEventEmitter {
 		}
 	}
 
-	current(): any {
+	current(): IframeView | null {
 		var visible = this.visible();
 		if(visible.length){
 			// Current is the last visible view
@@ -693,7 +697,7 @@ class DefaultViewManager implements IEventEmitter {
 		}
 	}
 
-	currentLocation(): any {
+	currentLocation(): ViewLocation[] {
 		this.updateLayout();
 		if (this.isPaginated && this.settings.axis === "horizontal") {
 			this.location = this.paginatedLocation();
@@ -703,7 +707,7 @@ class DefaultViewManager implements IEventEmitter {
 		return this.location;
 	}
 
-	scrolledLocation(): any[] {
+	scrolledLocation(): ViewLocation[] {
 		let visible = this.visible();
 		let container = this.container.getBoundingClientRect();
 		let pageHeight = (container.height < window.innerHeight) ? container.height : window.innerHeight;
@@ -772,7 +776,7 @@ class DefaultViewManager implements IEventEmitter {
 		return sections;
 	}
 
-	paginatedLocation(): any[] {
+	paginatedLocation(): ViewLocation[] {
 		let visible = this.visible();
 		let container = this.container.getBoundingClientRect();
 
@@ -846,7 +850,7 @@ class DefaultViewManager implements IEventEmitter {
 		return sections;
 	}
 
-	isVisible(view: any, offsetPrev: number, offsetNext: number, _container?: any): boolean {
+	isVisible(view: IframeView, offsetPrev: number, offsetNext: number, _container?: { left: number; right: number; top: number; bottom: number; width: number; height: number }): boolean {
 		var position = view.position();
 		var container = _container || this.bounds();
 
@@ -867,7 +871,7 @@ class DefaultViewManager implements IEventEmitter {
 
 	}
 
-	visible(): any[] {
+	visible(): IframeView[] {
 		var container = this.bounds();
 		var views = this.views.displayed();
 		var viewsLength = views.length;
@@ -954,15 +958,15 @@ class DefaultViewManager implements IEventEmitter {
 
 	}
 
-	bounds(): any {
+	bounds(): { left: number; right: number; top: number; bottom: number; width: number; height: number } {
 		var bounds;
 
 		bounds = this.stage.bounds();
 
-		return bounds;
+		return bounds as { left: number; right: number; top: number; bottom: number; width: number; height: number };
 	}
 
-	applyLayout(layout: any): void {
+	applyLayout(layout: Layout): void {
 
 		this.layout = layout;
 		this.updateLayout();
@@ -1003,7 +1007,7 @@ class DefaultViewManager implements IEventEmitter {
 		this.setLayout(this.layout);
 	}
 
-	setLayout(layout: any): void {
+	setLayout(layout: Layout): void {
 
 		this.viewSettings.layout = layout;
 
@@ -1011,7 +1015,7 @@ class DefaultViewManager implements IEventEmitter {
 
 		if(this.views) {
 
-			this.views.forEach(function(view: any){
+			this.views.forEach(function(view: IframeView){
 				if (view) {
 					view.setLayout(layout);
 				}
@@ -1077,12 +1081,12 @@ class DefaultViewManager implements IEventEmitter {
 
 	}
 
-	getContents(): any[] {
-		var contents: any[] = [];
+	getContents(): Contents[] {
+		var contents: Contents[] = [];
 		if (!this.views) {
 			return contents;
 		}
-		this.views.forEach(function(view: any){
+		this.views.forEach(function(view: IframeView){
 			const viewContents = view && view.contents;
 			if (viewContents) {
 				contents.push(viewContents);
