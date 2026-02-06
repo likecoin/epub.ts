@@ -29,15 +29,16 @@
   "license": "BSD-2-Clause",
   "devDependencies": {
     "@eslint/js": "^9.39.2",
+    "@types/localforage": "0.0.34",
     "eslint": "^9.39.2",
     "jsdom": "^28.0.0",
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.54.0",
     "vite": "^6.1.0",
+    "vite-plugin-dts": "^4.5.4",
     "vitest": "^3.0.5"
   },
   "dependencies": {
-    "@types/localforage": "0.0.34",
     "@xmldom/xmldom": "^0.7.5",
     "jszip": "^3.7.1",
     "localforage": "^1.10.0"
