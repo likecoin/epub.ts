@@ -3,6 +3,7 @@ import Queue from "./utils/queue";
 import EpubCFI from "./epubcfi";
 import { EVENTS } from "./utils/constants";
 import EventEmitter from "./utils/event-emitter";
+import type { IEventEmitter } from "./types";
 
 /**
  * Find Locations for a Book
@@ -10,8 +11,26 @@ import EventEmitter from "./utils/event-emitter";
  * @param {request} request
  * @param {number} [pause=100]
  */
-class Locations {
-	constructor(spine, request, pause) {
+class Locations implements IEventEmitter {
+	declare on: (type: string, fn: (...args: any[]) => void) => this;
+	declare off: (type: string, fn?: (...args: any[]) => void) => this;
+	declare emit: (type: string, ...args: any[]) => void;
+
+	spine: any;
+	request: any;
+	pause: number;
+	q: Queue;
+	epubcfi: EpubCFI;
+	_locations: string[];
+	_locationsWords: any[];
+	total: number;
+	break: number;
+	_current: number;
+	_wordCounter: number;
+	_currentCfi: string;
+	processingTimeout: any;
+
+	constructor(spine: any, request: any, pause?: number) {
 		this.spine = spine;
 		this.request = request;
 		this.pause = pause || 100;
@@ -29,7 +48,6 @@ class Locations {
 
 		this._wordCounter = 0;
 
-		this.currentLocation = '';
 		this._currentCfi ='';
 		this.processingTimeout = undefined;
 	}
@@ -39,7 +57,7 @@ class Locations {
 	 * @param  {int} chars how many chars to split on
 	 * @return {Promise<Array<string>>} locations
 	 */
-	generate(chars) {
+	generate(chars?: number): Promise<string[]> {
 
 		if (chars) {
 			this.break = chars;
@@ -66,7 +84,7 @@ class Locations {
 
 	}
 
-	createRange () {
+	createRange (): any {
 		return {
 			startContainer: undefined,
 			startOffset: undefined,
@@ -75,7 +93,7 @@ class Locations {
 		};
 	}
 
-	process(section) {
+	process(section: any): Promise<string[]> {
 
 		return section.load(this.request)
 			.then(function(contents) {
@@ -91,7 +109,7 @@ class Locations {
 
 	}
 
-	parse(contents, cfiBase, chars) {
+	parse(contents: any, cfiBase: string, chars?: number): string[] {
 		var locations = [];
 		var range;
 		var doc = contents.ownerDocument;
@@ -183,7 +201,7 @@ class Locations {
 	 * @param  {int} count result count
 	 * @return {object} locations
 	 */
-	generateFromWords(startCfi, wordCount, count) {
+	generateFromWords(startCfi?: string, wordCount?: number, count?: number): Promise<any[]> {
 		var start = startCfi ? new EpubCFI(startCfi) : undefined;
 		this.q.pause();
 		this._locationsWords = [];
@@ -211,7 +229,7 @@ class Locations {
 
 	}
 
-	processWords(section, wordCount, startCfi, count) {
+	processWords(section: any, wordCount: number, startCfi?: any, count?: number): Promise<any> {
 		if (count && this._locationsWords.length >= count) {
 			return Promise.resolve();
 		}
@@ -231,14 +249,14 @@ class Locations {
 	}
 
 	//http://stackoverflow.com/questions/18679576/counting-words-in-string
-	countWords(s) {
+	countWords(s: string): number {
 		s = s.replace(/(^\s*)|(\s*$)/gi, "");//exclude  start and end white-space
 		s = s.replace(/[ ]{2,}/gi, " ");//2 or more space to 1
 		s = s.replace(/\n /, "\n"); // exclude newline with a start spacing
 		return s.split(" ").length;
 	}
 
-	parseWords(contents, section, wordCount, startCfi) {
+	parseWords(contents: any, section: any, wordCount: number, startCfi?: any): any[] {
 		var cfiBase = section.cfiBase;
 		var locations = [];
 		var doc = contents.ownerDocument;
@@ -313,7 +331,7 @@ class Locations {
 	 * @param {EpubCFI} cfi
 	 * @return {number}
 	 */
-	locationFromCfi(cfi){
+	locationFromCfi(cfi: any): number {
 		let loc;
 		if (EpubCFI.prototype.isCfiString(cfi)) {
 			cfi = new EpubCFI(cfi);
@@ -337,7 +355,7 @@ class Locations {
 	 * @param {EpubCFI} cfi
 	 * @return {number}
 	 */
-	percentageFromCfi(cfi) {
+	percentageFromCfi(cfi: any): number | null {
 		if(this._locations.length === 0) {
 			return null;
 		}
@@ -352,7 +370,7 @@ class Locations {
 	 * @param {number} location
 	 * @return {number}
 	 */
-	percentageFromLocation(loc) {
+	percentageFromLocation(loc: number): number {
 		if (!loc || !this.total) {
 			return 0;
 		}
@@ -365,8 +383,8 @@ class Locations {
 	 * @param {number} loc
 	 * @return {EpubCFI} cfi
 	 */
-	cfiFromLocation(loc){
-		var cfi = -1;
+	cfiFromLocation(loc: any): any {
+		var cfi: any = -1;
 		// check that pg is an int
 		if(typeof loc != "number"){
 			loc = parseInt(loc);
@@ -384,7 +402,7 @@ class Locations {
 	 * @param {number} percentage
 	 * @return {EpubCFI} cfi
 	 */
-	cfiFromPercentage(percentage){
+	cfiFromPercentage(percentage: number): any {
 		let loc;
 		if (percentage > 1) {
 			console.warn("Normalize cfiFromPercentage value to between 0 - 1");
@@ -405,7 +423,7 @@ class Locations {
 	 * Load locations from JSON
 	 * @param {json} locations
 	 */
-	load(locations){
+	load(locations: string | string[]): string[] {
 		if (typeof locations === "string") {
 			this._locations = JSON.parse(locations);
 		} else {
@@ -419,15 +437,15 @@ class Locations {
 	 * Save locations to JSON
 	 * @return {json}
 	 */
-	save(){
+	save(): string {
 		return JSON.stringify(this._locations);
 	}
 
-	getCurrent(){
+	getCurrent(): number {
 		return this._current;
 	}
 
-	setCurrent(curr){
+	setCurrent(curr: any): void {
 		var loc;
 
 		if(typeof curr == "string"){
@@ -457,25 +475,25 @@ class Locations {
 	/**
 	 * Get the current location
 	 */
-	get currentLocation() {
+	get currentLocation(): number {
 		return this._current;
 	}
 
 	/**
 	 * Set the current location
 	 */
-	set currentLocation(curr) {
+	set currentLocation(curr: any) {
 		this.setCurrent(curr);
 	}
 
 	/**
 	 * Locations length
 	 */
-	length () {
+	length (): number {
 		return this._locations.length;
 	}
 
-	destroy () {
+	destroy (): void {
 		this.spine = undefined;
 		this.request = undefined;
 		this.pause = undefined;

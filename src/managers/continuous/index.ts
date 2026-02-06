@@ -2,7 +2,7 @@ import {extend, defer, requestAnimationFrame} from "../../utils/core";
 import DefaultViewManager from "../default";
 import Snap from "../helpers/snap";
 import { EVENTS } from "../../utils/constants";
-function debounce(func, wait) {
+function debounce(func: Function, wait: number): () => void {
 	var timeout;
 	return function() {
 		var context = this;
@@ -15,7 +15,18 @@ function debounce(func, wait) {
 }
 
 class ContinuousViewManager extends DefaultViewManager {
-	constructor(options) {
+	snapper: any;
+	tick: any;
+	scrollDeltaVert: number;
+	scrollDeltaHorz: number;
+	_scrolled: (...args: any[]) => void;
+	didScroll: boolean;
+	prevScrollTop: number;
+	prevScrollLeft: number;
+	scrollTimeout: ReturnType<typeof setTimeout>;
+	trimTimeout: ReturnType<typeof setTimeout>;
+
+	constructor(options: any) {
 		super(options);
 
 		this.name = "continuous";
@@ -59,14 +70,14 @@ class ContinuousViewManager extends DefaultViewManager {
 		this.scrollLeft = 0;
 	}
 
-	display(section, target){
+	display(section: any, target?: any): Promise<any> {
 		return DefaultViewManager.prototype.display.call(this, section, target)
 			.then(function () {
 				return this.fill();
 			}.bind(this));
 	}
 
-	fill(_full){
+	fill(_full?: any): Promise<any> {
 		var full = _full || new defer();
 
 		this.q.enqueue(() => {
@@ -82,7 +93,7 @@ class ContinuousViewManager extends DefaultViewManager {
 		return full.promise;
 	}
 
-	moveTo(offset){
+	moveTo(offset: any): void {
 		// var bounds = this.stage.bounds();
 		// var dist = Math.floor(offset.top / bounds.height) * bounds.height;
 		var distX = 0,
@@ -104,12 +115,12 @@ class ContinuousViewManager extends DefaultViewManager {
 		}
 	}
 
-	afterResized(view){
+	afterResized(view: any): void {
 		this.emit(EVENTS.MANAGERS.RESIZE, view.section);
 	}
 
 	// Remove Previous Listeners if present
-	removeShownListeners(view){
+	removeShownListeners(view: any): void {
 
 		// view.off("shown", this.afterDisplayed);
 		// view.off("shown", this.afterDisplayedAbove);
@@ -117,7 +128,7 @@ class ContinuousViewManager extends DefaultViewManager {
 
 	}
 
-	add(section){
+	add(section: any): Promise<any> {
 		var view = this.createView(section);
 
 		this.views.append(view);
@@ -141,7 +152,7 @@ class ContinuousViewManager extends DefaultViewManager {
 		return view.display(this.request);
 	}
 
-	append(section){
+	append(section: any): any {
 		var view = this.createView(section);
 
 		view.on(EVENTS.VIEWS.RESIZED, (bounds) => {
@@ -163,7 +174,7 @@ class ContinuousViewManager extends DefaultViewManager {
 		return view;
 	}
 
-	prepend(section){
+	prepend(section: any): any {
 		var view = this.createView(section);
 
 		view.on(EVENTS.VIEWS.RESIZED, (bounds) => {
@@ -186,7 +197,7 @@ class ContinuousViewManager extends DefaultViewManager {
 		return view;
 	}
 
-	counter(bounds){
+	counter(bounds: any): void {
 		if(this.settings.axis === "vertical") {
 			this.scrollBy(0, bounds.heightDelta, true);
 		} else {
@@ -194,7 +205,7 @@ class ContinuousViewManager extends DefaultViewManager {
 		}
 	}
 
-	update(_offset){
+	update(_offset?: number): Promise<any> {
 		var container = this.bounds();
 		var views = this.views.all();
 		var viewsLength = views.length;
@@ -249,7 +260,7 @@ class ContinuousViewManager extends DefaultViewManager {
 
 	}
 
-	check(_offsetLeft, _offsetTop){
+	check(_offsetLeft?: number, _offsetTop?: number): Promise<any> {
 		var checking = new defer();
 		var newViews = [];
 
@@ -347,7 +358,7 @@ class ContinuousViewManager extends DefaultViewManager {
 
 	}
 
-	trim(){
+	trim(): Promise<any> {
 		var task = new defer();
 		var displayed = this.views.displayed();
 		var first = displayed[0];
@@ -371,7 +382,7 @@ class ContinuousViewManager extends DefaultViewManager {
 		return task.promise;
 	}
 
-	erase(view, above){ //Trim
+	erase(view: any, above?: any): void { //Trim
 
 		var prevTop;
 		var prevLeft;
@@ -406,7 +417,7 @@ class ContinuousViewManager extends DefaultViewManager {
 
 	}
 
-	addEventListeners(stage){
+	addEventListeners(stage?: any): void {
 
 		window.addEventListener("unload", function(e){
 			this.ignore = true;
@@ -421,7 +432,7 @@ class ContinuousViewManager extends DefaultViewManager {
 		}
 	}
 
-	addScrollListeners() {
+	addScrollListeners(): void {
 		var scroller;
 
 		this.tick = requestAnimationFrame;
@@ -450,7 +461,7 @@ class ContinuousViewManager extends DefaultViewManager {
 
 	}
 
-	removeEventListeners(){
+	removeEventListeners(): void {
 		var scroller;
 
 		if(!this.settings.fullsize) {
@@ -463,7 +474,7 @@ class ContinuousViewManager extends DefaultViewManager {
 		this._onScroll = undefined;
 	}
 
-	onScroll(){
+	onScroll(): void {
 		let scrollTop;
 		let scrollLeft;
 		let dir = this.settings.direction === "rtl" && this.settings.rtlScrollType === "default" ? -1 : 1;
@@ -505,7 +516,7 @@ class ContinuousViewManager extends DefaultViewManager {
 
 	}
 
-	scrolled() {
+	scrolled(): void {
 
 		this.q.enqueue(function() {
 			return this.check();
@@ -532,7 +543,7 @@ class ContinuousViewManager extends DefaultViewManager {
 		}.bind(this), this.settings.afterScrolledTimeout);
 	}
 
-	next(){
+	next(): void {
 
 		let delta = this.layout.props.name === "pre-paginated" &&
 								this.layout.props.spread ? this.layout.props.delta * 2 : this.layout.props.delta;
@@ -554,7 +565,7 @@ class ContinuousViewManager extends DefaultViewManager {
 		}.bind(this));
 	}
 
-	prev(){
+	prev(): void {
 
 		let delta = this.layout.props.name === "pre-paginated" &&
 								this.layout.props.spread ? this.layout.props.delta * 2 : this.layout.props.delta;
@@ -576,7 +587,7 @@ class ContinuousViewManager extends DefaultViewManager {
 		}.bind(this));
 	}
 
-	updateFlow(flow){
+	updateFlow(flow: string): void {
 		if (this.rendered && this.snapper) {
 			this.snapper.destroy();
 			this.snapper = undefined;
@@ -589,7 +600,7 @@ class ContinuousViewManager extends DefaultViewManager {
 		}
 	}
 
-	destroy(){
+	destroy(): void {
 		super.destroy();
 
 		if (this.snapper) {

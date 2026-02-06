@@ -1,6 +1,7 @@
 import EventEmitter from "./utils/event-emitter";
 import EpubCFI from "./epubcfi";
 import { EVENTS } from "./utils/constants";
+import type { IEventEmitter } from "./types";
 
 /**
 	* Handles managing adding & removing Annotations
@@ -8,8 +9,14 @@ import { EVENTS } from "./utils/constants";
 	* @class
 	*/
 class Annotations {
+	rendition: any;
+	highlights: any[];
+	underlines: any[];
+	marks: any[];
+	_annotations: Record<string, any>;
+	_annotationsBySectionIndex: Record<number, string[]>;
 
-	constructor (rendition) {
+	constructor (rendition: any) {
 		this.rendition = rendition;
 		this.highlights = [];
 		this.underlines = [];
@@ -31,7 +38,7 @@ class Annotations {
 	 * @param {object} styles CSS styles to assign to annotation
 	 * @returns {Annotation} annotation
 	 */
-	add (type, cfiRange, data, cb, className, styles) {
+	add (type: string, cfiRange: string, data?: any, cb?: Function, className?: string, styles?: any): any {
 		let hash = encodeURI(cfiRange + type);
 		let cfi = new EpubCFI(cfiRange);
 		let sectionIndex = cfi.spinePos;
@@ -69,7 +76,7 @@ class Annotations {
 	 * @param {EpubCFI} cfiRange EpubCFI range the annotation is attached to
 	 * @param {string} type Type of annotation to add: "highlight", "underline", "mark"
 	 */
-	remove (cfiRange, type) {
+	remove (cfiRange: string, type?: string): void {
 		let hash = encodeURI(cfiRange + type);
 
 		if (hash in this._annotations) {
@@ -95,7 +102,7 @@ class Annotations {
 	 * Remove an annotations by Section Index
 	 * @private
 	 */
-	_removeFromAnnotationBySectionIndex (sectionIndex, hash) {
+	_removeFromAnnotationBySectionIndex (sectionIndex: number, hash: string): void {
 		this._annotationsBySectionIndex[sectionIndex] = this._annotationsAt(sectionIndex).filter(h => h !== hash);
 	}
 
@@ -103,7 +110,7 @@ class Annotations {
 	 * Get annotations by Section Index
 	 * @private
 	 */
-	_annotationsAt (index) {
+	_annotationsAt (index: number): string[] {
 		return this._annotationsBySectionIndex[index];
 	}
 
@@ -116,7 +123,7 @@ class Annotations {
 	 * @param {string} className CSS class to assign to annotation
 	 * @param {object} styles CSS styles to assign to annotation
 	 */
-	highlight (cfiRange, data, cb, className, styles) {
+	highlight (cfiRange: string, data?: any, cb?: Function, className?: string, styles?: any): any {
 		return this.add("highlight", cfiRange, data, cb, className, styles);
 	}
 
@@ -128,7 +135,7 @@ class Annotations {
 	 * @param {string} className CSS class to assign to annotation
 	 * @param {object} styles CSS styles to assign to annotation
 	 */
-	underline (cfiRange, data, cb, className, styles) {
+	underline (cfiRange: string, data?: any, cb?: Function, className?: string, styles?: any): any {
 		return this.add("underline", cfiRange, data, cb, className, styles);
 	}
 
@@ -138,14 +145,14 @@ class Annotations {
 	 * @param {object} data Data to assign to annotation
 	 * @param {function} cb Callback after annotation is clicked
 	 */
-	mark (cfiRange, data, cb) {
+	mark (cfiRange: string, data?: any, cb?: Function): any {
 		return this.add("mark", cfiRange, data, cb);
 	}
 
 	/**
 	 * iterate over annotations in the store
 	 */
-	each () {
+	each (...args: any[]): any {
 		return this._annotations.forEach.apply(this._annotations, arguments);
 	}
 
@@ -154,7 +161,7 @@ class Annotations {
 	 * @param {View} view
 	 * @private
 	 */
-	inject (view) {
+	inject (view: any): void {
 		let sectionIndex = view.index;
 		if (sectionIndex in this._annotationsBySectionIndex) {
 			let annotations = this._annotationsBySectionIndex[sectionIndex];
@@ -170,7 +177,7 @@ class Annotations {
 	 * @param {View} view
 	 * @private
 	 */
-	clear (view) {
+	clear (view: any): void {
 		let sectionIndex = view.index;
 		if (sectionIndex in this._annotationsBySectionIndex) {
 			let annotations = this._annotationsBySectionIndex[sectionIndex];
@@ -185,7 +192,7 @@ class Annotations {
 	 * [Not Implemented] Show annotations
 	 * @TODO: needs implementation in View
 	 */
-	show () {
+	show (): void {
 
 	}
 
@@ -193,7 +200,7 @@ class Annotations {
 	 * [Not Implemented] Hide annotations
 	 * @TODO: needs implementation in View
 	 */
-	hide () {
+	hide (): void {
 
 	}
 
@@ -212,7 +219,19 @@ class Annotations {
  * @param {object} styles CSS styles to assign to annotation
  * @returns {Annotation} annotation
  */
-class Annotation {
+class Annotation implements IEventEmitter {
+	type: string;
+	cfiRange: string;
+	data: any;
+	sectionIndex: number;
+	mark: any;
+	cb: Function;
+	className: string;
+	styles: any;
+
+	declare on: IEventEmitter["on"];
+	declare off: IEventEmitter["off"];
+	declare emit: IEventEmitter["emit"];
 
 	constructor ({
 		type,
@@ -222,7 +241,7 @@ class Annotation {
 		cb,
 		className,
 		styles
-	}) {
+	}: { type: string; cfiRange: string; data?: any; sectionIndex?: number; cb?: Function; className?: string; styles?: any }) {
 		this.type = type;
 		this.cfiRange = cfiRange;
 		this.data = data;
@@ -237,7 +256,7 @@ class Annotation {
 	 * Update stored data
 	 * @param {object} data
 	 */
-	update (data) {
+	update (data: any): void {
 		this.data = data;
 	}
 
@@ -245,7 +264,7 @@ class Annotation {
 	 * Add to a view
 	 * @param {View} view
 	 */
-	attach (view) {
+	attach (view: any): any {
 		let {cfiRange, data, type, mark, cb, className, styles} = this;
 		let result;
 
@@ -266,7 +285,7 @@ class Annotation {
 	 * Remove from a view
 	 * @param {View} view
 	 */
-	detach (view) {
+	detach (view: any): any {
 		let {cfiRange, type} = this;
 		let result;
 
@@ -289,7 +308,7 @@ class Annotation {
 	 * [Not Implemented] Get text of an annotation
 	 * @TODO: needs implementation in contents
 	 */
-	text () {
+	text (): void {
 
 	}
 

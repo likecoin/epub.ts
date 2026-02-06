@@ -9,6 +9,7 @@ import Themes from "./themes";
 import Contents from "./contents";
 import Annotations from "./annotations";
 import { EVENTS, DOM_EVENTS } from "./utils/constants";
+import type { IEventEmitter, RenditionOptions, Location } from "./types";
 
 // Default Views
 import IframeView from "./managers/views/iframe";
@@ -40,8 +41,28 @@ import ContinuousViewManager from "./managers/continuous/index";
  * @param {boolean} [options.allowScriptedContent=false] enable running scripts in content
  * @param {boolean} [options.allowPopups=false] enable opening popup in content
  */
-class Rendition {
-	constructor(book, options) {
+class Rendition implements IEventEmitter {
+	settings: any;
+	book: any;
+	hooks: any;
+	themes: any;
+	annotations: any;
+	epubcfi: any;
+	q: any;
+	location: any;
+	starting: any;
+	started: Promise<any>;
+	manager: any;
+	ViewManager: any;
+	View: any;
+	_layout: any;
+	displaying: any;
+
+	declare on: IEventEmitter["on"];
+	declare off: IEventEmitter["off"];
+	declare emit: IEventEmitter["emit"];
+
+	constructor(book: any, options?: RenditionOptions) {
 
 		this.settings = extend(this.settings || {}, {
 			width: null,
@@ -161,7 +182,7 @@ class Rendition {
 	 * Set the manager function
 	 * @param {function} manager
 	 */
-	setManager(manager) {
+	setManager(manager: any): void {
 		this.manager = manager;
 	}
 
@@ -170,7 +191,7 @@ class Rendition {
 	 * @param  {string|object} manager [description]
 	 * @return {method}
 	 */
-	requireManager(manager) {
+	requireManager(manager: any): any {
 		var viewManager;
 
 		// If manager is a string, try to load from imported managers
@@ -191,7 +212,7 @@ class Rendition {
 	 * @param  {string|object} view
 	 * @return {view}
 	 */
-	requireView(view) {
+	requireView(view: any): any {
 		var View;
 
 		// If view is a string, try to load from imported views,
@@ -209,7 +230,7 @@ class Rendition {
 	 * Start the rendering
 	 * @return {Promise} rendering has started
 	 */
-	start(){
+	start(): void {
 		if (!this.settings.layout && (this.book.package.metadata.layout === "pre-paginated" || this.book.displayOptions.fixedLayout === "true")) {
 			this.settings.layout = "pre-paginated";
 		}
@@ -273,7 +294,7 @@ class Rendition {
 	 * @param  {element} element to attach to
 	 * @return {Promise}
 	 */
-	attachTo(element){
+	attachTo(element: any): Promise<any> {
 
 		return this.q.enqueue(function () {
 
@@ -302,7 +323,7 @@ class Rendition {
 	 * @param  {string} target Url or EpubCFI
 	 * @return {Promise}
 	 */
-	display(target){
+	display(target?: any): Promise<any> {
 		if (this.displaying) {
 			this.displaying.resolve();
 		}
@@ -315,7 +336,7 @@ class Rendition {
 	 * @param  {string} target Url or EpubCFI
 	 * @return {Promise}
 	 */
-	_display(target){
+	_display(target?: any): any {
 		if (!this.book) {
 			return;
 		}
@@ -415,7 +436,7 @@ class Rendition {
 	 * @private
 	 * @param  {*} view
 	 */
-	afterDisplayed(view){
+	afterDisplayed(view: any): void {
 
 		view.on(EVENTS.VIEWS.MARK_CLICKED, (cfiRange, data) => this.triggerMarkEvent(cfiRange, data, view.contents));
 
@@ -444,7 +465,7 @@ class Rendition {
 	 * @private
 	 * @param  {*} view
 	 */
-	afterRemoved(view){
+	afterRemoved(view: any): void {
 		this.hooks.unloaded.trigger(view, this).then(() => {
 			/**
 			 * Emit that a section has been removed
@@ -461,7 +482,7 @@ class Rendition {
 	 * Report resize events and display the last seen location
 	 * @private
 	 */
-	onResized(size, epubcfi){
+	onResized(size: any, epubcfi?: string): void {
 
 		/**
 		 * Emit that the rendition has been resized
@@ -486,7 +507,7 @@ class Rendition {
 	 * Report orientation events and display the last seen location
 	 * @private
 	 */
-	onOrientationChange(orientation){
+	onOrientationChange(orientation: any): void {
 		/**
 		 * Emit that the rendition has been rotated
 		 * @event orientationchange
@@ -501,7 +522,7 @@ class Rendition {
 	 * Usually you would be better off calling display()
 	 * @param {object} offset
 	 */
-	moveTo(offset){
+	moveTo(offset: any): void {
 		this.manager.moveTo(offset);
 	}
 
@@ -511,7 +532,7 @@ class Rendition {
 	 * @param {number} [height]
 	 * @param {string} [epubcfi] (optional)
 	 */
-	resize(width, height, epubcfi){
+	resize(width?: number, height?: number, epubcfi?: string): void {
 		if (width) {
 			this.settings.width = width;
 		}
@@ -524,7 +545,7 @@ class Rendition {
 	/**
 	 * Clear all rendered views
 	 */
-	clear(){
+	clear(): void {
 		this.manager.clear();
 	}
 
@@ -532,7 +553,7 @@ class Rendition {
 	 * Go to the next "page" in the rendition
 	 * @return {Promise}
 	 */
-	next(){
+	next(): Promise<any> {
 		return this.q.enqueue(this.manager.next.bind(this.manager))
 			.then(this.reportLocation.bind(this));
 	}
@@ -541,7 +562,7 @@ class Rendition {
 	 * Go to the previous "page" in the rendition
 	 * @return {Promise}
 	 */
-	prev(){
+	prev(): Promise<any> {
 		return this.q.enqueue(this.manager.prev.bind(this.manager))
 			.then(this.reportLocation.bind(this));
 	}
@@ -553,7 +574,7 @@ class Rendition {
 	 * @param  {object} metadata
 	 * @return {object} properties
 	 */
-	determineLayoutProperties(metadata){
+	determineLayoutProperties(metadata: any): any {
 		var properties;
 		var layout = this.settings.layout || metadata.layout || "reflowable";
 		var spread = this.settings.spread || metadata.spread || "auto";
@@ -586,7 +607,7 @@ class Rendition {
 	 * (scrolled-continuous vs scrolled-doc are handled by different view managers)
 	 * @param  {string} flow
 	 */
-	flow(flow){
+	flow(flow: string): void {
 		var _flow = flow;
 		if (flow === "scrolled" ||
 				flow === "scrolled-doc" ||
@@ -622,7 +643,7 @@ class Rendition {
 	 * Adjust the layout of the rendition to reflowable or pre-paginated
 	 * @param  {object} settings
 	 */
-	layout(settings){
+	layout(settings?: any): any {
 		if (settings) {
 			this._layout = new Layout(settings);
 			this._layout.spread(settings.spread, this.settings.minSpreadWidth);
@@ -646,7 +667,7 @@ class Rendition {
 	 * @param  {string} spread none | auto (TODO: implement landscape, portrait, both)
 	 * @param  {int} [min] min width to use spreads at
 	 */
-	spread(spread, min){
+	spread(spread: any, min?: number): void {
 
 		this.settings.spread = spread;
 
@@ -667,7 +688,7 @@ class Rendition {
 	 * Adjust the direction of the rendition
 	 * @param  {string} dir
 	 */
-	direction(dir){
+	direction(dir?: string): void {
 
 		this.settings.direction = dir || "ltr";
 
@@ -686,7 +707,7 @@ class Rendition {
 	 * @fires relocated
 	 * @fires locationChanged
 	 */
-	reportLocation(){
+	reportLocation(): any {
 		return this.q.enqueue(function reportedLocation(){
 			requestAnimationFrame(function reportedLocationAfterRAF() {
 				var location = this.manager.currentLocation();
@@ -753,7 +774,7 @@ class Rendition {
 	 * Get the Current Location object
 	 * @return {displayedLocation | promise} location (may be a promise)
 	 */
-	currentLocation(){
+	currentLocation(): any {
 		var location = this.manager.currentLocation();
 		if (location && location.then && typeof location.then === "function") {
 			location.then(function(result) {
@@ -772,7 +793,7 @@ class Rendition {
 	 * @returns {displayedLocation}
 	 * @private
 	 */
-	located(location){
+	located(location: any): any {
 		if (!location.length) {
 			return {};
 		}
@@ -838,7 +859,7 @@ class Rendition {
 	/**
 	 * Remove and Clean Up the Rendition
 	 */
-	destroy(){
+	destroy(): void {
 		// Clear the queue
 		// this.q.clear();
 		// this.q = undefined;
@@ -873,7 +894,7 @@ class Rendition {
 	 * @private
 	 * @param  {Contents} view contents
 	 */
-	passEvents(contents){
+	passEvents(contents: any): void {
 		DOM_EVENTS.forEach((e) => {
 			contents.on(e, (ev) => this.triggerViewEvent(ev, contents));
 		});
@@ -886,7 +907,7 @@ class Rendition {
 	 * @private
 	 * @param  {event} e
 	 */
-	triggerViewEvent(e, contents){
+	triggerViewEvent(e: any, contents: any): void {
 		this.emit(e.type, e, contents);
 	}
 
@@ -895,7 +916,7 @@ class Rendition {
 	 * @private
 	 * @param  {string} cfirange
 	 */
-	triggerSelectedEvent(cfirange, contents){
+	triggerSelectedEvent(cfirange: string, contents: any): void {
 		/**
 		 * Emit that a text selection has occurred
 		 * @event selected
@@ -911,7 +932,7 @@ class Rendition {
 	 * @private
 	 * @param  {EpubCFI} cfirange
 	 */
-	triggerMarkEvent(cfiRange, data, contents){
+	triggerMarkEvent(cfiRange: string, data: any, contents: any): void {
 		/**
 		 * Emit that a mark was clicked
 		 * @event markClicked
@@ -929,7 +950,7 @@ class Rendition {
 	 * @param  {string} ignoreClass
 	 * @return {range}
 	 */
-	getRange(cfi, ignoreClass){
+	getRange(cfi: string, ignoreClass?: string): any {
 		var _cfi = new EpubCFI(cfi);
 		var found = this.manager.visible().filter(function (view) {
 			if(_cfi.spinePos === view.index) return true;
@@ -946,7 +967,7 @@ class Rendition {
 	 * @param  {Contents} contents
 	 * @private
 	 */
-	adjustImages(contents) {
+	adjustImages(contents: any): Promise<any> {
 
 		if (this._layout.name === "pre-paginated") {
 			return new Promise(function(resolve){
@@ -987,7 +1008,7 @@ class Rendition {
 	 * Get the Contents object of each rendered view
 	 * @returns {Contents[]}
 	 */
-	getContents () {
+	getContents (): any[] {
 		return this.manager ? this.manager.getContents() : [];
 	}
 
@@ -995,7 +1016,7 @@ class Rendition {
 	 * Get the views member from the manager
 	 * @returns {Views}
 	 */
-	views () {
+	views (): any {
 		let views = this.manager ? this.manager.views : undefined;
 		return views || [];
 	}
@@ -1005,7 +1026,7 @@ class Rendition {
 	 * @param  {Contents} contents
 	 * @private
 	 */
-	handleLinks(contents) {
+	handleLinks(contents: any): void {
 		if (contents) {
 			contents.on(EVENTS.CONTENTS.LINK_CLICKED, (href) => {
 				let relative = this.book.path.relative(href);
@@ -1021,7 +1042,7 @@ class Rendition {
 	 * @param  {Section} section
 	 * @private
 	 */
-	injectStylesheet(doc, section) {
+	injectStylesheet(doc: Document, section: any): void {
 		let style = doc.createElement("link");
 		style.setAttribute("type", "text/css");
 		style.setAttribute("rel", "stylesheet");
@@ -1036,7 +1057,7 @@ class Rendition {
 	 * @param  {Section} section
 	 * @private
 	 */
-	injectScript(doc, section) {
+	injectScript(doc: Document, section: any): void {
 		let script = doc.createElement("script");
 		script.setAttribute("type", "text/javascript");
 		script.setAttribute("src", this.settings.script);
@@ -1051,7 +1072,7 @@ class Rendition {
 	 * @param  {Section} section
 	 * @private
 	 */
-	injectIdentifier(doc, section) {
+	injectIdentifier(doc: Document, section: any): void {
 		let ident = this.book.packaging.metadata.identifier;
 		let meta = doc.createElement("meta");
 		meta.setAttribute("name", "dc.relation.ispartof");

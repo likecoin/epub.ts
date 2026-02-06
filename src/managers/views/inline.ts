@@ -3,9 +3,46 @@ import {extend, borders, uuid, isNumber, bounds, defer, qs, parse} from "../../u
 import EpubCFI from "../../epubcfi";
 import Contents from "../../contents";
 import { EVENTS } from "../../utils/constants";
+import type { IEventEmitter, ViewSettings } from "../../types";
 
-class InlineView {
-	constructor(section, options) {
+class InlineView implements IEventEmitter {
+	settings: any;
+	id: string;
+	section: any;
+	index: number;
+	element: HTMLElement;
+	added: boolean;
+	displayed: boolean;
+	rendered: boolean;
+	width: number;
+	height: number;
+	fixedWidth: number;
+	fixedHeight: number;
+	epubcfi: any;
+	layout: any;
+	frame: HTMLDivElement;
+	resizing: boolean;
+	_width: number;
+	_height: number;
+	_textWidth: number;
+	_textHeight: number;
+	_needsReframe: boolean;
+	_expanding: boolean;
+	elementBounds: any;
+	prevBounds: any;
+	lockedWidth: number;
+	lockedHeight: number;
+	document: Document;
+	window: Window;
+	contents: any;
+	rendering: boolean;
+	stopExpanding: boolean;
+
+	declare on: IEventEmitter["on"];
+	declare off: IEventEmitter["off"];
+	declare emit: IEventEmitter["emit"];
+
+	constructor(section: any, options?: ViewSettings) {
 		this.settings = extend({
 			ignoreClass : "",
 			axis: "vertical",
@@ -40,7 +77,7 @@ class InlineView {
 
 	}
 
-	container(axis) {
+	container(axis?: string): HTMLElement {
 		var element = document.createElement("div");
 
 		element.classList.add("epub-view");
@@ -64,7 +101,7 @@ class InlineView {
 		return element;
 	}
 
-	create() {
+	create(): HTMLDivElement {
 
 		if(this.frame) {
 			return this.frame;
@@ -105,7 +142,7 @@ class InlineView {
 		return this.frame;
 	}
 
-	render(request, show) {
+	render(request: any, show?: boolean): Promise<any> {
 
 		// view.onLayout = this.layout.format.bind(this.layout);
 		this.create();
@@ -159,7 +196,7 @@ class InlineView {
 	}
 
 	// Determine locks base on settings
-	size(_width, _height) {
+	size(_width?: number, _height?: number): void {
 		var width = _width || this.settings.width;
 		var height = _height || this.settings.height;
 
@@ -175,7 +212,7 @@ class InlineView {
 	}
 
 	// Lock an axis to element dimensions, taking borders into account
-	lock(what, width, height) {
+	lock(what: string, width: number, height: number): void {
 		var elBorders = borders(this.element);
 		var iframeBorders;
 
@@ -208,7 +245,7 @@ class InlineView {
 	}
 
 	// Resize a single axis based on content dimensions
-	expand(force) {
+	expand(force?: boolean): void {
 		var width = this.lockedWidth;
 		var height = this.lockedHeight;
 
@@ -235,16 +272,16 @@ class InlineView {
 		this._expanding = false;
 	}
 
-	contentWidth(min) {
+	contentWidth(min?: number): number {
 		return this.frame.scrollWidth;
 	}
 
-	contentHeight(min) {
+	contentHeight(min?: number): number {
 		return this.frame.scrollHeight;
 	}
 
 
-	resize(width, height) {
+	resize(width: any, height: any): void {
 
 		if(!this.frame) return;
 
@@ -276,7 +313,7 @@ class InlineView {
 	}
 
 
-	load(contents) {
+	load(contents: string): Promise<any> {
 		var loading = new defer();
 		var loaded = loading.promise;
 		var doc = parse(contents, "text/html");
@@ -313,26 +350,26 @@ class InlineView {
 		return loaded;
 	}
 
-	setLayout(layout) {
+	setLayout(layout: any): void {
 		this.layout = layout;
 	}
 
 
-	resizeListenters() {
+	resizeListenters(): void {
 		// Test size again
 		// clearTimeout(this.expanding);
 		// this.expanding = setTimeout(this.expand.bind(this), 350);
 	}
 
-	addListeners() {
+	addListeners(): void {
 		//TODO: Add content listeners for expanding
 	}
 
-	removeListeners(layoutFunc) {
+	removeListeners(layoutFunc?: any): void {
 		//TODO: remove content listeners for expanding
 	}
 
-	display(request) {
+	display(request: any): Promise<any> {
 		var displayed = new defer();
 
 		if (!this.displayed) {
@@ -356,7 +393,7 @@ class InlineView {
 		return displayed.promise;
 	}
 
-	show() {
+	show(): void {
 
 		this.element.style.visibility = "visible";
 
@@ -367,7 +404,7 @@ class InlineView {
 		this.emit(EVENTS.VIEWS.SHOWN, this);
 	}
 
-	hide() {
+	hide(): void {
 		// this.frame.style.display = "none";
 		this.element.style.visibility = "hidden";
 		this.frame.style.visibility = "hidden";
@@ -376,11 +413,11 @@ class InlineView {
 		this.emit(EVENTS.VIEWS.HIDDEN, this);
 	}
 
-	position() {
+	position(): DOMRect {
 		return this.element.getBoundingClientRect();
 	}
 
-	locationOf(target) {
+	locationOf(target: any): { left: number; top: number } {
 		var parentPos = this.frame.getBoundingClientRect();
 		var targetPos = this.contents.locationOf(target, this.settings.ignoreClass);
 
@@ -390,22 +427,22 @@ class InlineView {
 		};
 	}
 
-	onDisplayed(view) {
+	onDisplayed(view: any): void {
 		// Stub, override with a custom functions
 	}
 
-	onResize(view, e) {
+	onResize(view: any, e?: any): void {
 		// Stub, override with a custom functions
 	}
 
-	bounds() {
+	bounds(): any {
 		if(!this.elementBounds) {
 			this.elementBounds = bounds(this.element);
 		}
 		return this.elementBounds;
 	}
 
-	destroy() {
+	destroy(): void {
 
 		if(this.displayed){
 			this.displayed = false;

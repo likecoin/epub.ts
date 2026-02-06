@@ -1,11 +1,19 @@
 import {qs, qsa, querySelectorByType, filterChildren, getParentByTagName} from "./utils/core";
+import type { NavItem, LandmarkItem } from "./types";
 
 /**
  * Navigation Parser
  * @param {document} xml navigation html / xhtml / ncx
  */
 class Navigation {
-	constructor(xml) {
+	toc: NavItem[];
+	tocByHref: Record<string, number>;
+	tocById: Record<string, number>;
+	landmarks: LandmarkItem[];
+	landmarksByType: Record<string, number>;
+	length: number;
+
+	constructor(xml?: any) {
 		this.toc = [];
 		this.tocByHref = {};
 		this.tocById = {};
@@ -23,7 +31,7 @@ class Navigation {
 	 * Parse out the navigation items
 	 * @param {document} xml navigation html / xhtml / ncx
 	 */
-	parse(xml) {
+	parse(xml: any): void {
 		let isXml = xml.nodeType;
 		let html;
 		let ncx;
@@ -52,7 +60,7 @@ class Navigation {
 	 * @private
 	 * @param  {array} toc
 	 */
-	unpack(toc) {
+	unpack(toc: NavItem[]): void {
 		var item;
 
 		for (var i = 0; i < toc.length; i++) {
@@ -80,7 +88,7 @@ class Navigation {
 	 * @param  {string} target
 	 * @return {object} navItem
 	 */
-	get(target) {
+	get(target?: string): any {
 		var index;
 
 		if(!target) {
@@ -103,7 +111,7 @@ class Navigation {
 	 * @param  {array} navItems
 	 * @return {object} navItem
 	 */
-	getByIndex(target, index, navItems) {
+	getByIndex(target: string, index: number, navItems: NavItem[]): NavItem | undefined {
 		if (navItems.length === 0) {
 			return;
 		}
@@ -129,7 +137,7 @@ class Navigation {
 	 * @param  {string} type
 	 * @return {object} landmarkItem
 	 */
-	landmark(type) {
+	landmark(type?: string): any {
 		var index;
 
 		if(!type) {
@@ -147,7 +155,7 @@ class Navigation {
 	 * @param  {document} navHtml
 	 * @return {array} navigation list
 	 */
-	parseNav(navHtml){
+	parseNav(navHtml: any): NavItem[] {
 		var navElement = querySelectorByType(navHtml, "nav", "toc");
 		var list = [];
 
@@ -166,7 +174,7 @@ class Navigation {
 	 * @param  {string} parent id
 	 * @return {array} navigation list
 	 */
-	parseNavList(navListHtml, parent) {
+	parseNavList(navListHtml: any, parent?: string): NavItem[] {
 		const result = [];
 
 		if (!navListHtml) return result;
@@ -189,7 +197,7 @@ class Navigation {
 	 * @param  {element} item
 	 * @return {object} navItem
 	 */
-	navItem(item, parent) {
+	navItem(item: any, parent?: string): NavItem | undefined {
 		let id = item.getAttribute("id") || undefined;
 		let content = filterChildren(item, "a", true)
 			|| filterChildren(item, "span", true);
@@ -226,7 +234,7 @@ class Navigation {
 	 * @param  {document} navHtml
 	 * @return {array} landmarks list
 	 */
-	parseLandmarks(navHtml){
+	parseLandmarks(navHtml: any): LandmarkItem[] {
 		var navElement = querySelectorByType(navHtml, "nav", "landmarks");
 		var navItems = navElement ? qsa(navElement, "li") : [];
 		var length = navItems.length;
@@ -253,7 +261,7 @@ class Navigation {
 	 * @param  {element} item
 	 * @return {object} landmarkItem
 	 */
-	landmarkItem(item){
+	landmarkItem(item: any): LandmarkItem | undefined {
 		let content = filterChildren(item, "a", true);
 
 		if (!content) {
@@ -277,7 +285,7 @@ class Navigation {
 	 * @param  {document} navHtml
 	 * @return {array} navigation list
 	 */
-	parseNcx(tocXml){
+	parseNcx(tocXml: any): NavItem[] {
 		var navPoints = qsa(tocXml, "navPoint");
 		var length = navPoints.length;
 		var i;
@@ -307,7 +315,7 @@ class Navigation {
 	 * @param  {element} item
 	 * @return {object} ncxItem
 	 */
-	ncxItem(item){
+	ncxItem(item: any): NavItem {
 		var id = item.getAttribute("id") || false,
 				content = qs(item, "content"),
 				src = content.getAttribute("src"),
@@ -336,7 +344,7 @@ class Navigation {
 	 * @param  {object} json the items to be loaded
 	 * @return {Array} navItems
 	 */
-	load(json) {
+	load(json: any[]): NavItem[] {
 		return json.map(item => {
 			item.label = item.title;
 			item.subitems = item.children ? this.load(item.children) : [];
@@ -349,7 +357,7 @@ class Navigation {
 	 * @param  {Function} fn function to run on each item
 	 * @return {method} forEach loop
 	 */
-	forEach(fn) {
+	forEach(fn: (item: NavItem, index: number, array: NavItem[]) => void): void {
 		return this.toc.forEach(fn);
 	}
 }

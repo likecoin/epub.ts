@@ -4,6 +4,7 @@ import mime from "./utils/mime";
 import Path from "./utils/path";
 import EventEmitter from "./utils/event-emitter";
 import localforage from "localforage";
+import type { IEventEmitter } from "./types";
 
 /**
  * Handles saving and requesting files from local storage
@@ -12,9 +13,20 @@ import localforage from "localforage";
  * @param {function} [requester]
  * @param {function} [resolver]
  */
-class Store {
+class Store implements IEventEmitter {
+	declare on: (type: string, fn: (...args: any[]) => void) => this;
+	declare off: (type: string, fn?: (...args: any[]) => void) => this;
+	declare emit: (type: string, ...args: any[]) => void;
 
-	constructor(name, requester, resolver) {
+	urlCache: Record<string, string>;
+	storage: any;
+	name: string;
+	requester: any;
+	resolver: any;
+	online: boolean;
+	_status: ((event: Event) => void) | undefined;
+
+	constructor(name: string, requester?: any, resolver?: any) {
 		this.urlCache = {};
 
 		this.storage = undefined;
@@ -35,7 +47,7 @@ class Store {
 	 * Requires localForage if it isn't there
 	 * @private
 	 */
-	checkRequirements(){
+	checkRequirements(): void {
 		try {
 			let store;
 			if (typeof localforage === "undefined") {
@@ -53,7 +65,7 @@ class Store {
 	 * Add online and offline event listeners
 	 * @private
 	 */
-	addListeners() {
+	addListeners(): void {
 		this._status = this.status.bind(this);
 		window.addEventListener('online',  this._status);
 	  window.addEventListener('offline', this._status);
@@ -63,7 +75,7 @@ class Store {
 	 * Remove online and offline event listeners
 	 * @private
 	 */
-	removeListeners() {
+	removeListeners(): void {
 		window.removeEventListener('online',  this._status);
 	  window.removeEventListener('offline', this._status);
 		this._status = undefined;
@@ -73,7 +85,7 @@ class Store {
 	 * Update the online / offline status
 	 * @private
 	 */
-	status(event) {
+	status(event: Event): void {
 		let online = navigator.onLine;
 		this.online = online;
 		if (online) {
@@ -89,7 +101,7 @@ class Store {
 	 * @param  {boolean} [force] force resaving resources
 	 * @return {Promise<object>} store objects
 	 */
-	add(resources, force) {
+	add(resources: any, force?: boolean): Promise<any[]> {
 		let mapped = resources.resources.map((item) => {
 			let { href } = item;
 			let url = this.resolver(href);
@@ -117,7 +129,7 @@ class Store {
 	 * @param  {object} [headers]
 	 * @return {Promise<Blob>}
 	 */
-	put(url, withCredentials, headers) {
+	put(url: string, withCredentials?: boolean, headers?: object): Promise<any> {
 		let encodedUrl = window.encodeURIComponent(url);
 
 		return this.storage.getItem(encodedUrl).then((result) => {
@@ -138,7 +150,7 @@ class Store {
 	 * @param  {object} [headers]
 	 * @return {Promise<Blob | string | JSON | Document | XMLDocument>}
 	 */
-	request(url, type, withCredentials, headers){
+	request(url: string, type?: string, withCredentials?: boolean, headers?: object): Promise<any> {
 		if (this.online) {
 			// From network
 			return this.requester(url, type, withCredentials, headers).then((data) => {
@@ -159,7 +171,7 @@ class Store {
 	 * @param  {string} [type] specify the type of the returned result
 	 * @return {Promise<Blob | string | JSON | Document | XMLDocument>}
 	 */
-	retrieve(url, type) {
+	retrieve(url: string, type?: string): Promise<any> {
 		var deferred = new defer();
 		var response;
 		var path = new Path(url);
@@ -199,7 +211,7 @@ class Store {
 	 * @param  {string} [type]
 	 * @return {any} the parsed result
 	 */
-	handleResponse(response, type){
+	handleResponse(response: any, type?: string): any {
 		var r;
 
 		if(type == "json") {
@@ -229,7 +241,7 @@ class Store {
 	 * @param  {string} [mimeType]
 	 * @return {Blob}
 	 */
-	getBlob(url, mimeType){
+	getBlob(url: string, mimeType?: string): Promise<Blob | undefined> {
 		let encodedUrl = window.encodeURIComponent(url);
 
 		return this.storage.getItem(encodedUrl).then(function(uint8array) {
@@ -248,7 +260,7 @@ class Store {
 	 * @param  {string} [mimeType]
 	 * @return {string}
 	 */
-	getText(url, mimeType){
+	getText(url: string, mimeType?: string): Promise<any> {
 		let encodedUrl = window.encodeURIComponent(url);
 
 		mimeType = mimeType || mime.lookup(url);
@@ -278,7 +290,7 @@ class Store {
 	 * @param  {string} [mimeType]
 	 * @return {string} base64 encoded
 	 */
-	getBase64(url, mimeType){
+	getBase64(url: string, mimeType?: string): Promise<any> {
 		let encodedUrl = window.encodeURIComponent(url);
 
 		mimeType = mimeType || mime.lookup(url);
@@ -307,7 +319,7 @@ class Store {
 	 * @param  {object} [options.base64] use base64 encoding or blob url
 	 * @return {Promise} url promise with Url string
 	 */
-	createUrl(url, options){
+	createUrl(url: string, options?: any): Promise<string> {
 		var deferred = new defer();
 		var _URL = window.URL || window.webkitURL || window.mozURL;
 		var tempUrl;
@@ -363,13 +375,13 @@ class Store {
 	 * Revoke Temp Url for a archive item
 	 * @param  {string} url url of the item in the store
 	 */
-	revokeUrl(url){
+	revokeUrl(url: string): void {
 		var _URL = window.URL || window.webkitURL || window.mozURL;
 		var fromCache = this.urlCache[url];
 		if(fromCache) _URL.revokeObjectURL(fromCache);
 	}
 
-	destroy() {
+	destroy(): void {
 		var _URL = window.URL || window.webkitURL || window.mozURL;
 		for (let fromCache in this.urlCache) {
 			_URL.revokeObjectURL(fromCache);

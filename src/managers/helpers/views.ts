@@ -1,36 +1,41 @@
 class Views {
-	constructor(container) {
+	container: HTMLElement;
+	_views: any[];
+	length: number;
+	hidden: boolean;
+
+	constructor(container: HTMLElement) {
 		this.container = container;
 		this._views = [];
 		this.length = 0;
 		this.hidden = false;
 	}
 
-	all() {
+	all(): any[] {
 		return this._views;
 	}
 
-	first() {
+	first(): any {
 		return this._views[0];
 	}
 
-	last() {
+	last(): any {
 		return this._views[this._views.length-1];
 	}
 
-	indexOf(view) {
+	indexOf(view: any): number {
 		return this._views.indexOf(view);
 	}
 
-	slice() {
+	slice(...args: any[]): any[] {
 		return this._views.slice.apply(this._views, arguments);
 	}
 
-	get(i) {
+	get(i: number): any {
 		return this._views[i];
 	}
 
-	append(view){
+	append(view: any): any {
 		this._views.push(view);
 		if(this.container){
 			this.container.appendChild(view.element);
@@ -39,7 +44,7 @@ class Views {
 		return view;
 	}
 
-	prepend(view){
+	prepend(view: any): any {
 		this._views.unshift(view);
 		if(this.container){
 			this.container.insertBefore(view.element, this.container.firstChild);
@@ -48,7 +53,7 @@ class Views {
 		return view;
 	}
 
-	insert(view, index) {
+	insert(view: any, index: number): any {
 		this._views.splice(index, 0, view);
 
 		if(this.container){
@@ -63,7 +68,7 @@ class Views {
 		return view;
 	}
 
-	remove(view) {
+	remove(view: any): void {
 		var index = this._views.indexOf(view);
 
 		if(index > -1) {
@@ -76,7 +81,7 @@ class Views {
 		this.length--;
 	}
 
-	destroy(view) {
+	destroy(view: any): void {
 		if(view.displayed){
 			view.destroy();
 		}
@@ -89,11 +94,11 @@ class Views {
 
 	// Iterators
 
-	forEach() {
+	forEach(...args: any[]): void {
 		return this._views.forEach.apply(this._views, arguments);
 	}
 
-	clear(){
+	clear(): void {
 		// Remove all views
 		var view;
 		var len = this.length;
@@ -109,7 +114,7 @@ class Views {
 		this.length = 0;
 	}
 
-	find(section){
+	find(section: any): any {
 
 		var view;
 		var len = this.length;
@@ -123,7 +128,7 @@ class Views {
 
 	}
 
-	displayed(){
+	displayed(): any[] {
 		var displayed = [];
 		var view;
 		var len = this.length;
@@ -137,7 +142,7 @@ class Views {
 		return displayed;
 	}
 
-	show(){
+	show(): void {
 		var view;
 		var len = this.length;
 
@@ -150,7 +155,7 @@ class Views {
 		this.hidden = false;
 	}
 
-	hide(){
+	hide(): void {
 		var view;
 		var len = this.length;
 

@@ -4,6 +4,7 @@ import Url from "./utils/url";
 import mime from "./utils/mime";
 import Path from "./utils/path";
 import path from "./utils/path-utils";
+import type { PackagingManifestObject } from "./types";
 
 /**
  * Handle Package Resources
@@ -15,7 +16,22 @@ import path from "./utils/path-utils";
  * @param {method} [options.resolver]
  */
 class Resources {
-	constructor(manifest, options) {
+	settings: {
+		replacements: string;
+		archive: any;
+		resolver: any;
+		request: any;
+	};
+	manifest: any;
+	resources: any[];
+	replacementUrls: string[];
+	html: any[];
+	assets: any[];
+	css: any[];
+	urls: string[];
+	cssUrls: string[];
+
+	constructor(manifest: any, options?: any) {
 		this.settings = {
 			replacements: (options && options.replacements) || "base64",
 			archive: (options && options.archive),
@@ -30,7 +46,7 @@ class Resources {
 	 * Process resources
 	 * @param {Manifest} manifest
 	 */
-	process(manifest){
+	process(manifest: any): void {
 		this.manifest = manifest;
 		this.resources = Object.keys(manifest).
 			map(function (key){
@@ -54,7 +70,7 @@ class Resources {
 	 * Split resources by type
 	 * @private
 	 */
-	split(){
+	split(): void {
 
 		// HTML
 		this.html = this.resources.
@@ -87,7 +103,7 @@ class Resources {
 	 * Convert split resources into Urls
 	 * @private
 	 */
-	splitUrls(){
+	splitUrls(): void {
 
 		// All Assets Urls
 		this.urls = this.assets.
@@ -107,7 +123,7 @@ class Resources {
 	 * @param {string} url
 	 * @return {Promise<string>} Promise resolves with url string
 	 */
-	createUrl (url) {
+	createUrl (url: string): Promise<string> {
 		var parsedUrl = new Url(url);
 		var mimeType = mime.lookup(parsedUrl.filename);
 
@@ -134,7 +150,7 @@ class Resources {
 	 * Create blob urls for all the assets
 	 * @return {Promise}         returns replacement urls
 	 */
-	replacements(){
+	replacements(): Promise<string[]> {
 		if (this.settings.replacements === "none") {
 			return new Promise(function(resolve) {
 				resolve(this.urls);
@@ -167,7 +183,7 @@ class Resources {
 	 * @param  {method} [resolver]
 	 * @return {Promise}
 	 */
-	replaceCss(archive, resolver){
+	replaceCss(archive?: any, resolver?: any): Promise<any[]> {
 		var replaced = [];
 		archive = archive || this.settings.archive;
 		resolver = resolver || this.settings.resolver;
@@ -193,7 +209,7 @@ class Resources {
 	 * @param  {string} href the original css file
 	 * @return {Promise}  returns a BlobUrl to the new CSS file or a data url
 	 */
-	createCssFile(href){
+	createCssFile(href: string): Promise<any> {
 		var newUrl;
 
 		if (path.isAbsolute(href)) {
@@ -255,7 +271,7 @@ class Resources {
 	 * @param  {resolver} [resolver]
 	 * @return {string[]} array with relative Urls
 	 */
-	relativeTo(absolute, resolver){
+	relativeTo(absolute: string, resolver?: any): string[] {
 		resolver = resolver || this.settings.resolver;
 
 		// Get Urls relative to current sections
@@ -272,7 +288,7 @@ class Resources {
 	 * @param  {string} path
 	 * @return {string} url
 	 */
-	get(path) {
+	get(path: string): Promise<string> | undefined {
 		var indexInUrls = this.urls.indexOf(path);
 		if (indexInUrls === -1) {
 			return;
@@ -293,7 +309,7 @@ class Resources {
 	 * @param  {string} [url]   url to resolve to
 	 * @return {string}         content with urls substituted
 	 */
-	substitute(content, url) {
+	substitute(content: string, url?: string): string {
 		var relUrls;
 		if (url) {
 			relUrls = this.relativeTo(url);
@@ -303,7 +319,7 @@ class Resources {
 		return substitute(content, relUrls, this.replacementUrls);
 	}
 
-	destroy() {
+	destroy(): void {
 		this.settings = undefined;
 		this.manifest = undefined;
 		this.resources = undefined;

@@ -1,6 +1,7 @@
 import {extend, defer, requestAnimationFrame, prefixed} from "../../utils/core";
 import { EVENTS, DOM_EVENTS } from "../../utils/constants";
 import EventEmitter from "../../utils/event-emitter";
+import type { IEventEmitter } from "../../types";
 
 // easing equations from https://github.com/danro/easing-js/blob/master/easing.js
 const PI_D2 = (Math.PI / 2);
@@ -22,8 +23,37 @@ const EASING_EQUATIONS = {
   	}
 };
 
-class Snap {
-	constructor(manager, options) {
+class Snap implements IEventEmitter {
+	settings: any;
+	manager: any;
+	layout: any;
+	fullsize: boolean;
+	element: any;
+	scroller: any;
+	isVertical: boolean;
+	touchCanceler: boolean;
+	resizeCanceler: boolean;
+	snapping: boolean;
+	scrollLeft: number;
+	scrollTop: number;
+	startTouchX: number;
+	startTouchY: number;
+	startTime: number;
+	endTouchX: number;
+	endTouchY: number;
+	endTime: number;
+	_onResize: (...args: any[]) => void;
+	_onScroll: (...args: any[]) => void;
+	_onTouchStart: (...args: any[]) => void;
+	_onTouchMove: (...args: any[]) => void;
+	_onTouchEnd: (...args: any[]) => void;
+	_afterDisplayed: (...args: any[]) => void;
+
+	declare on: IEventEmitter["on"];
+	declare off: IEventEmitter["off"];
+	declare emit: IEventEmitter["emit"];
+
+	constructor(manager: any, options?: any) {
 
 		this.settings = extend({
 			duration: 80,
@@ -39,7 +69,7 @@ class Snap {
 		}
 	}
 
-	setup(manager) {
+	setup(manager: any): void {
 		this.manager = manager;
 
 		this.layout = this.manager.layout;
@@ -86,7 +116,7 @@ class Snap {
 		this.addListeners();
 	}
 
-	supportsTouch() {
+	supportsTouch(): any {
 		if (('ontouchstart' in window) || window.DocumentTouch && document instanceof DocumentTouch) {
 			return true;
 		}
@@ -94,15 +124,15 @@ class Snap {
 		return false;
 	}
 
-	disableScroll() {
+	disableScroll(): void {
 		this.element.style.overflow = "hidden";
 	}
 
-	enableScroll() {
+	enableScroll(): void {
 		this.element.style.overflow = "";
 	}
 
-	addListeners() {
+	addListeners(): void {
 		this._onResize = this.onResize.bind(this);
 		window.addEventListener('resize', this._onResize);
 
@@ -125,7 +155,7 @@ class Snap {
 		this.manager.on(EVENTS.MANAGERS.ADDED, this._afterDisplayed);
 	}
 
-	removeListeners() {
+	removeListeners(): void {
 		window.removeEventListener('resize', this._onResize);
 		this._onResize = undefined;
 
@@ -148,27 +178,27 @@ class Snap {
 		this._afterDisplayed = undefined;
 	}
 
-	afterDisplayed(view) {
+	afterDisplayed(view: any): void {
 		let contents = view.contents;
 		["touchstart", "touchmove", "touchend"].forEach((e) => {
 			contents.on(e, (ev) => this.triggerViewEvent(ev, contents));
 		});
 	}
 
-	triggerViewEvent(e, contents){
+	triggerViewEvent(e: any, contents: any): void {
 		this.emit(e.type, e, contents);
 	}
 
-	onScroll(e) {
+	onScroll(e?: any): void {
 		this.scrollLeft = this.fullsize ? window.scrollX : this.scroller.scrollLeft;
 		this.scrollTop = this.fullsize ? window.scrollY : this.scroller.scrollTop;
 	}
 
-	onResize(e) {
+	onResize(e?: any): void {
 		this.resizeCanceler = true;
 	}
 
-	onTouchStart(e) {
+	onTouchStart(e: any): void {
 		let { screenX, screenY } = e.touches[0];
 
 		if (this.fullsize) {
@@ -188,7 +218,7 @@ class Snap {
 		this.endTime = this.now();
 	}
 
-	onTouchMove(e) {
+	onTouchMove(e: any): void {
 		let { screenX, screenY } = e.touches[0];
 		let deltaY = Math.abs(screenY - this.endTouchY);
 
@@ -204,7 +234,7 @@ class Snap {
 		this.endTime = this.now();
 	}
 
-	onTouchEnd(e) {
+	onTouchEnd(e?: any): void {
 		if (this.fullsize) {
 			this.disableScroll();
 		}
@@ -227,7 +257,7 @@ class Snap {
 		this.endTime = undefined;
 	}
 
-	wasSwiped() {
+	wasSwiped(): number {
 		let snapWidth = this.layout.pageWidth * this.layout.divisor;
 		let distance = (this.endTouchX - this.startTouchX);
 		let absolute = Math.abs(distance);
@@ -248,13 +278,13 @@ class Snap {
 		}
 	}
 
-	needsSnap() {
+	needsSnap(): boolean {
 		let left = this.scrollLeft;
 		let snapWidth = this.layout.pageWidth * this.layout.divisor;
 		return (left % snapWidth) !== 0;
 	}
 
-	snap(howMany=0) {
+	snap(howMany: number = 0): Promise<any> {
 		let left = this.scrollLeft;
 		let snapWidth = this.layout.pageWidth * this.layout.divisor;
 		let snapTo = Math.round(left / snapWidth) * snapWidth;
@@ -266,7 +296,7 @@ class Snap {
 		return this.smoothScrollTo(snapTo);
 	}
 
-	smoothScrollTo(destination) {
+	smoothScrollTo(destination: number): Promise<any> {
 		const deferred = new defer();
 		const start = this.scrollLeft;
 		const startTime = this.now();
@@ -305,7 +335,7 @@ class Snap {
 		return deferred.promise;
 	}
 
-	scrollTo(left=0, top=0) {
+	scrollTo(left: number = 0, top: number = 0): void {
 		if (this.fullsize) {
 			window.scroll(left, top);
 		} else {
@@ -314,11 +344,11 @@ class Snap {
 		}
 	}
 
-	now() {
+	now(): number {
 		return ('now' in window.performance) ? performance.now() : new Date().getTime();
 	}
 
-	destroy() {
+	destroy(): void {
 		if (!this.scroller) {
 			return;
 		}

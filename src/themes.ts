@@ -6,7 +6,13 @@ import Url from "./utils/url";
  * @param {Rendition} rendition
  */
 class Themes {
-	constructor(rendition) {
+	rendition: any;
+	_themes: Record<string, any>;
+	_overrides: Record<string, any>;
+	_current: string;
+	_injected: any[];
+
+	constructor(rendition: any) {
 		this.rendition = rendition;
 		this._themes = {
 			"default" : {
@@ -30,7 +36,7 @@ class Themes {
 	 * @example themes.register("light", { "body": { "color": "purple"}})
 	 * @example themes.register({ "light" : {...}, "dark" : {...}})
 	 */
-	register () {
+	register (...args: any[]): void {
 		if (arguments.length === 0) {
 			return;
 		}
@@ -54,7 +60,7 @@ class Themes {
 	 * @example themes.register("http://example.com/default.css")
 	 * @example themes.register({ "body": { "color": "purple"}})
 	 */
-	default (theme) {
+	default (theme: any): void {
 		if (!theme) {
 			return;
 		}
@@ -70,7 +76,7 @@ class Themes {
 	 * Register themes object
 	 * @param {object} themes
 	 */
-	registerThemes (themes) {
+	registerThemes (themes: Record<string, any>): void {
 		for (var theme in themes) {
 			if (themes.hasOwnProperty(theme)) {
 				if (typeof(themes[theme]) === "string") {
@@ -87,7 +93,7 @@ class Themes {
 	 * @param {string} name 
 	 * @param {string} css 
 	 */
-	registerCss (name, css) {
+	registerCss (name: string, css: string): void {
 		this._themes[name] = { "serialized" : css };
 		if (this._injected[name] || name == 'default') {
 			this.update(name);
@@ -99,7 +105,7 @@ class Themes {
 	 * @param {string} name
 	 * @param {string} input
 	 */
-	registerUrl (name, input) {
+	registerUrl (name: string, input: string): void {
 		var url = new Url(input);
 		this._themes[name] = { "url": url.toString() };
 		if (this._injected[name] || name == 'default') {
@@ -112,7 +118,7 @@ class Themes {
 	 * @param {string} name
 	 * @param {object} rules
 	 */
-	registerRules (name, rules) {
+	registerRules (name: string, rules: object): void {
 		this._themes[name] = { "rules": rules };
 		// TODO: serialize css rules
 		if (this._injected[name] || name == 'default') {
@@ -124,7 +130,7 @@ class Themes {
 	 * Select a theme
 	 * @param {string} name
 	 */
-	select (name) {
+	select (name: string): void {
 		var prev = this._current;
 		var contents;
 
@@ -142,7 +148,7 @@ class Themes {
 	 * Update a theme
 	 * @param {string} name
 	 */
-	update (name) {
+	update (name: string): void {
 		var contents = this.rendition.getContents();
 		contents.forEach( (content) => {
 			this.add(name, content);
@@ -153,7 +159,7 @@ class Themes {
 	 * Inject all themes into contents
 	 * @param {Contents} contents
 	 */
-	inject (contents) {
+	inject (contents: any): void {
 		var links = [];
 		var themes = this._themes;
 		var theme;
@@ -178,7 +184,7 @@ class Themes {
 	 * @param {string} name
 	 * @param {Contents} contents
 	 */
-	add (name, contents) {
+	add (name: string, contents: any): void {
 		var theme = this._themes[name];
 
 		if (!theme || !contents) {
@@ -202,7 +208,7 @@ class Themes {
 	 * @param {string} value
 	 * @param {boolean} priority
 	 */
-	override (name, value, priority) {
+	override (name: string, value: any, priority?: boolean): void {
 		var contents = this.rendition.getContents();
 
 		this._overrides[name] = {
@@ -215,7 +221,7 @@ class Themes {
 		});
 	}
 
-	removeOverride (name) {
+	removeOverride (name: string): void {
 		var contents = this.rendition.getContents();
 
 		delete this._overrides[name];
@@ -229,7 +235,7 @@ class Themes {
 	 * Add all overrides
 	 * @param {Content} content
 	 */
-	overrides (contents) {
+	overrides (contents: any): void {
 		var overrides = this._overrides;
 
 		for (var rule in overrides) {
@@ -243,7 +249,7 @@ class Themes {
 	 * Adjust the font size of a rendition
 	 * @param {number} size
 	 */
-	fontSize (size) {
+	fontSize (size: any): void {
 		this.override("font-size", size);
 	}
 
@@ -251,11 +257,11 @@ class Themes {
 	 * Adjust the font-family of a rendition
 	 * @param {string} f
 	 */
-	font (f) {
+	font (f: string): void {
 		this.override("font-family", f, true);
 	}
 
-	destroy() {
+	destroy(): void {
 		this.rendition = undefined;
 		this._themes = undefined;
 		this._overrides = undefined;

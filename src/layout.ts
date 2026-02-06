@@ -1,6 +1,7 @@
 import { extend } from "./utils/core";
 import { EVENTS } from "./utils/constants";
 import EventEmitter from "./utils/event-emitter";
+import type { LayoutSettings, LayoutProps, IEventEmitter } from "./types";
 
 /**
  * Figures out the CSS values to apply for a layout
@@ -11,8 +12,28 @@ import EventEmitter from "./utils/event-emitter";
  * @param {number} [settings.minSpreadWidth=800]
  * @param {boolean} [settings.evenSpreads=false]
  */
-class Layout {
-	constructor(settings) {
+class Layout implements IEventEmitter {
+	declare on: (type: string, fn: (...args: any[]) => void) => this;
+	declare off: (type: string, fn?: (...args: any[]) => void) => this;
+	declare emit: (type: string, ...args: any[]) => void;
+
+	settings: any;
+	name: string;
+	_spread: boolean;
+	_minSpreadWidth: number;
+	_evenSpreads: boolean;
+	_flow: string;
+	width: number;
+	height: number;
+	spreadWidth: number;
+	delta: number;
+	columnWidth: number;
+	gap: number;
+	divisor: number;
+	pageWidth: number;
+	props: Record<string, any>;
+
+	constructor(settings: any) {
 		this.settings = settings;
 		this.name = settings.layout || "reflowable";
 		this._spread = (settings.spread === "none") ? false : true;
@@ -57,7 +78,7 @@ class Layout {
 	 * @param  {string} flow paginated | scrolled
 	 * @return {string} simplified flow
 	 */
-	flow(flow) {
+	flow(flow?: string): string {
 		if (typeof(flow) != "undefined") {
 			if (flow === "scrolled" ||
 					flow === "scrolled-continuous" ||
@@ -79,7 +100,7 @@ class Layout {
 	 * @param  {number} min integer in pixels
 	 * @return {boolean} spread true | false
 	 */
-	spread(spread, min) {
+	spread(spread?: string, min?: number): boolean {
 
 		if (spread) {
 			this._spread = (spread === "none") ? false : true;
@@ -100,7 +121,7 @@ class Layout {
 	 * @param  {number} _height height of the rendering
 	 * @param  {number} _gap    width of the gap between columns
 	 */
-	calculate(_width, _height, _gap){
+	calculate(_width: number, _height: number, _gap?: number): void {
 
 		var divisor = 1;
 		var gap = _gap || 0;
@@ -189,7 +210,7 @@ class Layout {
 	 * @param  {Contents} contents
 	 * @return {Promise}
 	 */
-	format(contents, section, axis){
+	format(contents: any, section?: any, axis?: string): any {
 		var formating;
 
 		if (this.name === "pre-paginated") {
@@ -211,7 +232,7 @@ class Layout {
 	 * @param  {number} pageLength
 	 * @return {{spreads: Number, pages: Number}}
 	 */
-	count(totalLength, pageLength) {
+	count(totalLength: number, pageLength?: number): { spreads: number; pages: number } {
 
 		let spreads, pages;
 
@@ -240,7 +261,7 @@ class Layout {
 	 * @private
 	 * @param  {object} props
 	 */
-	update(props) {
+	update(props: Record<string, any>): void {
 		// Remove props that haven't changed
 		Object.keys(props).forEach((propName) => {
 			if (this.props[propName] === props[propName]) {

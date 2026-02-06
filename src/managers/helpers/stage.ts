@@ -1,5 +1,6 @@
 import {uuid, isNumber, isElement, windowBounds, extend} from "../../utils/core";
-function throttle(func, wait) {
+import type { StageOptions } from "../../types";
+function throttle(func: Function, wait: number): () => void {
 	var timeout = null;
 	var previous = 0;
 	return function() {
@@ -23,7 +24,18 @@ function throttle(func, wait) {
 }
 
 class Stage {
-	constructor(_options) {
+	settings: any;
+	id: string;
+	container: HTMLDivElement;
+	wrapper: HTMLDivElement;
+	element: HTMLElement;
+	resizeFunc: () => void;
+	orientationChangeFunc: (e: Event) => void;
+	containerStyles: CSSStyleDeclaration;
+	containerPadding: { left: number; right: number; top: number; bottom: number };
+	sheet: CSSStyleSheet;
+
+	constructor(_options?: StageOptions) {
 		this.settings = _options || {};
 		this.id = "epubjs-container-" + uuid();
 
@@ -39,7 +51,7 @@ class Stage {
 	* Creates an element to render to.
 	* Resizes to passed width and height or to the elements size
 	*/
-	create(options){
+	create(options: any): HTMLDivElement {
 		let height  = options.height;// !== false ? options.height : "100%";
 		let width   = options.width;// !== false ? options.width : "100%";
 		let overflow  = options.overflow || false;
@@ -108,7 +120,7 @@ class Stage {
 		return container;
 	}
 
-	wrap(container) {
+	wrap(container: HTMLElement): HTMLDivElement {
 		var wrapper = document.createElement("div");
 
 		wrapper.style.visibility = "hidden";
@@ -121,7 +133,7 @@ class Stage {
 	}
 
 
-	getElement(_element){
+	getElement(_element: any): HTMLElement {
 		var element;
 
 		if(isElement(_element)) {
@@ -137,7 +149,7 @@ class Stage {
 		return element;
 	}
 
-	attachTo(what){
+	attachTo(what: any): HTMLElement | void {
 
 		var element = this.getElement(what);
 		var base;
@@ -160,11 +172,11 @@ class Stage {
 
 	}
 
-	getContainer() {
+	getContainer(): HTMLDivElement {
 		return this.container;
 	}
 
-	onResize(func){
+	onResize(func: () => void): void {
 		// Only listen to window for resize event if width and height are not fixed.
 		// This applies if it is set to a percent or auto.
 		if(!isNumber(this.settings.width) ||
@@ -175,12 +187,12 @@ class Stage {
 
 	}
 
-	onOrientationChange(func){
+	onOrientationChange(func: (e: Event) => void): void {
 		this.orientationChangeFunc = func;
 		window.addEventListener("orientationchange", this.orientationChangeFunc, false);
 	}
 
-	size(width, height){
+	size(width?: any, height?: any): { width: number; height: number } {
 		var bounds;
 		let _width = width || this.settings.width;
 		let _height = height || this.settings.height;
@@ -267,7 +279,7 @@ class Stage {
 
 	}
 
-	bounds(){
+	bounds(): DOMRect | { width: number; height: number } {
 		let box;
 		if (this.container.style.overflow !== "visible") {
 			box = this.container && this.container.getBoundingClientRect();
@@ -281,7 +293,7 @@ class Stage {
 
 	}
 
-	getSheet(){
+	getSheet(): CSSStyleSheet {
 		var style = document.createElement("style");
 
 		// WebKit hack --> https://davidwalsh.name/add-rules-stylesheets
@@ -292,7 +304,7 @@ class Stage {
 		return style.sheet;
 	}
 
-	addStyleRules(selector, rulesArray){
+	addStyleRules(selector: string, rulesArray: any[]): void {
 		var scope = "#" + this.id + " ";
 		var rules = "";
 
@@ -311,7 +323,7 @@ class Stage {
 		this.sheet.insertRule(scope + selector + " {" + rules + "}", 0);
 	}
 
-	axis(axis) {
+	axis(axis: string): void {
 		if(axis === "horizontal") {
 			this.container.style.display = "flex";
 			this.container.style.flexDirection = "row";
@@ -332,7 +344,7 @@ class Stage {
 	// 	this.orientation = orientation;
 	// }
 
-	direction(dir) {
+	direction(dir: string): void {
 		if (this.container) {
 			this.container.dir = dir;
 			this.container.style["direction"] = dir;
@@ -344,7 +356,7 @@ class Stage {
 		this.settings.dir = dir;
 	}
 
-	overflow(overflow) {
+	overflow(overflow: string): void {
 		if (this.container) {
 			if (overflow === "scroll" && this.settings.axis === "vertical") {
 				this.container.style["overflow-y"] = overflow;
@@ -359,7 +371,7 @@ class Stage {
 		this.settings.overflow = overflow;
 	}
 
-	destroy() {
+	destroy(): void {
 		var base;
 
 		if (this.element) {

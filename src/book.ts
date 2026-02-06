@@ -16,6 +16,7 @@ import EpubCFI from "./epubcfi";
 import Store from "./store";
 import DisplayOptions from "./displayoptions";
 import { EPUBJS_VERSION, EVENTS } from "./utils/constants";
+import type { IEventEmitter, BookOptions } from "./types";
 
 const CONTAINER_PATH = "META-INF/container.xml";
 const IBOOKS_DISPLAY_OPTIONS_PATH = "META-INF/com.apple.ibooks.display-options.xml";
@@ -47,8 +48,38 @@ const INPUT_TYPE = {
  * @example new Book("/path/to/book.epub", {})
  * @example new Book({ replacements: "blobUrl" })
  */
-class Book {
-	constructor(url, options) {
+class Book implements IEventEmitter {
+	settings: any;
+	opening: any;
+	opened: Promise<any>;
+	isOpen: boolean;
+	loading: any;
+	loaded: any;
+	ready: Promise<any>;
+	isRendered: boolean;
+	request: any;
+	spine: any;
+	locations: any;
+	navigation: any;
+	pageList: any;
+	url: any;
+	path: any;
+	archived: boolean;
+	archive: any;
+	storage: any;
+	resources: any;
+	rendition: any;
+	container: any;
+	packaging: any;
+	displayOptions: any;
+	package: any;
+	cover: string;
+
+	declare on: IEventEmitter["on"];
+	declare off: IEventEmitter["off"];
+	declare emit: IEventEmitter["emit"];
+
+	constructor(url?: any, options?: BookOptions) {
 		// Allow passing just options to the Book
 		if (typeof(options) === "undefined" &&
 			  typeof(url) !== "string" &&
@@ -244,7 +275,7 @@ class Book {
 	 * @returns {Promise} of when the book has been loaded
 	 * @example book.open("/path/to/book.epub")
 	 */
-	open(input, what) {
+	open(input: any, what?: string): Promise<any> {
 		var opening;
 		var type = what || this.determineType(input);
 
@@ -283,7 +314,7 @@ class Book {
 	 * @param  {string} [encoding]
 	 * @return {Promise}
 	 */
-	openEpub(data, encoding) {
+	openEpub(data: any, encoding?: string): Promise<any> {
 		return this.unarchive(data, encoding || this.settings.encoding)
 			.then(() => {
 				return this.openContainer(CONTAINER_PATH);
@@ -299,7 +330,7 @@ class Book {
 	 * @param  {string} url
 	 * @return {string} packagePath
 	 */
-	openContainer(url) {
+	openContainer(url: string): Promise<any> {
 		return this.load(url)
 			.then((xml) => {
 				this.container = new Container(xml);
@@ -313,7 +344,7 @@ class Book {
 	 * @param  {string} url
 	 * @return {Promise}
 	 */
-	openPackaging(url) {
+	openPackaging(url: string): Promise<any> {
 		this.path = new Path(url);
 		return this.load(url)
 			.then((xml) => {
@@ -328,7 +359,7 @@ class Book {
 	 * @param  {string} url
 	 * @return {Promise}
 	 */
-	openManifest(url) {
+	openManifest(url: string): Promise<any> {
 		this.path = new Path(url);
 		return this.load(url)
 			.then((json) => {
@@ -343,7 +374,7 @@ class Book {
 	 * @param  {string} path path to the resource to load
 	 * @return {Promise}     returns a promise with the requested resource
 	 */
-	load(path) {
+	load(path: string): Promise<any> {
 		var resolved = this.resolve(path);
 		if(this.archived) {
 			return this.archive.request(resolved);
@@ -358,7 +389,7 @@ class Book {
 	 * @param  {boolean} [absolute] force resolving the full URL
 	 * @return {string}          the resolved path string
 	 */
-	resolve(path, absolute) {
+	resolve(path: string, absolute?: boolean): string {
 		if (!path) {
 			return;
 		}
@@ -385,7 +416,7 @@ class Book {
 	 * @param  {string} path
 	 * @return {string} the canonical path string
 	 */
-	canonical(path) {
+	canonical(path: string): string {
 		var url = path;
 
 		if (!path) {
@@ -407,7 +438,7 @@ class Book {
 	 * @param  {string} input
 	 * @return {string}  binary | directory | epub | opf
 	 */
-	determineType(input) {
+	determineType(input: any): string {
 		var url;
 		var path;
 		var extension;
@@ -452,7 +483,7 @@ class Book {
 	 * @private
 	 * @param {Packaging} packaging object
 	 */
-	unpack(packaging) {
+	unpack(packaging: any): void {
 		this.package = packaging; //TODO: deprecated this
 
 		if (this.packaging.metadata.layout === "") {
@@ -519,7 +550,7 @@ class Book {
 	 * @private
 	 * @param {Packaging} packaging
 	 */
-	loadNavigation(packaging) {
+	loadNavigation(packaging: any): Promise<any> {
 		let navPath = packaging.navPath || packaging.ncxPath;
 		let toc = packaging.toc;
 
@@ -559,7 +590,7 @@ class Book {
 	 * @param {string} target
 	 * @return {Section}
 	 */
-	section(target) {
+	section(target: any): any {
 		return this.spine.get(target);
 	}
 
@@ -569,7 +600,7 @@ class Book {
 	 * @param  {object} [options]
 	 * @return {Rendition}
 	 */
-	renderTo(element, options) {
+	renderTo(element: any, options?: any): any {
 		this.rendition = new Rendition(this, options);
 		this.rendition.attachTo(element);
 
@@ -580,7 +611,7 @@ class Book {
 	 * Set if request should use withCredentials
 	 * @param {boolean} credentials
 	 */
-	setRequestCredentials(credentials) {
+	setRequestCredentials(credentials: boolean): void {
 		this.settings.requestCredentials = credentials;
 	}
 
@@ -588,7 +619,7 @@ class Book {
 	 * Set headers request should use
 	 * @param {object} headers
 	 */
-	setRequestHeaders(headers) {
+	setRequestHeaders(headers: object): void {
 		this.settings.requestHeaders = headers;
 	}
 
@@ -599,7 +630,7 @@ class Book {
 	 * @param  {string} [encoding]
 	 * @return {Archive}
 	 */
-	unarchive(input, encoding) {
+	unarchive(input: any, encoding?: string): Promise<any> {
 		this.archive = new Archive();
 		return this.archive.open(input, encoding);
 	}
@@ -611,7 +642,7 @@ class Book {
 	 * @param  {string} [encoding]
 	 * @return {Store}
 	 */
-	store(name) {
+	store(name: any): any {
 		// Use "blobUrl" or "base64" for replacements
 		let replacementsSetting = this.settings.replacements && this.settings.replacements !== "none";
 		// Save original url
@@ -663,7 +694,7 @@ class Book {
 	 * Get the cover url
 	 * @return {Promise<?string>} coverUrl
 	 */
-	coverUrl() {
+	coverUrl(): Promise<any> {
 		return this.loaded.cover.then(() => {
 			if (!this.cover) {
 				return null;
@@ -682,7 +713,7 @@ class Book {
 	 * @private
 	 * @return {Promise} completed loading urls
 	 */
-	replacements() {
+	replacements(): Promise<any> {
 		this.spine.hooks.serialize.register((output, section) => {
 			section.output = this.resources.substitute(output, section.url);
 		});
@@ -698,7 +729,7 @@ class Book {
 	 * @param  {EpubCFI} cfiRange a epub cfi range
 	 * @return {Promise}
 	 */
-	getRange(cfiRange) {
+	getRange(cfiRange: string): Promise<any> {
 		var cfi = new EpubCFI(cfiRange);
 		var item = this.spine.get(cfi.spinePos);
 		var _request = this.load.bind(this);
@@ -718,7 +749,7 @@ class Book {
 	 * @param  {string} [identifier] to use instead of metadata identifier
 	 * @return {string} key
 	 */
-	key(identifier) {
+	key(identifier?: string): string {
 		var ident = identifier || this.packaging.metadata.identifier || this.url.filename;
 		return `epubjs:${EPUBJS_VERSION}:${ident}`;
 	}
@@ -726,7 +757,7 @@ class Book {
 	/**
 	 * Destroy the Book and all associated objects
 	 */
-	destroy() {
+	destroy(): void {
 		this.opened = undefined;
 		this.loading = undefined;
 		this.loaded = undefined;

@@ -6,13 +6,24 @@ import {
 	indexOfSorted,
 	locationOf
 } from "./utils/core";
+import type { PageListItem } from "./types";
 
 /**
  * Page List Parser
  * @param {document} [xml]
  */
 class PageList {
-	constructor(xml) {
+	pages: any[];
+	locations: string[];
+	epubcfi: EpubCFI;
+	firstPage: number;
+	lastPage: number;
+	totalPages: number;
+	toc: any;
+	ncx: any;
+	pageList: any[];
+
+	constructor(xml?: any) {
 		this.pages = [];
 		this.locations = [];
 		this.epubcfi = new EpubCFI();
@@ -37,7 +48,7 @@ class PageList {
 	 * Parse PageList Xml
 	 * @param  {document} xml
 	 */
-	parse(xml) {
+	parse(xml: any): any[] {
 		var html = qs(xml, "html");
 		var ncx = qs(xml, "ncx");
 
@@ -55,7 +66,7 @@ class PageList {
 	 * @param  {node} navHtml
 	 * @return {PageList.item[]} list
 	 */
-	parseNav(navHtml){
+	parseNav(navHtml: any): any[] {
 		var navElement = querySelectorByType(navHtml, "nav", "page-list");
 		var navItems = navElement ? qsa(navElement, "li") : [];
 		var length = navItems.length;
@@ -73,7 +84,7 @@ class PageList {
 		return list;
 	}
 
-	parseNcx(navXml) {
+	parseNcx(navXml: any): any[] {
 		var list = [];
 		var i = 0;
 		var item;
@@ -99,7 +110,7 @@ class PageList {
 		return list;
 	}
 
-	ncxItem(item) {
+	ncxItem(item: any): any {
 		var navLabel = qs(item, "navLabel");
 		var navLabelText = qs(navLabel, "text");
 		var pageText = navLabelText.textContent;
@@ -120,7 +131,7 @@ class PageList {
 	 * @param  {node} item
 	 * @return {object} pageListItem
 	 */
-	item(item){
+	item(item: any): any {
 		var content = qs(item, "a"),
 				href = content.getAttribute("href") || "",
 				text = content.textContent || "",
@@ -153,7 +164,7 @@ class PageList {
 	 * @private
 	 * @param  {array} pageList
 	 */
-	process(pageList){
+	process(pageList: any[]): void {
 		pageList.forEach(function(item){
 			this.pages.push(item.page);
 			if (item.cfi) {
@@ -170,7 +181,7 @@ class PageList {
 	 * @param  {string} cfi EpubCFI String
 	 * @return {number} page
 	 */
-	pageFromCfi(cfi){
+	pageFromCfi(cfi: string): number {
 		var pg = -1;
 
 		// Check if the pageList has not been set yet
@@ -208,8 +219,8 @@ class PageList {
 	 * @param  {string | number} pg
 	 * @return {string} cfi
 	 */
-	cfiFromPage(pg){
-		var cfi = -1;
+	cfiFromPage(pg: string | number): any {
+		var cfi: any = -1;
 		// check that pg is an int
 		if(typeof pg != "number"){
 			pg = parseInt(pg);
@@ -230,7 +241,7 @@ class PageList {
 	 * @param  {number} percent
 	 * @return {number} page
 	 */
-	pageFromPercentage(percent){
+	pageFromPercentage(percent: number): number {
 		var pg = Math.round(this.totalPages * percent);
 		return pg;
 	}
@@ -240,7 +251,7 @@ class PageList {
 	 * @param  {number} pg the page
 	 * @return {number} percentage
 	 */
-	percentageFromPage(pg){
+	percentageFromPage(pg: number): number {
 		var percentage = (pg - this.firstPage) / this.totalPages;
 		return Math.round(percentage * 1000) / 1000;
 	}
@@ -250,7 +261,7 @@ class PageList {
 	 * @param  {string} cfi EpubCFI String
 	 * @return {number} percentage
 	 */
-	percentageFromCfi(cfi){
+	percentageFromCfi(cfi: string): number {
 		var pg = this.pageFromCfi(cfi);
 		var percentage = this.percentageFromPage(pg);
 		return percentage;
@@ -259,7 +270,7 @@ class PageList {
 	/**
 	 * Destroy
 	 */
-	destroy() {
+	destroy(): void {
 		this.pages = undefined;
 		this.locations = undefined;
 		this.epubcfi = undefined;

@@ -4,6 +4,7 @@ import EpubCFI from "./epubcfi";
 import Mapping from "./mapping";
 import {replaceLinks} from "./utils/replacements";
 import { EPUBJS_VERSION, EVENTS, DOM_EVENTS } from "./utils/constants";
+import type { ViewportSettings, IEventEmitter } from "./types";
 
 const hasNavigator = typeof (navigator) !== "undefined";
 
@@ -21,14 +22,38 @@ const TEXT_NODE = 3;
 	* @param {string} cfiBase Section component of CFIs
 	* @param {number} sectionIndex Index in Spine of Conntent's Section
 	*/
-class Contents {
-	constructor(doc, content, cfiBase, sectionIndex) {
+class Contents implements IEventEmitter {
+	declare on: (type: string, fn: (...args: any[]) => void) => this;
+	declare off: (type: string, fn?: (...args: any[]) => void) => this;
+	declare emit: (type: string, ...args: any[]) => void;
+
+	epubcfi: EpubCFI;
+	document: Document;
+	documentElement: HTMLElement;
+	content: HTMLElement;
+	window: Window;
+	_size: { width: number; height: number };
+	sectionIndex: number;
+	cfiBase: string;
+	called: number;
+	active: boolean;
+	observer: any;
+	expanding: any;
+	onResize: ((size: { width: number; height: number }) => void) | undefined;
+	_expanding: boolean;
+	_resizeCheck: (() => void) | undefined;
+	_triggerEvent: ((e: Event) => void) | undefined;
+	_onSelectionChange: ((e: Event) => void) | undefined;
+	selectionEndTimeout: any;
+	_layoutStyle: string;
+
+	constructor(doc: Document, content?: HTMLElement, cfiBase?: string, sectionIndex?: number) {
 		// Blank Cfi for Parsing
 		this.epubcfi = new EpubCFI();
 
 		this.document = doc;
-		this.documentElement =  this.document.documentElement;
-		this.content = content || this.document.body;
+		this.documentElement =  this.document.documentElement as HTMLElement;
+		this.content = content || this.document.body as HTMLElement;
 		this.window = this.document.defaultView;
 
 		this._size = {
@@ -57,7 +82,7 @@ class Contents {
 		* @param {number} [w]
 		* @returns {number} width
 		*/
-	width(w) {
+	width(w?: any): number {
 		// var frame = this.documentElement;
 		var frame = this.content;
 
@@ -80,7 +105,7 @@ class Contents {
 		* @param {number} [h]
 		* @returns {number} height
 		*/
-	height(h) {
+	height(h?: any): number {
 		// var frame = this.documentElement;
 		var frame = this.content;
 
@@ -102,7 +127,7 @@ class Contents {
 		* @param {number} [w]
 		* @returns {number} width
 		*/
-	contentWidth(w) {
+	contentWidth(w?: any): number {
 
 		var content = this.content || this.document.body;
 
@@ -124,7 +149,7 @@ class Contents {
 		* @param {number} [h]
 		* @returns {number} height
 		*/
-	contentHeight(h) {
+	contentHeight(h?: any): number {
 
 		var content = this.content || this.document.body;
 
@@ -144,7 +169,7 @@ class Contents {
 		* Get the width of the text using Range
 		* @returns {number} width
 		*/
-	textWidth() {
+	textWidth(): number {
 		let rect;
 		let width;
 		let range = this.document.createRange();
@@ -169,7 +194,7 @@ class Contents {
 		* Get the height of the text using Range
 		* @returns {number} height
 		*/
-	textHeight() {
+	textHeight(): number {
 		let rect;
 		let height;
 		let range = this.document.createRange();
@@ -187,7 +212,7 @@ class Contents {
 		* Get documentElement scrollWidth
 		* @returns {number} width
 		*/
-	scrollWidth() {
+	scrollWidth(): number {
 		var width = this.documentElement.scrollWidth;
 
 		return width;
@@ -197,7 +222,7 @@ class Contents {
 		* Get documentElement scrollHeight
 		* @returns {number} height
 		*/
-	scrollHeight() {
+	scrollHeight(): number {
 		var height = this.documentElement.scrollHeight;
 
 		return height;
@@ -207,7 +232,7 @@ class Contents {
 		* Set overflow css style of the contents
 		* @param {string} [overflow]
 		*/
-	overflow(overflow) {
+	overflow(overflow?: string): string {
 
 		if (overflow) {
 			this.documentElement.style.overflow = overflow;
@@ -220,7 +245,7 @@ class Contents {
 		* Set overflowX css style of the documentElement
 		* @param {string} [overflow]
 		*/
-	overflowX(overflow) {
+	overflowX(overflow?: string): string {
 
 		if (overflow) {
 			this.documentElement.style.overflowX = overflow;
@@ -233,7 +258,7 @@ class Contents {
 		* Set overflowY css style of the documentElement
 		* @param {string} [overflow]
 		*/
-	overflowY(overflow) {
+	overflowY(overflow?: string): string {
 
 		if (overflow) {
 			this.documentElement.style.overflowY = overflow;
@@ -248,7 +273,7 @@ class Contents {
 		* @param {string} value
 		* @param {boolean} [priority] set as "important"
 		*/
-	css(property, value, priority) {
+	css(property: string, value?: string, priority?: boolean): string {
 		var content = this.content || this.document.body;
 
 		if (value) {
@@ -270,7 +295,7 @@ class Contents {
 		* @param {string} [options.maximum]
 		* @param {string} [options.scalable]
 		*/
-	viewport(options) {
+	viewport(options?: any): any {
 		var _width, _height, _scale, _minimum, _maximum, _scalable;
 		// var width, height, scale, minimum, maximum, scalable;
 		var $viewport = this.document.querySelector("meta[name='viewport']");
@@ -371,7 +396,7 @@ class Contents {
 	 * Event emitter for when the contents has expanded
 	 * @private
 	 */
-	expand() {
+	expand(): void {
 		this.emit(EVENTS.CONTENTS.EXPAND);
 	}
 
@@ -379,7 +404,7 @@ class Contents {
 	 * Add DOM listeners
 	 * @private
 	 */
-	listeners() {
+	listeners(): void {
 		this.imageLoadListeners();
 
 		this.mediaQueryListeners();
@@ -408,7 +433,7 @@ class Contents {
 	 * Remove DOM listeners
 	 * @private
 	 */
-	removeListeners() {
+	removeListeners(): void {
 
 		this.removeEventListeners();
 
@@ -426,7 +451,7 @@ class Contents {
 	 * emit 'resize' event if it has.
 	 * @private
 	 */
-	resizeCheck() {
+	resizeCheck(): void {
 		let width = this.textWidth();
 		let height = this.textHeight();
 
@@ -446,7 +471,7 @@ class Contents {
 	 * Poll for resize detection
 	 * @private
 	 */
-	resizeListeners() {
+	resizeListeners(): void {
 		var width, height;
 		// Test size again
 		clearTimeout(this.expanding);
@@ -458,7 +483,7 @@ class Contents {
 	 * Listen for visibility of tab to change
 	 * @private
 	 */
-	visibilityListeners() {
+	visibilityListeners(): void {
 		document.addEventListener("visibilitychange", () => {
 			if (document.visibilityState === "visible" && this.active === false) {
 				this.active = true;
@@ -474,7 +499,7 @@ class Contents {
 	 * Use css transitions to detect resize
 	 * @private
 	 */
-	transitionListeners() {
+	transitionListeners(): void {
 		let body = this.content;
 
 		body.style['transitionProperty'] = "font, font-size, font-size-adjust, font-stretch, font-variation-settings, font-weight, width, height";
@@ -491,7 +516,7 @@ class Contents {
 	 * Adapted from: https://github.com/tylergaw/media-query-events/blob/master/js/mq-events.js
 	 * @private
 	 */
-	mediaQueryListeners() {
+	mediaQueryListeners(): void {
 		var sheets = this.document.styleSheets;
 		var mediaChangeHandler = function(m){
 			if(m.matches && !this._expanding) {
@@ -523,7 +548,7 @@ class Contents {
 	 * Use ResizeObserver to listen for changes in the DOM and check for resize
 	 * @private
 	 */
-	resizeObservers() {
+	resizeObservers(): void {
 		// create an observer instance
 		this.observer = new ResizeObserver((e) => {
 			requestAnimationFrame(this.resizeCheck.bind(this));
@@ -537,7 +562,7 @@ class Contents {
 	 * Use MutationObserver to listen for changes in the DOM and check for resize
 	 * @private
 	 */
-	mutationObservers() {
+	mutationObservers(): void {
 		// create an observer instance
 		this.observer = new MutationObserver((mutations) => {
 			this.resizeCheck();
@@ -554,7 +579,7 @@ class Contents {
 	 * Test if images are loaded or add listener for when they load
 	 * @private
 	 */
-	imageLoadListeners() {
+	imageLoadListeners(): void {
 		var images = this.document.querySelectorAll("img");
 		var img;
 		for (var i = 0; i < images.length; i++) {
@@ -571,7 +596,7 @@ class Contents {
 	 * Listen for font load and check for resize when loaded
 	 * @private
 	 */
-	fontLoadListeners() {
+	fontLoadListeners(): void {
 		if (!this.document || !this.document.fonts) {
 			return;
 		}
@@ -586,7 +611,7 @@ class Contents {
 	 * Get the documentElement
 	 * @returns {element} documentElement
 	 */
-	root() {
+	root(): HTMLElement | null {
 		if(!this.document) return null;
 		return this.document.documentElement;
 	}
@@ -597,7 +622,7 @@ class Contents {
 	 * @param {string} [ignoreClass] for the cfi
 	 * @returns { {left: Number, top: Number }
 	 */
-	locationOf(target, ignoreClass) {
+	locationOf(target: string, ignoreClass?: string): { left: number; top: number } {
 		var position;
 		var targetPos = {"left": 0, "top": 0};
 
@@ -689,7 +714,7 @@ class Contents {
 	 * Append a stylesheet link to the document head
 	 * @param {string} src url
 	 */
-	addStylesheet(src) {
+	addStylesheet(src: string): Promise<boolean> {
 		return new Promise(function(resolve, reject){
 			var $stylesheet;
 			var ready = false;
@@ -725,7 +750,7 @@ class Contents {
 		}.bind(this));
 	}
 
-	_getStylesheetNode(key) {
+	_getStylesheetNode(key?: string): any {
 		var styleEl;
 		key = "epubjs-inserted-css-" + (key || '');
 
@@ -747,7 +772,7 @@ class Contents {
 	 * @param {string} serializedCss
 	 * @param {string} key If the key is the same, the CSS will be replaced instead of inserted
 	 */
-	addStylesheetCss(serializedCss, key) {
+	addStylesheetCss(serializedCss: string, key?: string): boolean {
 		if(!this.document || !serializedCss) return false;
 
 		var styleEl;
@@ -764,7 +789,7 @@ class Contents {
 	 * @param {array | object} rules
 	 * @param {string} key If the key is the same, the CSS will be replaced instead of inserted
 	 */
-	addStylesheetRules(rules, key) {
+	addStylesheetRules(rules: any, key?: string): void {
 		var styleSheet;
 
 		if(!this.document || !rules || rules.length === 0) return;
@@ -817,7 +842,7 @@ class Contents {
 	 * @param {string} src url
 	 * @returns {Promise} loaded
 	 */
-	addScript(src) {
+	addScript(src: string): Promise<boolean> {
 
 		return new Promise(function(resolve, reject){
 			var $script;
@@ -850,7 +875,7 @@ class Contents {
 	 * Add a class to the contents container
 	 * @param {string} className
 	 */
-	addClass(className) {
+	addClass(className: string): void {
 		var content;
 
 		if(!this.document) return;
@@ -867,7 +892,7 @@ class Contents {
 	 * Remove a class from the contents container
 	 * @param {string} removeClass
 	 */
-	removeClass(className) {
+	removeClass(className: string): void {
 		var content;
 
 		if(!this.document) return;
@@ -884,7 +909,7 @@ class Contents {
 	 * Add DOM event listeners
 	 * @private
 	 */
-	addEventListeners(){
+	addEventListeners(): void {
 		if(!this.document) {
 			return;
 		}
@@ -901,7 +926,7 @@ class Contents {
 	 * Remove DOM event listeners
 	 * @private
 	 */
-	removeEventListeners(){
+	removeEventListeners(): void {
 		if(!this.document) {
 			return;
 		}
@@ -915,7 +940,7 @@ class Contents {
 	 * Emit passed browser events
 	 * @private
 	 */
-	triggerEvent(e){
+	triggerEvent(e: Event): void {
 		this.emit(e.type, e);
 	}
 
@@ -923,7 +948,7 @@ class Contents {
 	 * Add listener for text selection
 	 * @private
 	 */
-	addSelectionListeners(){
+	addSelectionListeners(): void {
 		if(!this.document) {
 			return;
 		}
@@ -935,7 +960,7 @@ class Contents {
 	 * Remove listener for text selection
 	 * @private
 	 */
-	removeSelectionListeners(){
+	removeSelectionListeners(): void {
 		if(!this.document) {
 			return;
 		}
@@ -947,7 +972,7 @@ class Contents {
 	 * Handle getting text on selection
 	 * @private
 	 */
-	onSelectionChange(e){
+	onSelectionChange(e: Event): void {
 		if (this.selectionEndTimeout) {
 			clearTimeout(this.selectionEndTimeout);
 		}
@@ -961,7 +986,7 @@ class Contents {
 	 * Emit event on text selection
 	 * @private
 	 */
-	triggerSelectedEvent(selection){
+	triggerSelectedEvent(selection: Selection): void {
 		var range, cfirange;
 
 		if (selection && selection.rangeCount > 0) {
@@ -981,7 +1006,7 @@ class Contents {
 	 * @param {string} [ignoreClass]
 	 * @returns {Range} range
 	 */
-	range(_cfi, ignoreClass){
+	range(_cfi: string, ignoreClass?: string): Range {
 		var cfi = new EpubCFI(_cfi);
 		return cfi.toRange(this.document, ignoreClass);
 	}
@@ -992,7 +1017,7 @@ class Contents {
 	 * @param {string} [ignoreClass]
 	 * @returns {EpubCFI} cfi
 	 */
-	cfiFromRange(range, ignoreClass){
+	cfiFromRange(range: Range, ignoreClass?: string): string {
 		return new EpubCFI(range, this.cfiBase, ignoreClass).toString();
 	}
 
@@ -1002,12 +1027,12 @@ class Contents {
 	 * @param {string} [ignoreClass]
 	 * @returns {EpubCFI} cfi
 	 */
-	cfiFromNode(node, ignoreClass){
+	cfiFromNode(node: Node, ignoreClass?: string): string {
 		return new EpubCFI(node, this.cfiBase, ignoreClass).toString();
 	}
 
 	// TODO: find where this is used - remove?
-	map(layout){
+	map(layout: any): any {
 		var map = new Mapping(layout);
 		return map.section();
 	}
@@ -1017,7 +1042,7 @@ class Contents {
 	 * @param {number} [width]
 	 * @param {number} [height]
 	 */
-	size(width, height){
+	size(width?: number, height?: number): void {
 		var viewport = { scale: 1.0, scalable: "no" };
 
 		this.layoutStyle("scrolling");
@@ -1047,7 +1072,7 @@ class Contents {
 	 * @param {number} columnWidth
 	 * @param {number} gap
 	 */
-	columns(width, height, columnWidth, gap, dir){
+	columns(width: number, height: number, columnWidth: number, gap: number, dir?: string): void {
 		let COLUMN_AXIS = prefixed("column-axis");
 		let COLUMN_GAP = prefixed("column-gap");
 		let COLUMN_WIDTH = prefixed("column-width");
@@ -1108,7 +1133,7 @@ class Contents {
 	 * @param {number} offsetX
 	 * @param {number} offsetY
 	 */
-	scaler(scale, offsetX, offsetY){
+	scaler(scale: number, offsetX?: number, offsetY?: number): void {
 		var scaleStr = "scale(" + scale + ")";
 		var translateStr = "";
 		// this.css("position", "absolute"));
@@ -1126,7 +1151,7 @@ class Contents {
 	 * @param {number} width
 	 * @param {number} height
 	 */
-	fit(width, height, section){
+	fit(width: number, height: number, section?: any): void {
 		var viewport = this.viewport();
 		var viewportWidth = parseInt(viewport.width);
 		var viewportHeight = parseInt(viewport.height);
@@ -1167,13 +1192,13 @@ class Contents {
 	 * Set the direction of the text
 	 * @param {string} [dir="ltr"] "rtl" | "ltr"
 	 */
-	direction(dir) {
+	direction(dir: string): void {
 		if (this.documentElement) {
 			this.documentElement.style["direction"] = dir;
 		}
 	}
 
-	mapPage(cfiBase, layout, start, end, dev) {
+	mapPage(cfiBase: string, layout: any, start: number, end: number, dev?: boolean): any {
 		var mapping = new Mapping(layout, dev);
 
 		return mapping.page(this, cfiBase, start, end);
@@ -1183,7 +1208,7 @@ class Contents {
 	 * Emit event when link in content is clicked
 	 * @private
 	 */
-	linksHandler() {
+	linksHandler(): void {
 		replaceLinks(this.content, (href) => {
 			this.emit(EVENTS.CONTENTS.LINK_CLICKED, href);
 		});
@@ -1193,7 +1218,7 @@ class Contents {
 	 * Set the writingMode of the text
 	 * @param {string} [mode="horizontal-tb"] "horizontal-tb" | "vertical-rl" | "vertical-lr"
 	 */
-	writingMode(mode) {
+	writingMode(mode?: string): string {
 		let WRITING_MODE = prefixed("writing-mode");
 
 		if (mode && this.documentElement) {
@@ -1208,7 +1233,7 @@ class Contents {
 	 * @param {string} [style="paginated"] "scrolling" | "paginated"
 	 * @private
 	 */
-	layoutStyle(style) {
+	layoutStyle(style?: string): string {
 
 		if (style) {
 			this._layoutStyle = style;
@@ -1224,7 +1249,7 @@ class Contents {
 	 * @param {string} version
 	 * @private
 	 */
-	epubReadingSystem(name, version) {
+	epubReadingSystem(name: string, version: string): any {
 		navigator.epubReadingSystem = {
 			name: name,
 			version: version,
@@ -1251,7 +1276,7 @@ class Contents {
 		return navigator.epubReadingSystem;
 	}
 
-	destroy() {
+	destroy(): void {
 		// this.document.removeEventListener('transitionend', this._resizeCheck);
 
 		this.removeListeners();

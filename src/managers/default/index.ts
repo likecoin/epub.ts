@@ -6,9 +6,43 @@ import Queue from "../../utils/queue";
 import Stage from "../helpers/stage";
 import Views from "../helpers/views";
 import { EVENTS } from "../../utils/constants";
+import type { IEventEmitter, ManagerOptions, ViewSettings } from "../../types";
 
-class DefaultViewManager {
-	constructor(options) {
+class DefaultViewManager implements IEventEmitter {
+	name: string;
+	optsSettings: any;
+	View: any;
+	request: any;
+	renditionQueue: any;
+	q: any;
+	settings: any;
+	viewSettings: any;
+	rendered: boolean;
+	stage: any;
+	container: HTMLElement;
+	views: any;
+	_bounds: any;
+	_stageSize: any;
+	overflow: string;
+	layout: any;
+	mapping: any;
+	location: any;
+	isPaginated: boolean;
+	scrollLeft: number;
+	scrollTop: number;
+	ignore: boolean;
+	writingMode: string;
+	_onScroll: (...args: any[]) => void;
+	orientationTimeout: ReturnType<typeof setTimeout>;
+	resizeTimeout: ReturnType<typeof setTimeout>;
+	afterScrolled: ReturnType<typeof setTimeout>;
+	winBounds: any;
+
+	declare on: IEventEmitter["on"];
+	declare off: IEventEmitter["off"];
+	declare emit: IEventEmitter["emit"];
+
+	constructor(options: any) {
 
 		this.name = "default";
 		this.optsSettings = options.settings;
@@ -50,7 +84,7 @@ class DefaultViewManager {
 
 	}
 
-	render(element, size){
+	render(element: any, size: any): void {
 		let tag = element.tagName;
 
 		if (typeof this.settings.fullsize === "undefined" &&
@@ -114,7 +148,7 @@ class DefaultViewManager {
 
 	}
 
-	addEventListeners(){
+	addEventListeners(): void {
 		var scroller;
 
 		window.addEventListener("unload", function(e){
@@ -131,7 +165,7 @@ class DefaultViewManager {
 		scroller.addEventListener("scroll", this._onScroll);
 	}
 
-	removeEventListeners(){
+	removeEventListeners(): void {
 		var scroller;
 
 		if(!this.settings.fullsize) {
@@ -144,7 +178,7 @@ class DefaultViewManager {
 		this._onScroll = undefined;
 	}
 
-	destroy(){
+	destroy(): void {
 		clearTimeout(this.orientationTimeout);
 		clearTimeout(this.resizeTimeout);
 		clearTimeout(this.afterScrolled);
@@ -168,7 +202,7 @@ class DefaultViewManager {
 		*/
 	}
 
-	onOrientationChange(e) {
+	onOrientationChange(e?: any): void {
 		let {orientation} = window;
 
 		if(this.optsSettings.resizeOnOrientationChange) {
@@ -193,11 +227,11 @@ class DefaultViewManager {
 
 	}
 
-	onResized(e) {
+	onResized(e?: any): void {
 		this.resize();
 	}
 
-	resize(width, height, epubcfi){
+	resize(width?: any, height?: any, epubcfi?: string): void {
 		let stageSize = this.stage.size(width, height);
 
 		// For Safari, wait for orientation to catch up
@@ -236,11 +270,11 @@ class DefaultViewManager {
 		}, epubcfi);
 	}
 
-	createView(section, forceRight) {
+	createView(section: any, forceRight?: boolean): any {
 		return new this.View(section, extend(this.viewSettings, { forceRight }) );
 	}
 
-	handleNextPrePaginated(forceRight, section, action) {
+	handleNextPrePaginated(forceRight: boolean, section: any, action: Function): any {
 		let next;
 
 		if (this.layout.name === "pre-paginated" && this.layout.divisor > 1) {
@@ -255,7 +289,7 @@ class DefaultViewManager {
 		}
 	}
 
-	display(section, target){
+	display(section: any, target?: any): Promise<any> {
 
 		var displaying = new defer();
 		var displayed = displaying.promise;
@@ -329,15 +363,15 @@ class DefaultViewManager {
 		return displayed;
 	}
 
-	afterDisplayed(view){
+	afterDisplayed(view: any): void {
 		this.emit(EVENTS.MANAGERS.ADDED, view);
 	}
 
-	afterResized(view){
+	afterResized(view: any): void {
 		this.emit(EVENTS.MANAGERS.RESIZE, view.section);
 	}
 
-	moveTo(offset, width){
+	moveTo(offset: any, width?: number): void {
 		var distX = 0,
 				distY = 0;
 
@@ -368,7 +402,7 @@ class DefaultViewManager {
 		this.scrollTo(distX, distY, true);
 	}
 
-	add(section, forceRight){
+	add(section: any, forceRight?: boolean): Promise<any> {
 		var view = this.createView(section, forceRight);
 
 		this.views.append(view);
@@ -388,7 +422,7 @@ class DefaultViewManager {
 		return view.display(this.request);
 	}
 
-	append(section, forceRight){
+	append(section: any, forceRight?: boolean): Promise<any> {
 		var view = this.createView(section, forceRight);
 		this.views.append(view);
 
@@ -406,7 +440,7 @@ class DefaultViewManager {
 		return view.display(this.request);
 	}
 
-	prepend(section, forceRight){
+	prepend(section: any, forceRight?: boolean): Promise<any> {
 		var view = this.createView(section, forceRight);
 
 		view.on(EVENTS.VIEWS.RESIZED, (bounds) => {
@@ -429,7 +463,7 @@ class DefaultViewManager {
 		return view.display(this.request);
 	}
 
-	counter(bounds){
+	counter(bounds: any): void {
 		if(this.settings.axis === "vertical") {
 			this.scrollBy(0, bounds.heightDelta, true);
 		} else {
@@ -448,7 +482,7 @@ class DefaultViewManager {
 	//
 	// };
 
-	next(){
+	next(): any {
 		var next;
 		var left;
 
@@ -538,7 +572,7 @@ class DefaultViewManager {
 
 	}
 
-	prev(){
+	prev(): any {
 		var prev;
 		var left;
 		let dir = this.settings.direction;
@@ -638,7 +672,7 @@ class DefaultViewManager {
 		}
 	}
 
-	current(){
+	current(): any {
 		var visible = this.visible();
 		if(visible.length){
 			// Current is the last visible view
@@ -647,7 +681,7 @@ class DefaultViewManager {
 		return null;
 	}
 
-	clear () {
+	clear (): void {
 
 		// this.q.clear();
 
@@ -658,7 +692,7 @@ class DefaultViewManager {
 		}
 	}
 
-	currentLocation(){
+	currentLocation(): any {
 		this.updateLayout();
 		if (this.isPaginated && this.settings.axis === "horizontal") {
 			this.location = this.paginatedLocation();
@@ -668,7 +702,7 @@ class DefaultViewManager {
 		return this.location;
 	}
 
-	scrolledLocation() {
+	scrolledLocation(): any[] {
 		let visible = this.visible();
 		let container = this.container.getBoundingClientRect();
 		let pageHeight = (container.height < window.innerHeight) ? container.height : window.innerHeight;
@@ -737,7 +771,7 @@ class DefaultViewManager {
 		return sections;
 	}
 
-	paginatedLocation(){
+	paginatedLocation(): any[] {
 		let visible = this.visible();
 		let container = this.container.getBoundingClientRect();
 
@@ -811,7 +845,7 @@ class DefaultViewManager {
 		return sections;
 	}
 
-	isVisible(view, offsetPrev, offsetNext, _container){
+	isVisible(view: any, offsetPrev: number, offsetNext: number, _container?: any): boolean {
 		var position = view.position();
 		var container = _container || this.bounds();
 
@@ -832,7 +866,7 @@ class DefaultViewManager {
 
 	}
 
-	visible(){
+	visible(): any[] {
 		var container = this.bounds();
 		var views = this.views.displayed();
 		var viewsLength = views.length;
@@ -852,7 +886,7 @@ class DefaultViewManager {
 		return visible;
 	}
 
-	scrollBy(x, y, silent){
+	scrollBy(x: number, y: number, silent?: boolean): void {
 		let dir = this.settings.direction === "rtl" ? -1 : 1;
 
 		if(silent) {
@@ -868,7 +902,7 @@ class DefaultViewManager {
 		this.scrolled = true;
 	}
 
-	scrollTo(x, y, silent){
+	scrollTo(x: number, y: number, silent?: boolean): void {
 		if(silent) {
 			this.ignore = true;
 		}
@@ -882,7 +916,7 @@ class DefaultViewManager {
 		this.scrolled = true;
 	}
 
-	onScroll(){
+	onScroll(): void {
 		let scrollTop;
 		let scrollLeft;
 
@@ -919,7 +953,7 @@ class DefaultViewManager {
 
 	}
 
-	bounds() {
+	bounds(): any {
 		var bounds;
 
 		bounds = this.stage.bounds();
@@ -927,7 +961,7 @@ class DefaultViewManager {
 		return bounds;
 	}
 
-	applyLayout(layout) {
+	applyLayout(layout: any): void {
 
 		this.layout = layout;
 		this.updateLayout();
@@ -937,7 +971,7 @@ class DefaultViewManager {
 		 // this.manager.layout(this.layout.format);
 	}
 
-	updateLayout() {
+	updateLayout(): void {
 
 		if (!this.stage) {
 			return;
@@ -968,7 +1002,7 @@ class DefaultViewManager {
 		this.setLayout(this.layout);
 	}
 
-	setLayout(layout){
+	setLayout(layout: any): void {
 
 		this.viewSettings.layout = layout;
 
@@ -986,11 +1020,11 @@ class DefaultViewManager {
 
 	}
 
-	updateWritingMode(mode) {
+	updateWritingMode(mode: string): void {
 		this.writingMode = mode;
 	}
 
-	updateAxis(axis, forceUpdate){
+	updateAxis(axis: string, forceUpdate?: boolean): void {
 
 		if (!forceUpdate && axis === this.settings.axis) {
 			return;
@@ -1015,7 +1049,7 @@ class DefaultViewManager {
 		}
 	}
 
-	updateFlow(flow, defaultScrolledOverflow="auto"){
+	updateFlow(flow: string, defaultScrolledOverflow: string = "auto"): void {
 		let isPaginated = (flow === "paginated" || flow === "auto");
 
 		this.isPaginated = isPaginated;
@@ -1042,7 +1076,7 @@ class DefaultViewManager {
 
 	}
 
-	getContents(){
+	getContents(): any[] {
 		var contents = [];
 		if (!this.views) {
 			return contents;
@@ -1056,7 +1090,7 @@ class DefaultViewManager {
 		return contents;
 	}
 
-	direction(dir="ltr") {
+	direction(dir: string = "ltr"): void {
 		this.settings.direction = dir;
 
 		this.stage && this.stage.direction(dir);
@@ -1066,7 +1100,7 @@ class DefaultViewManager {
 		this.updateLayout();
 	}
 
-	isRendered() {
+	isRendered(): boolean {
 		return this.rendered;
 	}
 }

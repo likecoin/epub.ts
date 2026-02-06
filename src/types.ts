@@ -13,8 +13,8 @@ export interface Deferred<T = any> {
 
 // ===== Event Emitter =====
 export interface IEventEmitter {
-	on(type: string, fn: (...args: any[]) => void): this;
-	off(type: string, fn?: (...args: any[]) => void): this;
+	on(type: string, fn: (...args: any[]) => void): any;
+	off(type: string, fn?: (...args: any[]) => void): any;
 	emit(type: string, ...args: any[]): void;
 	__listeners?: Record<string, Array<(...args: any[]) => void>>;
 }

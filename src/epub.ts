@@ -16,7 +16,7 @@ import ContinuousViewManager from "./managers/continuous";
  * @returns {Book} a new Book object
  * @example ePub("/path/to/book.epub", {})
  */
-function ePub(url, options) {
+function ePub(url?: any, options?: any): any {
 	return new Book(url, options);
 }
 

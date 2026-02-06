@@ -18,7 +18,7 @@ class Hook {
 	 * Adds a function to be run before a hook completes
 	 * @example this.content.register(function(){...});
 	 */
-	register(): void {
+	register(...args: any[]): void {
 		for(var i = 0; i < arguments.length; ++i) {
 			if (typeof arguments[i]  === "function") {
 				this.hooks.push(arguments[i]);

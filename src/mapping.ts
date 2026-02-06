@@ -1,5 +1,6 @@
 import EpubCFI from "./epubcfi";
 import { nodeBounds } from "./utils/core";
+import type { EpubCFIPair, RangePair } from "./types";
 
 /**
  * Map text locations to CFI ranges
@@ -10,7 +11,12 @@ import { nodeBounds } from "./utils/core";
  * @param {boolean} [dev] toggle developer highlighting
  */
 class Mapping {
-	constructor(layout, direction, axis, dev=false) {
+	layout: any;
+	horizontal: boolean;
+	direction: string;
+	_dev: boolean;
+
+	constructor(layout: any, direction?: string, axis?: string, dev: boolean = false) {
 		this.layout = layout;
 		this.horizontal = (axis === "horizontal") ? true : false;
 		this.direction = direction || "ltr";
@@ -20,7 +26,7 @@ class Mapping {
 	/**
 	 * Find CFI pairs for entire section at once
 	 */
-	section(view) {
+	section(view: any): EpubCFIPair[] {
 		var ranges = this.findRanges(view);
 		var map = this.rangeListToCfiList(view.section.cfiBase, ranges);
 
@@ -34,7 +40,7 @@ class Mapping {
 	 * @param {number} start position to start at
 	 * @param {number} end position to end at
 	 */
-	page(contents, cfiBase, start, end) {
+	page(contents: any, cfiBase: string, start: number, end: number): EpubCFIPair | undefined {
 		var root = contents && contents.document ? contents.document.body : false;
 		var result;
 
@@ -70,7 +76,7 @@ class Mapping {
 	 * @param {function} func walk function
 	 * @return {*} returns the result of the walk function
 	 */
-	walk(root, func) {
+	walk(root: any, func: (node: any) => any): any {
 		// IE11 has strange issue, if root is text node IE throws exception on
 		// calling treeWalker.nextNode(), saying
 		// Unexpected call to method or property access instead of returning null value
@@ -102,7 +108,7 @@ class Mapping {
 		return result;
 	}
 
-	findRanges(view){
+	findRanges(view: any): any[] {
 		var columns = [];
 		var scrollWidth = view.contents.scrollWidth();
 		var spreads = Math.ceil( scrollWidth / this.layout.spreadWidth);
@@ -131,7 +137,7 @@ class Mapping {
 	 * @param {number} end position to end at
 	 * @return {Range}
 	 */
-	findStart(root, start, end){
+	findStart(root: any, start: number, end: number): any {
 		var stack = [root];
 		var $el;
 		var found;
@@ -214,7 +220,7 @@ class Mapping {
 	 * @param {number} end position to end at
 	 * @return {Range}
 	 */
-	findEnd(root, start, end){
+	findEnd(root: any, start: number, end: number): any {
 		var stack = [root];
 		var $el;
 		var $prev = root;
@@ -297,7 +303,7 @@ class Mapping {
 	 * @param {number} end position to end at
 	 * @return {Range}
 	 */
-	findTextStartRange(node, start, end){
+	findTextStartRange(node: any, start: number, end: number): Range {
 		var ranges = this.splitTextNodeIntoRanges(node);
 		var range;
 		var pos;
@@ -346,7 +352,7 @@ class Mapping {
 	 * @param {number} end position to end at
 	 * @return {Range}
 	 */
-	findTextEndRange(node, start, end){
+	findTextEndRange(node: any, start: number, end: number): Range {
 		var ranges = this.splitTextNodeIntoRanges(node);
 		var prev;
 		var range;
@@ -410,7 +416,7 @@ class Mapping {
 	 * @param {string} [_splitter] what to split on
 	 * @return {Range[]}
 	 */
-	splitTextNodeIntoRanges(node, _splitter){
+	splitTextNodeIntoRanges(node: any, _splitter?: string): Range[] {
 		var ranges = [];
 		var textContent = node.textContent || "";
 		var text = textContent.trim();
@@ -463,7 +469,7 @@ class Mapping {
 	 * @param {object} rangePair { start: Range, end: Range }
 	 * @return {object} { start: "epubcfi(...)", end: "epubcfi(...)" }
 	 */
-	rangePairToCfiPair(cfiBase, rangePair){
+	rangePairToCfiPair(cfiBase: string, rangePair: any): EpubCFIPair {
 
 		var startRange = rangePair.start;
 		var endRange = rangePair.end;
@@ -481,7 +487,7 @@ class Mapping {
 
 	}
 
-	rangeListToCfiList(cfiBase, columns){
+	rangeListToCfiList(cfiBase: string, columns: any[]): EpubCFIPair[] {
 		var map = [];
 		var cifPair;
 
@@ -500,7 +506,7 @@ class Mapping {
 	 * @param {string} axis horizontal | vertical
 	 * @return {boolean} is it horizontal?
 	 */
-	axis(axis) {
+	axis(axis?: string): boolean {
 		if (axis) {
 			this.horizontal = (axis === "horizontal") ? true : false;
 		}

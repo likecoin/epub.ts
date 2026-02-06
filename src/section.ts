@@ -5,6 +5,7 @@ import { sprint } from "./utils/core";
 import { replaceBase } from "./utils/replacements";
 import Request from "./utils/request";
 import { DOMParser as XMLDOMSerializer } from "@xmldom/xmldom";
+import type { SpineItem, GlobalLayout, SearchResult } from "./types";
 
 /**
  * Represents a Section of the Book
@@ -14,7 +15,23 @@ import { DOMParser as XMLDOMSerializer } from "@xmldom/xmldom";
  * @param {object} hooks hooks for serialize and content
  */
 class Section {
-	constructor(item, hooks){
+	idref: string;
+	linear: boolean;
+	properties: string[];
+	index: number;
+	href: string;
+	url: string;
+	canonical: string;
+	next: () => SpineItem;
+	prev: () => SpineItem;
+	cfiBase: string;
+	hooks: { serialize: Hook; content: Hook };
+	document: any;
+	contents: any;
+	output: any;
+	request: any;
+
+	constructor(item: any, hooks?: { serialize: Hook; content: Hook }){
 		this.idref = item.idref;
 		this.linear = item.linear === "yes";
 		this.properties = item.properties;
@@ -30,7 +47,7 @@ class Section {
 		if (hooks) {
 			this.hooks = hooks;
 		} else {
-			this.hooks = {};
+			this.hooks = {} as any;
 			this.hooks.serialize = new Hook(this);
 			this.hooks.content = new Hook(this);
 		}
@@ -45,7 +62,7 @@ class Section {
 	 * @param  {method} [_request] a request method to use for loading
 	 * @return {document} a promise with the xml document
 	 */
-	load(_request){
+	load(_request?: any): Promise<any> {
 		var request = _request || this.request || Request;
 		var loading = new defer();
 		var loaded = loading.promise;
@@ -77,7 +94,7 @@ class Section {
 	 * Adds a base tag for resolving urls in the section
 	 * @private
 	 */
-	base(){
+	base(): any {
 		return replaceBase(this.document, this);
 	}
 
@@ -86,7 +103,7 @@ class Section {
 	 * @param  {method} [_request] a request method to use for loading
 	 * @return {string} output a serialized XML Document
 	 */
-	render(_request){
+	render(_request?: any): Promise<string> {
 		var rendering = new defer();
 		var rendered = rendering.promise;
 		this.output; // TODO: better way to return this from hooks?
@@ -123,7 +140,7 @@ class Section {
 	 * @param  {string} _query The query string to find
 	 * @return {object[]} A list of matches, with form {cfi, excerpt}
 	 */
-	find(_query){
+	find(_query: string): SearchResult[] {
 		var section = this;
 		var matches = [];
 		var query = _query.toLowerCase();
@@ -182,7 +199,7 @@ class Section {
 	 * @param  {int} maxSeqEle The maximum number of Element that are combined for search, default value is 5.
 	 * @return {object[]} A list of matches, with form {cfi, excerpt}
 	 */
-	search(_query , maxSeqEle = 5){
+	search(_query: string, maxSeqEle: number = 5): SearchResult[] {
 		if (typeof(document.createTreeWalker) == "undefined") {
 			return this.find(_query);
 		}
@@ -250,7 +267,7 @@ class Section {
 	* @param {object} globalLayout  The global layout settings object, chapter properties string
 	* @return {object} layoutProperties Object with layout properties
 	*/
-	reconcileLayoutSettings(globalLayout){
+	reconcileLayoutSettings(globalLayout: GlobalLayout): Record<string, string> {
 		//-- Get the global defaults
 		var settings = {
 			layout : globalLayout.layout,
@@ -279,7 +296,7 @@ class Section {
 	 * @param  {range} _range
 	 * @return {string} cfi an EpubCFI string
 	 */
-	cfiFromRange(_range) {
+	cfiFromRange(_range: Range): string {
 		return new EpubCFI(_range, this.cfiBase).toString();
 	}
 
@@ -288,20 +305,20 @@ class Section {
 	 * @param  {element} el
 	 * @return {string} cfi an EpubCFI string
 	 */
-	cfiFromElement(el) {
+	cfiFromElement(el: Element): string {
 		return new EpubCFI(el, this.cfiBase).toString();
 	}
 
 	/**
 	 * Unload the section document
 	 */
-	unload() {
+	unload(): void {
 		this.document = undefined;
 		this.contents = undefined;
 		this.output = undefined;
 	}
 
-	destroy() {
+	destroy(): void {
 		this.unload();
 		this.hooks.serialize.clear();
 		this.hooks.content.clear();
