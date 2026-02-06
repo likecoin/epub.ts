@@ -3,21 +3,23 @@ import type { StageOptions } from "../../types";
 function throttle(func: Function, wait: number): () => void {
 	let timeout: ReturnType<typeof setTimeout> | null = null;
 	let previous = 0;
-	return function() {
+	return function(this: unknown) {
 		const now = Date.now();
 		const remaining = wait - (now - previous);
+		const context = this;
+		const args = arguments;
 		if (remaining <= 0 || remaining > wait) {
 			if (timeout) {
 				clearTimeout(timeout);
 				timeout = null;
 			}
 			previous = now;
-			func.apply(this, arguments);
+			func.apply(context, args);
 		} else if (!timeout) {
 			timeout = setTimeout(() => {
 				previous = Date.now();
 				timeout = null;
-				func.apply(this, arguments);
+				func.apply(context, args);
 			}, remaining);
 		}
 	};
@@ -27,13 +29,13 @@ class Stage {
 	settings: StageOptions;
 	id: string;
 	container: HTMLDivElement;
-	wrapper: HTMLDivElement;
-	element: HTMLElement;
-	resizeFunc: () => void;
-	orientationChangeFunc: (e: Event) => void;
-	containerStyles: CSSStyleDeclaration;
-	containerPadding: { left: number; right: number; top: number; bottom: number };
-	sheet: CSSStyleSheet;
+	wrapper!: HTMLDivElement;
+	element!: HTMLElement;
+	resizeFunc!: () => void;
+	orientationChangeFunc!: (e: Event) => void;
+	containerStyles!: CSSStyleDeclaration;
+	containerPadding!: { left: number; right: number; top: number; bottom: number };
+	sheet!: CSSStyleSheet;
 
 	constructor(_options?: StageOptions) {
 		this.settings = _options || {};

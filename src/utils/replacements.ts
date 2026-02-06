@@ -112,7 +112,7 @@ export function replaceLinks(contents: Element, fn: (path: string) => void): voi
 				return false;
 			};
 		}
-	}.bind(this);
+	};
 
 	for (let i = 0; i < links.length; i++) {
 		replaceLink(links[i]);

@@ -332,12 +332,13 @@ class Store implements IEventEmitter {
 			response = this.getBase64(url);
 
 			if (response) {
-				response.then(function(tempUrl: string) {
+				response.then((tempUrl: string | undefined) => {
 
+					if (!tempUrl) return;
 					this.urlCache[url] = tempUrl;
 					deferred.resolve(tempUrl);
 
-				}.bind(this));
+				});
 
 			}
 
@@ -346,13 +347,14 @@ class Store implements IEventEmitter {
 			response = this.getBlob(url);
 
 			if (response) {
-				response.then(function(blob: Blob) {
+				response.then((blob: Blob | undefined) => {
 
+					if (!blob) return;
 					tempUrl = _URL.createObjectURL(blob);
 					this.urlCache[url] = tempUrl;
 					deferred.resolve(tempUrl);
 
-				}.bind(this));
+				});
 
 			}
 		}

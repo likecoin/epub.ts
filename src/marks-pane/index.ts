@@ -173,8 +173,8 @@ export class Pane {
 
 export class Mark {
 	element: SVGElement | null;
-	container: HTMLElement;
-	range: Range;
+	container!: HTMLElement;
+	range!: Range;
 
 	constructor() {
 		this.element = null;

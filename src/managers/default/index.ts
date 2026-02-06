@@ -22,26 +22,26 @@ class DefaultViewManager implements IEventEmitter {
 	settings: ManagerOptions;
 	viewSettings: Omit<ViewSettings, "layout"> & { layout?: Layout | LayoutProps };
 	rendered: boolean;
-	stage: Stage;
-	container: HTMLElement;
-	views: Views;
-	_bounds: { left: number; right: number; top: number; bottom: number; width: number; height: number };
-	_stageSize: SizeObject;
-	overflow: string;
-	layout: Layout;
-	mapping: Mapping;
-	location: ViewLocation[];
-	isPaginated: boolean;
-	scrollLeft: number;
-	scrollTop: number;
-	ignore: boolean;
-	writingMode: string;
-	_hasScrolled: boolean;
-	_onScroll: (...args: any[]) => void;
-	orientationTimeout: ReturnType<typeof setTimeout>;
-	resizeTimeout: ReturnType<typeof setTimeout>;
-	afterScrolled: ReturnType<typeof setTimeout>;
-	winBounds: { top: number; left: number; right: number; bottom: number; width: number; height: number };
+	stage!: Stage;
+	container!: HTMLElement;
+	views!: Views;
+	_bounds!: { left: number; right: number; top: number; bottom: number; width: number; height: number };
+	_stageSize!: SizeObject;
+	overflow!: string;
+	layout!: Layout;
+	mapping!: Mapping;
+	location!: ViewLocation[];
+	isPaginated!: boolean;
+	scrollLeft!: number;
+	scrollTop!: number;
+	ignore!: boolean;
+	writingMode!: string;
+	_hasScrolled!: boolean;
+	_onScroll!: (...args: any[]) => void;
+	orientationTimeout: ReturnType<typeof setTimeout> | undefined;
+	resizeTimeout!: ReturnType<typeof setTimeout>;
+	afterScrolled!: ReturnType<typeof setTimeout>;
+	winBounds!: { top: number; left: number; right: number; bottom: number; width: number; height: number };
 
 	declare on: IEventEmitter["on"];
 	declare off: IEventEmitter["off"];
@@ -56,7 +56,7 @@ class DefaultViewManager implements IEventEmitter {
 		this.renditionQueue = options.queue;
 		this.q = new Queue(this);
 
-		this.settings = extend(this.settings || {}, {
+		this.settings = extend({}, {
 			infinite: true,
 			hidden: false,
 			width: undefined,
@@ -156,9 +156,9 @@ class DefaultViewManager implements IEventEmitter {
 	addEventListeners(): void {
 		let scroller;
 
-		window.addEventListener("unload", function(_e: Event){
+		window.addEventListener("unload", (_e: Event) => {
 			this.destroy();
-		}.bind(this));
+		});
 
 		if(!this.settings.fullsize) {
 			scroller = this.container;
@@ -220,7 +220,7 @@ class DefaultViewManager implements IEventEmitter {
 		// happens in window.resize event. Adding a timeout for correct
 		// measurement. See https://github.com/ampproject/amphtml/issues/8479
 		clearTimeout(this.orientationTimeout);
-		this.orientationTimeout = setTimeout(function(){
+		this.orientationTimeout = setTimeout(() => {
 			this.orientationTimeout = undefined;
 
 			if(this.optsSettings.resizeOnOrientationChange) {
@@ -228,7 +228,7 @@ class DefaultViewManager implements IEventEmitter {
 			}
 
 			this.emit(EVENTS.MANAGERS.ORIENTATION_CHANGE, orientation);
-		}.bind(this), 500);
+		}, 500);
 
 	}
 
@@ -337,7 +337,7 @@ class DefaultViewManager implements IEventEmitter {
 		}
 
 		this.add(section, forceRight)
-			.then(function(view: IframeView){
+			.then((view: IframeView) => {
 
 				// Move to correct place within the section, if needed
 				if(target) {
@@ -346,19 +346,19 @@ class DefaultViewManager implements IEventEmitter {
 					this.moveTo(offset, width);
 				}
 
-			}.bind(this), (err) => {
+			}, (err) => {
 				displaying.reject(err);
 			})
-			.then(function(){
+			.then(() => {
 				return this.handleNextPrePaginated(forceRight, section, this.add);
-			}.bind(this))
-			.then(function(){
+			})
+			.then(() => {
 
 				this.views.show();
 
 				displaying.resolve();
 
-			}.bind(this));
+			});
 		// .then(function(){
 		// 	return this.hooks.display.trigger(view);
 		// }.bind(this))
@@ -555,23 +555,23 @@ class DefaultViewManager implements IEventEmitter {
 			}
 
 			return this.append(next, forceRight)
-				.then(function(){
+				.then(() => {
 					return this.handleNextPrePaginated(forceRight, next, this.append);
-				}.bind(this), (err) => {
+				}, (err) => {
 					return err;
 				})
-				.then(function(){
+				.then(() => {
 
 					// Reset position to start for scrolled-doc vertical-rl in default mode
 					if (!this.isPaginated &&
 						this.settings.axis === "horizontal" &&
 						this.settings.direction === "rtl" &&
 						this.settings.rtlScrollType === "default") {
-						
+
 						this.scrollTo(this.container.scrollWidth, 0, true);
 					}
 					this.views.show();
-				}.bind(this));
+				});
 		}
 
 
@@ -648,7 +648,7 @@ class DefaultViewManager implements IEventEmitter {
 			}
 
 			return this.prepend(prev, forceRight)
-				.then(function(){
+				.then(() => {
 					let left;
 					if (this.layout.name === "pre-paginated" && this.layout.divisor > 1) {
 						left = prev.prev();
@@ -656,10 +656,10 @@ class DefaultViewManager implements IEventEmitter {
 							return this.prepend(left);
 						}
 					}
-				}.bind(this), (err) => {
+				}, (err) => {
 					return err;
 				})
-				.then(function(){
+				.then(() => {
 					if(this.isPaginated && this.settings.axis === "horizontal") {
 						if (this.settings.direction === "rtl") {
 							if (this.settings.rtlScrollType === "default"){
@@ -673,7 +673,7 @@ class DefaultViewManager implements IEventEmitter {
 						}
 					}
 					this.views.show();
-				}.bind(this));
+				});
 		}
 	}
 
@@ -943,12 +943,12 @@ class DefaultViewManager implements IEventEmitter {
 			});
 
 			clearTimeout(this.afterScrolled);
-			this.afterScrolled = setTimeout(function () {
+			this.afterScrolled = setTimeout(() => {
 				this.emit(EVENTS.MANAGERS.SCROLLED, {
 					top: this.scrollTop,
 					left: this.scrollLeft
 				});
-			}.bind(this), 20);
+			}, 20);
 
 
 
@@ -1013,7 +1013,7 @@ class DefaultViewManager implements IEventEmitter {
 
 		if(this.views) {
 
-			this.views.forEach(function(view: IframeView){
+			this.views.forEach((view: IframeView) => {
 				if (view) {
 					view.setLayout(layout);
 				}
@@ -1084,7 +1084,7 @@ class DefaultViewManager implements IEventEmitter {
 		if (!this.views) {
 			return contents;
 		}
-		this.views.forEach(function(view: IframeView){
+		this.views.forEach((view: IframeView) => {
 			const viewContents = view && view.contents;
 			if (viewContents) {
 				contents.push(viewContents);

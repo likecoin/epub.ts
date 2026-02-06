@@ -66,8 +66,8 @@ class Rendition implements IEventEmitter {
 	starting: defer;
 	started: Promise<void>;
 	manager: DefaultViewManager | undefined;
-	ViewManager: typeof DefaultViewManager | typeof ContinuousViewManager | Function;
-	View: typeof IframeView | Function;
+	ViewManager!: typeof DefaultViewManager | typeof ContinuousViewManager | Function;
+	View!: typeof IframeView | Function;
 	_layout: Layout | undefined;
 	displaying: defer | undefined;
 
@@ -77,7 +77,7 @@ class Rendition implements IEventEmitter {
 
 	constructor(book: Book, options?: RenditionOptions) {
 
-		this.settings = extend(this.settings || {}, {
+		this.settings = extend({}, {
 			width: null,
 			height: null,
 			ignoreClass: "",
@@ -309,12 +309,12 @@ class Rendition implements IEventEmitter {
 	 */
 	attachTo(element: HTMLElement | string): Promise<void> {
 
-		return this.q.enqueue(function () {
+		return this.q.enqueue(() => {
 
 			// Start rendering
-			this.manager.render(element, {
-				"width"  : this.settings.width,
-				"height" : this.settings.height
+			this.manager!.render(element as HTMLElement, {
+				"width"  : this.settings.width as number,
+				"height" : this.settings.height as number
 			});
 
 			/**
@@ -324,7 +324,7 @@ class Rendition implements IEventEmitter {
 			 */
 			this.emit(EVENTS.RENDITION.ATTACHED);
 
-		}.bind(this));
+		});
 
 	}
 
@@ -722,11 +722,11 @@ class Rendition implements IEventEmitter {
 	 * @fires locationChanged
 	 */
 	reportLocation(): Promise<void> {
-		return this.q.enqueue(function reportedLocation(){
-			requestAnimationFrame(function reportedLocationAfterRAF() {
-				const location = this.manager.currentLocation();
+		return this.q.enqueue(() => {
+			requestAnimationFrame(() => {
+				const location = this.manager!.currentLocation() as any;
 				if (location && location.then && typeof location.then === "function") {
-					location.then(function(result: ViewLocation[]) {
+					location.then((result: ViewLocation[]) => {
 						const located = this.located(result);
 
 						if (!located || !located.start || !located.end) {
@@ -744,7 +744,7 @@ class Rendition implements IEventEmitter {
 						});
 
 						this.emit(EVENTS.RENDITION.RELOCATED, this.location);
-					}.bind(this));
+					});
 				} else if (location) {
 					const located = this.located(location);
 
@@ -780,8 +780,8 @@ class Rendition implements IEventEmitter {
 					 */
 					this.emit(EVENTS.RENDITION.RELOCATED, this.location);
 				}
-			}.bind(this));
-		}.bind(this));
+			});
+		});
 	}
 
 	/**
@@ -791,10 +791,10 @@ class Rendition implements IEventEmitter {
 	currentLocation(): Location | undefined {
 		const location = this.manager!.currentLocation() as any;
 		if (location && location.then && typeof location.then === "function") {
-			location.then(function(result: ViewLocation[]) {
+			location.then((result: ViewLocation[]) => {
 				const located = this.located(result);
 				return located;
-			}.bind(this));
+			});
 		} else if (location) {
 			const located = this.located(location);
 			return located;

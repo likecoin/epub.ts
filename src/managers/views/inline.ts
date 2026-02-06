@@ -20,23 +20,23 @@ class InlineView implements IEventEmitter {
 	fixedHeight: number;
 	epubcfi: any;
 	layout: any;
-	frame: HTMLDivElement;
-	resizing: boolean;
-	_width: number;
-	_height: number;
-	_textWidth: number;
-	_textHeight: number;
-	_needsReframe: boolean;
-	_expanding: boolean;
+	frame!: HTMLDivElement;
+	resizing!: boolean;
+	_width!: number;
+	_height!: number;
+	_textWidth!: number;
+	_textHeight!: number;
+	_needsReframe!: boolean;
+	_expanding!: boolean;
 	elementBounds: any;
 	prevBounds: any;
-	lockedWidth: number;
-	lockedHeight: number;
-	document: Document;
-	window: Window;
+	lockedWidth!: number;
+	lockedHeight!: number;
+	document!: Document;
+	window!: Window;
 	contents: any;
-	rendering: boolean;
-	stopExpanding: boolean;
+	rendering!: boolean;
+	stopExpanding!: boolean;
 
 	declare on: IEventEmitter["on"];
 	declare off: IEventEmitter["off"];
@@ -152,23 +152,23 @@ class InlineView implements IEventEmitter {
 
 		// Render Chain
 		return this.section.render(request)
-			.then(function(contents: any){
+			.then((contents: any) => {
 				return this.load(contents);
-			}.bind(this))
+			})
 			// .then(function(doc){
 			// 	return this.hooks.content.trigger(view, this);
 			// }.bind(this))
-			.then(function(){
+			.then(() => {
 				// this.settings.layout.format(view.contents);
 				// return this.hooks.layout.trigger(view, this);
-			}.bind(this))
+			})
 			// .then(function(){
 			// 	return this.display();
 			// }.bind(this))
 			// .then(function(){
 			// 	return this.hooks.render.trigger(view, this);
 			// }.bind(this))
-			.then(function(){
+			.then(() => {
 
 				// apply the layout function to the contents
 				this.settings.layout.format(this.contents);
@@ -188,10 +188,10 @@ class InlineView implements IEventEmitter {
 				//this.hooks.show.trigger(view, this);
 				this.emit(EVENTS.VIEWS.RENDERED, this.section);
 
-			}.bind(this))
-			.catch(function(e: any){
+			})
+			.catch((e: any) => {
 				this.emit(EVENTS.VIEWS.LOAD_ERROR, e);
-			}.bind(this));
+			});
 
 	}
 
@@ -374,7 +374,7 @@ class InlineView implements IEventEmitter {
 
 		if (!this.displayed) {
 
-			this.render(request).then(function () {
+			this.render(request).then(() => {
 
 				this.emit(EVENTS.VIEWS.DISPLAYED, this);
 				this.onDisplayed(this);
@@ -383,7 +383,7 @@ class InlineView implements IEventEmitter {
 
 				displayed.resolve(this);
 
-			}.bind(this));
+			});
 
 		} else {
 			displayed.resolve(this);

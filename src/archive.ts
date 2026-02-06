@@ -51,9 +51,9 @@ class Archive {
 	 */
 	openUrl(zipUrl: string, isBase64?: boolean): Promise<JSZip> {
 		return request(zipUrl, "binary")
-			.then(function(data: ArrayBuffer){
+			.then((data: ArrayBuffer) => {
 				return this.zip.loadAsync(data, {"base64": isBase64});
-			}.bind(this));
+			});
 	}
 
 	/**
@@ -79,10 +79,10 @@ class Archive {
 		}
 
 		if (response) {
-			response.then(function (r: string | Blob) {
+			response.then((r: string | Blob) => {
 				const result = this.handleResponse(r, type);
 				deferred.resolve(result);
-			}.bind(this));
+			});
 		} else {
 			deferred.reject({
 				message : "File not found in the epub: " + url,
@@ -198,12 +198,12 @@ class Archive {
 			response = this.getBase64(url);
 
 			if (response) {
-				response.then(function(tempUrl: string) {
+				response.then((tempUrl: string) => {
 
 					this.urlCache[url] = tempUrl;
 					deferred.resolve(tempUrl);
 
-				}.bind(this));
+				});
 
 			}
 
@@ -212,13 +212,13 @@ class Archive {
 			response = this.getBlob(url);
 
 			if (response) {
-				response.then(function(blob: Blob) {
+				response.then((blob: Blob) => {
 
 					tempUrl = _URL.createObjectURL(blob);
 					this.urlCache[url] = tempUrl;
 					deferred.resolve(tempUrl);
 
-				}.bind(this));
+				});
 
 			}
 		}

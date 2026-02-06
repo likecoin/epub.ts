@@ -32,7 +32,7 @@ class Layout implements IEventEmitter {
 	columnWidth: number;
 	gap: number;
 	divisor: number;
-	pageWidth: number;
+	pageWidth!: number;
 	props: LayoutProps;
 
 	constructor(settings: LayoutSettings) {

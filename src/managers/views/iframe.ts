@@ -26,29 +26,29 @@ class IframeView implements IEventEmitter {
 	underlines: Record<string, { mark: Mark; element: SVGElement | null; listeners: (Function | undefined)[] }>;
 	marks: Record<string, { element: HTMLAnchorElement; range: Range; listeners: (Function | undefined)[] }>;
 	iframe: HTMLIFrameElement | undefined;
-	resizing: boolean;
-	_width: number;
-	_height: number;
-	_textWidth: number;
-	_textHeight: number;
-	_contentWidth: number;
-	_contentHeight: number;
-	_needsReframe: boolean;
-	_expanding: boolean;
-	elementBounds: { width: number; height: number };
-	supportsSrcdoc: boolean;
-	sectionRender: Promise<string>;
-	lockedWidth: number;
-	lockedHeight: number;
+	resizing!: boolean;
+	_width!: number;
+	_height!: number;
+	_textWidth!: number;
+	_textHeight!: number;
+	_contentWidth!: number;
+	_contentHeight!: number;
+	_needsReframe!: boolean;
+	_expanding!: boolean;
+	elementBounds!: { width: number; height: number };
+	supportsSrcdoc!: boolean;
+	sectionRender!: Promise<string>;
+	lockedWidth!: number;
+	lockedHeight!: number;
 	prevBounds: ReframeBounds | undefined;
-	blobUrl: string;
-	document: Document;
-	window: Window;
+	blobUrl!: string;
+	document!: Document;
+	window!: Window;
 	contents: Contents | undefined;
-	rendering: boolean;
-	writingMode: string;
-	stopExpanding: boolean;
-	axis: string;
+	rendering!: boolean;
+	writingMode!: string;
+	stopExpanding!: boolean;
+	axis!: string;
 
 	declare on: IEventEmitter["on"];
 	declare off: IEventEmitter["off"];
@@ -202,13 +202,13 @@ class IframeView implements IEventEmitter {
 
 		// Render Chain
 		return this.sectionRender
-			.then(function(contents: string){
+			.then((contents: string) => {
 				return this.load(contents);
-			}.bind(this))
-			.then(function(){
+			})
+			.then(() => {
 
 				// find and report the writingMode axis
-				const writingMode = this.contents.writingMode();
+				const writingMode = this.contents!.writingMode();
 
 				// Set the axis based on the flow and writing mode
 				let axis;
@@ -230,7 +230,7 @@ class IframeView implements IEventEmitter {
 
 
 				// apply the layout function to the contents
-				this.layout.format(this.contents, this.section, this.axis);
+				this.layout.format(this.contents!, this.section, this.axis);
 
 				// Listen for events that require an expansion of the iframe
 				this.addListeners();
@@ -245,15 +245,15 @@ class IframeView implements IEventEmitter {
 					resolve();
 				});
 
-			}.bind(this), function(e: Error){
+			}, (e: Error) => {
 				this.emit(EVENTS.VIEWS.LOAD_ERROR, e);
 				return new Promise((resolve, reject) => {
 					reject(e);
 				});
-			}.bind(this))
-			.then(function() {
+			})
+			.then(() => {
 				this.emit(EVENTS.VIEWS.RENDERED, this.section);
-			}.bind(this));
+			});
 
 	}
 
@@ -436,11 +436,11 @@ class IframeView implements IEventEmitter {
 			return loaded;
 		}
 
-		this.iframe.onload = function(event: Event) {
+		this.iframe.onload = (event: Event) => {
 
 			this.onLoad(event, loading);
 
-		}.bind(this);
+		};
 
 		if (this.settings.method === "blobUrl") {
 			this.blobUrl = createBlobUrl(contents, "application/xhtml+xml");
@@ -559,7 +559,7 @@ class IframeView implements IEventEmitter {
 		if (!this.displayed) {
 
 			this.render(request)
-				.then(function () {
+				.then(() => {
 
 					this.emit(EVENTS.VIEWS.DISPLAYED, this);
 					this.onDisplayed(this);
@@ -567,7 +567,7 @@ class IframeView implements IEventEmitter {
 					this.displayed = true;
 					displayed.resolve(this);
 
-				}.bind(this), function (err) {
+				}, (err) => {
 					displayed.reject(err);
 				});
 

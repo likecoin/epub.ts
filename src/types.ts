@@ -109,7 +109,7 @@ export interface PageListItem {
 
 // ===== Book =====
 export interface BookOptions {
-	requestMethod?: (url: string, type: string, withCredentials?: boolean, headers?: object) => Promise<any>;
+	requestMethod?: RequestFunction;
 	requestCredentials?: boolean;
 	requestHeaders?: Record<string, string>;
 	encoding?: string;

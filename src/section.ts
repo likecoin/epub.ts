@@ -29,7 +29,7 @@ class Section {
 	document: Document | undefined;
 	contents: Element | undefined;
 	output: string | undefined;
-	request: RequestFunction;
+	request!: RequestFunction;
 
 	constructor(item: SpineItem, hooks?: { serialize: Hook; content: Hook }){
 		this.idref = item.idref;
@@ -71,17 +71,17 @@ class Section {
 			loading.resolve(this.contents);
 		} else {
 			request(this.url)
-				.then(function(xml: Document){
+				.then((xml: Document) => {
 					// var directory = new Url(this.url).directory;
 
 					this.document = xml;
 					this.contents = xml.documentElement;
 
 					return this.hooks.content.trigger(this.document, this);
-				}.bind(this))
-				.then(function(){
+				})
+				.then(() => {
 					loading.resolve(this.contents);
-				}.bind(this))
+				})
 				.catch(function(error: Error){
 					loading.reject(error);
 				});
@@ -109,7 +109,7 @@ class Section {
 		this.output; // TODO: better way to return this from hooks?
 
 		this.load(_request).
-			then(function(contents: Element){
+			then((contents: Element) => {
 				const userAgent = (typeof navigator !== "undefined" && navigator.userAgent) || "";
 				const isIE = userAgent.indexOf("Trident") >= 0;
 				let Serializer;
@@ -121,13 +121,13 @@ class Section {
 				const serializer = new Serializer() as unknown as XMLSerializer;
 				this.output = serializer.serializeToString(contents);
 				return this.output;
-			}.bind(this)).
-			then(function(){
+			}).
+			then(() => {
 				return this.hooks.serialize.trigger(this.output, this);
-			}.bind(this)).
-			then(function(){
+			}).
+			then(() => {
 				rendering.resolve(this.output);
-			}.bind(this))
+			})
 			.catch(function(error: Error){
 				rendering.reject(error);
 			});

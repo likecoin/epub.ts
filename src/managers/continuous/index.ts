@@ -8,7 +8,7 @@ import type Stage from "../helpers/stage";
 import type { ManagerOptions, ReframeBounds } from "../../types";
 function debounce(func: Function, wait: number): () => void {
 	let timeout: ReturnType<typeof setTimeout>;
-	return function() {
+	return function(this: unknown) {
 		const context = this;
 		const args = arguments;
 		clearTimeout(timeout);
@@ -19,23 +19,23 @@ function debounce(func: Function, wait: number): () => void {
 }
 
 class ContinuousViewManager extends DefaultViewManager {
-	snapper: Snap;
+	snapper!: Snap;
 	tick: typeof requestAnimationFrame;
-	scrollDeltaVert: number;
-	scrollDeltaHorz: number;
-	_scrolled: (...args: any[]) => void;
-	didScroll: boolean;
-	prevScrollTop: number;
-	prevScrollLeft: number;
-	scrollTimeout: ReturnType<typeof setTimeout>;
-	trimTimeout: ReturnType<typeof setTimeout>;
+	scrollDeltaVert!: number;
+	scrollDeltaHorz!: number;
+	_scrolled!: (...args: any[]) => void;
+	didScroll!: boolean;
+	prevScrollTop!: number;
+	prevScrollLeft!: number;
+	scrollTimeout!: ReturnType<typeof setTimeout>;
+	trimTimeout!: ReturnType<typeof setTimeout>;
 
 	constructor(options: ManagerOptions) {
 		super(options);
 
 		this.name = "continuous";
 
-		this.settings = extend(this.settings || {}, {
+		this.settings = extend({}, {
 			infinite: true,
 			overflow: undefined,
 			axis: undefined,
@@ -76,9 +76,9 @@ class ContinuousViewManager extends DefaultViewManager {
 
 	display(section: Section, target?: string): Promise<any> {
 		return DefaultViewManager.prototype.display.call(this, section, target)
-			.then(function () {
+			.then(() => {
 				return this.fill();
-			}.bind(this));
+			});
 	}
 
 	fill(_full?: InstanceType<typeof defer>): Promise<any> {
@@ -245,9 +245,9 @@ class ContinuousViewManager extends DefaultViewManager {
 				// console.log("hidden " + view.index, view.displayed);
 
 				clearTimeout(this.trimTimeout);
-				this.trimTimeout = setTimeout(function(){
+				this.trimTimeout = setTimeout(() => {
 					this.q.enqueue(this.trim.bind(this));
-				}.bind(this), 250);
+				}, 250);
 			}
 
 		}
@@ -352,9 +352,9 @@ class ContinuousViewManager extends DefaultViewManager {
 					return err;
 				});
 		} else {
-			this.q.enqueue(function(){
+			this.q.enqueue(() => {
 				this.update();
-			}.bind(this));
+			});
 			checking.resolve(false);
 			return checking.promise;
 		}
@@ -423,11 +423,11 @@ class ContinuousViewManager extends DefaultViewManager {
 
 	addEventListeners(_stage?: Stage): void {
 
-		window.addEventListener("unload", function(_e: Event){
+		window.addEventListener("unload", (_e: Event) => {
 			this.ignore = true;
 			// this.scrollTo(0,0);
 			this.destroy();
-		}.bind(this));
+		});
 
 		this.addScrollListeners();
 
@@ -509,10 +509,10 @@ class ContinuousViewManager extends DefaultViewManager {
 		this.prevScrollLeft = scrollLeft;
 
 		clearTimeout(this.scrollTimeout);
-		this.scrollTimeout = setTimeout(function(){
+		this.scrollTimeout = setTimeout(() => {
 			this.scrollDeltaVert = 0;
 			this.scrollDeltaHorz = 0;
-		}.bind(this), 150);
+		}, 150);
 
 		clearTimeout(this.afterScrolled);
 
@@ -522,9 +522,9 @@ class ContinuousViewManager extends DefaultViewManager {
 
 	scrolled(): void {
 
-		this.q.enqueue(function() {
+		this.q.enqueue(() => {
 			return this.check();
-		}.bind(this));
+		});
 
 		this.emit(EVENTS.MANAGERS.SCROLL, {
 			top: this.scrollTop,
@@ -532,10 +532,10 @@ class ContinuousViewManager extends DefaultViewManager {
 		});
 
 		clearTimeout(this.afterScrolled);
-		this.afterScrolled = setTimeout(function () {
+		this.afterScrolled = setTimeout(() => {
 
 			// Don't report scroll if we are about the snap
-			if (this.snapper && this.snapper.supportsTouch && this.snapper.needsSnap()) {
+			if (this.snapper && this.snapper.supportsTouch() && this.snapper.needsSnap()) {
 				return;
 			}
 
@@ -544,7 +544,7 @@ class ContinuousViewManager extends DefaultViewManager {
 				left: this.scrollLeft
 			});
 
-		}.bind(this), this.settings.afterScrolledTimeout);
+		}, this.settings.afterScrolledTimeout);
 	}
 
 	next(): Promise<void> | undefined {
@@ -564,9 +564,9 @@ class ContinuousViewManager extends DefaultViewManager {
 
 		}
 
-		this.q.enqueue(function() {
+		this.q.enqueue(() => {
 			return this.check();
-		}.bind(this));
+		});
 	}
 
 	prev(): Promise<void> | undefined {
@@ -586,9 +586,9 @@ class ContinuousViewManager extends DefaultViewManager {
 
 		}
 
-		this.q.enqueue(function() {
+		this.q.enqueue(() => {
 			return this.check();
-		}.bind(this));
+		});
 	}
 
 	updateFlow(flow: string): void {

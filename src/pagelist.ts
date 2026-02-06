@@ -21,7 +21,7 @@ class PageList {
 	totalPages: number;
 	toc: Document | undefined;
 	ncx: Document | undefined;
-	pageList: PageListItem[];
+	pageList!: PageListItem[];
 
 	constructor(xml?: Document) {
 		this.pages = [];
@@ -164,12 +164,12 @@ class PageList {
 	 * @param  {array} pageList
 	 */
 	process(pageList: PageListItem[]): void {
-		pageList.forEach(function(item){
+		pageList.forEach((item) => {
 			this.pages.push(item.page);
 			if (item.cfi) {
 				this.locations.push(item.cfi);
 			}
-		}, this);
+		});
 		this.firstPage = this.pages[0];
 		this.lastPage = this.pages[this.pages.length-1];
 		this.totalPages = this.lastPage - this.firstPage;

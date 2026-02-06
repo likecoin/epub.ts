@@ -90,11 +90,11 @@ class Queue {
 
 				if(result && typeof result["then"] === "function") {
 					// Task is a function that returns a promise
-					return result.then(function(){
-						inwait.deferred.resolve.apply(this.context, arguments);
-					}.bind(this), function() {
-						inwait.deferred.reject.apply(this.context, arguments);
-					}.bind(this));
+					return result.then((...args: any[]) => {
+						inwait.deferred.resolve.apply(this.context, args);
+					}, (...args: any[]) => {
+						inwait.deferred.reject.apply(this.context, args);
+					});
 				} else {
 					// Task resolves immediately
 					inwait.deferred.resolve.apply(this.context, result);
@@ -139,9 +139,9 @@ class Queue {
 			if(this._q.length) {
 
 				this.dequeue()
-					.then(function(){
+					.then(() => {
 						this.run();
-					}.bind(this));
+					});
 
 			} else {
 				this.defered.resolve();
@@ -170,10 +170,10 @@ class Queue {
 
 		if(this._q.length) {
 			this.running = this.dequeue()
-				.then(function(){
+				.then(() => {
 					this.running = undefined;
 					return this.flush();
-				}.bind(this));
+				});
 
 			return this.running;
 		}
@@ -225,7 +225,7 @@ class Queue {
 class Task {
 	constructor(task: Function, args: any[], context: any){
 
-		return function(){
+		return function(this: unknown){
 			const toApply = (arguments as any) || [];
 
 			return new Promise( (resolve, reject) => {

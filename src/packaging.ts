@@ -14,8 +14,8 @@ class Packaging {
 	spineNodeIndex: number;
 	spine: PackagingSpineItem[];
 	metadata: PackagingMetadataObject;
-	uniqueIdentifier: string;
-	toc: NavItem[];
+	uniqueIdentifier!: string;
+	toc!: NavItem[];
 
 	constructor(packageDocument?: Document) {
 		this.manifest = {};

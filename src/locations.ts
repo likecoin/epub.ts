@@ -67,13 +67,13 @@ class Locations implements IEventEmitter {
 
 		this.q.pause();
 
-		this.spine.each(function(section: Section) {
+		this.spine.each((section: Section) => {
 			if (section.linear) {
 				this.q.enqueue(this.process.bind(this), section);
 			}
-		}.bind(this));
+		});
 
-		return this.q.run().then(function() {
+		return this.q.run().then(() => {
 			this.total = this._locations.length - 1;
 
 			if (this._currentCfi) {
@@ -82,7 +82,7 @@ class Locations implements IEventEmitter {
 
 			return this._locations;
 			// console.log(this.percentage(this.book.rendition.location.start), this.percentage(this.book.rendition.location.end));
-		}.bind(this));
+		});
 
 	}
 
@@ -98,7 +98,7 @@ class Locations implements IEventEmitter {
 	process(section: Section): Promise<string[]> {
 
 		return section.load(this.request)
-			.then(function(contents: Element) {
+			.then((contents: Element) => {
 				const completed = new defer();
 				const locations = this.parse(contents, section.cfiBase);
 				this._locations = this._locations.concat(locations);
@@ -107,7 +107,7 @@ class Locations implements IEventEmitter {
 
 				this.processingTimeout = setTimeout(() => completed.resolve(locations), this.pause);
 				return completed.promise;
-			}.bind(this));
+			});
 
 	}
 
@@ -119,7 +119,7 @@ class Locations implements IEventEmitter {
 		let counter = 0;
 		let prev: any;
 		const _break = chars || this.break;
-		const parser = function(node: Node) {
+		const parser = (node: Node) => {
 			const len = (node as Text).length;
 			let dist;
 			let pos = 0;
@@ -181,7 +181,7 @@ class Locations implements IEventEmitter {
 			prev = node;
 		};
 
-		sprint(body!, parser.bind(this));
+		sprint(body!, parser);
 
 		// Close remaining
 		if (range && range.startContainer && prev) {
@@ -209,7 +209,7 @@ class Locations implements IEventEmitter {
 		this._locationsWords = [];
 		this._wordCounter = 0;
 
-		this.spine.each(function(section: Section) {
+		this.spine.each((section: Section) => {
 			if (section.linear) {
 				if (start) {
 					if (section.index >= start.spinePos) {
@@ -219,15 +219,15 @@ class Locations implements IEventEmitter {
 					this.q.enqueue(this.processWords.bind(this), section, wordCount, start, count);
 				}
 			}
-		}.bind(this));
+		});
 
-		return this.q.run().then(function() {
+		return this.q.run().then(() => {
 			if (this._currentCfi) {
 				this.currentLocation = this._currentCfi;
 			}
 
 			return this._locationsWords;
-		}.bind(this));
+		});
 
 	}
 
@@ -237,7 +237,7 @@ class Locations implements IEventEmitter {
 		}
 
 		return section.load(this.request)
-			.then(function(contents: Element) {
+			.then((contents: Element) => {
 				const completed = new defer();
 				const locations = this.parseWords(contents, section, wordCount, startCfi);
 				const remainingCount = count! - this._locationsWords.length;
@@ -247,7 +247,7 @@ class Locations implements IEventEmitter {
 
 				this.processingTimeout = setTimeout(() => completed.resolve(locations), this.pause);
 				return completed.promise;
-			}.bind(this));
+			});
 	}
 
 	//http://stackoverflow.com/questions/18679576/counting-words-in-string
@@ -270,7 +270,7 @@ class Locations implements IEventEmitter {
 		if (startCfi && section.index === startCfi.spinePos) {
 			startNode = startCfi.findNode(startCfi.range ? startCfi.path.steps.concat(startCfi.start!.steps) : startCfi.path.steps, contents.ownerDocument!);
 		}
-		const parser = function(node: Node) {
+		const parser = (node: Node) => {
 			if (!foundStartNode) {
 				if (node === startNode) {
 					foundStartNode = true;
@@ -323,7 +323,7 @@ class Locations implements IEventEmitter {
 			_prev = node;
 		};
 
-		sprint(body!, parser.bind(this));
+		sprint(body!, parser);
 
 		return locations;
 	}

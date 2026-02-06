@@ -81,7 +81,7 @@ class Spine {
 			}
 
 			if (item.linear === "yes") {
-				item.prev = function() {
+				item.prev = () => {
 					let prevIndex = item.index;
 					while (prevIndex > 0) {
 						const prev = this.get(prevIndex-1);
@@ -91,8 +91,8 @@ class Spine {
 						prevIndex -= 1;
 					}
 					return;
-				}.bind(this);
-				item.next = function() {
+				};
+				item.next = () => {
 					let nextIndex = item.index;
 					while (nextIndex < this.spineItems.length-1) {
 						const next = this.get(nextIndex+1);
@@ -102,7 +102,7 @@ class Spine {
 						nextIndex += 1;
 					}
 					return;
-				}.bind(this);
+				};
 			} else {
 				item.prev = function(): Section | undefined {
 					return undefined;

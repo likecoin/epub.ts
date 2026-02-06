@@ -23,7 +23,7 @@
 - [ ] Replace `localforage` with lighter IndexedDB wrapper
 - [ ] Replace `@xmldom/xmldom` with browser-native DOMParser
 - [x] Enable `strictNullChecks` (476 errors fixed across 30 files)
-- [ ] Full `strict: true`
+- [x] Full `strict: true` (377 errors fixed: strictPropertyInitialization 120, noImplicitThis 251, others 6)
 - [ ] Node.js support (parsing-only entry point)
 - [ ] Improve test coverage
 - [x] ESLint + TS plugin (0 errors, 0 warnings)

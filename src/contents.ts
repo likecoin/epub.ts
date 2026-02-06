@@ -41,12 +41,12 @@ class Contents implements IEventEmitter {
 	observer: ResizeObserver | MutationObserver | undefined;
 	expanding: ReturnType<typeof setTimeout> | undefined;
 	onResize: ((size: { width: number; height: number }) => void) | undefined;
-	_expanding: boolean;
+	_expanding!: boolean;
 	_resizeCheck: (() => void) | undefined;
 	_triggerEvent: ((e: Event) => void) | undefined;
 	_onSelectionChange: ((e: Event) => void) | undefined;
 	selectionEndTimeout: ReturnType<typeof setTimeout> | undefined;
-	_layoutStyle: string;
+	_layoutStyle!: string;
 
 	constructor(doc: Document, content?: HTMLElement, cfiBase?: string, sectionIndex?: number) {
 		// Blank Cfi for Parsing
@@ -516,11 +516,11 @@ class Contents implements IEventEmitter {
 	 */
 	mediaQueryListeners(): void {
 		const sheets = this.document.styleSheets;
-		const mediaChangeHandler = function(m: MediaQueryListEvent){
+		const mediaChangeHandler = (m: MediaQueryListEvent) => {
 			if(m.matches && !this._expanding) {
 				setTimeout(this.expand.bind(this), 1);
 			}
-		}.bind(this);
+		};
 
 		for (let i = 0; i < sheets.length; i += 1) {
 			let rules;
@@ -599,9 +599,9 @@ class Contents implements IEventEmitter {
 			return;
 		}
 
-		this.document.fonts.ready.then(function () {
+		this.document.fonts.ready.then(() => {
 			this.resizeCheck();
-		}.bind(this));
+		});
 
 	}
 
@@ -677,7 +677,7 @@ class Contents implements IEventEmitter {
 							}
 						} catch (e) {
 							// eslint-disable-next-line no-console
-							console.error(e, e.stack);
+							console.error(e, e instanceof Error ? e.stack : undefined);
 						}
 					} else {
 						position = range.getBoundingClientRect();
@@ -715,7 +715,7 @@ class Contents implements IEventEmitter {
 	 * @param {string} src url
 	 */
 	addStylesheet(src: string): Promise<boolean> {
-		return new Promise(function(resolve: (value: boolean) => void, _reject: (reason?: unknown) => void){
+		return new Promise((resolve: (value: boolean) => void, _reject: (reason?: unknown) => void) => {
 			let $stylesheet;
 			let ready = false;
 
@@ -735,7 +735,7 @@ class Contents implements IEventEmitter {
 			$stylesheet.type = "text/css";
 			$stylesheet.rel = "stylesheet";
 			$stylesheet.href = src;
-			$stylesheet.onload = $stylesheet.onreadystatechange = function() {
+			$stylesheet.onload = ($stylesheet as any).onreadystatechange = function(this: any) {
 				if ( !ready && (!this.readyState || this.readyState == "complete") ) {
 					ready = true;
 					// Let apply
@@ -747,7 +747,7 @@ class Contents implements IEventEmitter {
 
 			this.document.head.appendChild($stylesheet);
 
-		}.bind(this));
+		});
 	}
 
 	_getStylesheetNode(key?: string): HTMLStyleElement | false {
@@ -844,7 +844,7 @@ class Contents implements IEventEmitter {
 	 */
 	addScript(src: string): Promise<boolean> {
 
-		return new Promise(function(resolve: (value: boolean) => void, _reject: (reason?: unknown) => void){
+		return new Promise((resolve: (value: boolean) => void, _reject: (reason?: unknown) => void) => {
 			let ready = false;
 
 			if(!this.document) {
@@ -856,7 +856,7 @@ class Contents implements IEventEmitter {
 			$script.type = "text/javascript";
 			$script.async = true;
 			$script.src = src;
-			$script.onload = $script.onreadystatechange = function() {
+			$script.onload = ($script as any).onreadystatechange = function(this: any) {
 				if ( !ready && (!this.readyState || this.readyState == "complete") ) {
 					ready = true;
 					setTimeout(function(){
@@ -867,7 +867,7 @@ class Contents implements IEventEmitter {
 
 			this.document.head.appendChild($script);
 
-		}.bind(this));
+		});
 	}
 
 	/**
@@ -911,9 +911,9 @@ class Contents implements IEventEmitter {
 
 		this._triggerEvent = this.triggerEvent.bind(this);
 
-		DOM_EVENTS.forEach(function(eventName){
-			this.document.addEventListener(eventName, this._triggerEvent, { passive: true });
-		}, this);
+		DOM_EVENTS.forEach((eventName) => {
+			this.document.addEventListener(eventName, this._triggerEvent!, { passive: true });
+		});
 
 	}
 
@@ -925,9 +925,9 @@ class Contents implements IEventEmitter {
 		if(!this.document) {
 			return;
 		}
-		DOM_EVENTS.forEach(function(eventName){
-			this.document.removeEventListener(eventName, this._triggerEvent, { passive: true });
-		}, this);
+		DOM_EVENTS.forEach((eventName) => {
+			this.document.removeEventListener(eventName, this._triggerEvent!);
+		});
 		this._triggerEvent = undefined;
 	}
 
@@ -971,10 +971,12 @@ class Contents implements IEventEmitter {
 		if (this.selectionEndTimeout) {
 			clearTimeout(this.selectionEndTimeout);
 		}
-		this.selectionEndTimeout = setTimeout(function() {
+		this.selectionEndTimeout = setTimeout(() => {
 			const selection = this.window.getSelection();
-			this.triggerSelectedEvent(selection);
-		}.bind(this), 250);
+			if (selection) {
+				this.triggerSelectedEvent(selection);
+			}
+		}, 250);
 	}
 
 	/**

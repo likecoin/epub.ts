@@ -97,7 +97,7 @@ class Book implements IEventEmitter {
 	packaging: Packaging | undefined;
 	displayOptions: DisplayOptions | undefined;
 	package: Packaging | undefined;
-	cover: string;
+	cover!: string;
 
 	declare on: IEventEmitter["on"];
 	declare off: IEventEmitter["off"];
@@ -113,7 +113,7 @@ class Book implements IEventEmitter {
 			url = undefined;
 		}
 
-		this.settings = extend(this.settings || {}, {
+		this.settings = extend({}, {
 			requestMethod: undefined,
 			requestCredentials: undefined,
 			requestHeaders: undefined,

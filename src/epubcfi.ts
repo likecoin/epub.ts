@@ -31,7 +31,7 @@ class EpubCFI {
 	path: EpubCFIComponent;
 	start: EpubCFIComponent | null;
 	end: EpubCFIComponent | null;
-	id: string | null;
+	id!: string | null;
 
 	constructor(cfiFrom?: string | Range | Node | EpubCFI, base?: string | EpubCFIComponent, ignoreClass?: string) {
 		this.str = "";
@@ -169,9 +169,9 @@ class EpubCFI {
 			steps.shift(); // Ignore the first slash
 		}
 
-		component.steps = steps.map(function(step: string){
+		component.steps = steps.map((step: string) => {
 			return this.parseStep(step);
-		}.bind(this));
+		}).filter((step): step is EpubCFIStep => step !== undefined);
 
 		return component;
 	}

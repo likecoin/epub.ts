@@ -73,70 +73,70 @@ function request(url: string, type?: string, withCredentials?: boolean, headers?
 	}
 
 	function handler() {
-		if (this.readyState === XMLHttpRequest.DONE) {
-			let responseXML = false;
+		if (xhr.readyState === XMLHttpRequest.DONE) {
+			let responseXML: Document | null | false = false;
 
-			if(this.responseType === "" || this.responseType === "document") {
-				responseXML = this.responseXML;
+			if(xhr.responseType === "" || xhr.responseType === "document") {
+				responseXML = xhr.responseXML;
 			}
 
-			if (this.status === 200 || this.status === 0 || responseXML) { //-- Firefox is reporting 0 for blob urls
+			if (xhr.status === 200 || xhr.status === 0 || responseXML) { //-- Firefox is reporting 0 for blob urls
 				let r;
 
-				if (!this.response && !responseXML) {
+				if (!xhr.response && !responseXML) {
 					deferred.reject({
-						status: this.status,
+						status: xhr.status,
 						message : "Empty Response",
 						stack : new Error().stack
 					});
 					return deferred.promise;
 				}
 
-				if (this.status === 403) {
+				if (xhr.status === 403) {
 					deferred.reject({
-						status: this.status,
-						response: this.response,
+						status: xhr.status,
+						response: xhr.response,
 						message : "Forbidden",
 						stack : new Error().stack
 					});
 					return deferred.promise;
 				}
 				if(responseXML){
-					r = this.responseXML;
+					r = xhr.responseXML;
 				} else
 				if(isXml(type!)){
 					// xhr.overrideMimeType("text/xml"); // for OPF parsing
-					// If this.responseXML wasn't set, try to parse using a DOMParser from text
-					r = parse(this.response, "text/xml");
+					// If xhr.responseXML wasn't set, try to parse using a DOMParser from text
+					r = parse(xhr.response, "text/xml");
 				}else
 				if(type == "xhtml"){
-					r = parse(this.response, "application/xhtml+xml");
+					r = parse(xhr.response, "application/xhtml+xml");
 				}else
 				if(type == "html" || type == "htm"){
-					r = parse(this.response, "text/html");
+					r = parse(xhr.response, "text/html");
 				}else
 				if(type == "json"){
-					r = JSON.parse(this.response);
+					r = JSON.parse(xhr.response);
 				}else
 				if(type == "blob"){
 
 					if(supportsURL) {
-						r = this.response;
+						r = xhr.response;
 					} else {
 						//-- Safari doesn't support responseType blob, so create a blob from arraybuffer
-						r = new Blob([this.response]);
+						r = new Blob([xhr.response]);
 					}
 
 				}else{
-					r = this.response;
+					r = xhr.response;
 				}
 
 				deferred.resolve(r);
 			} else {
 
 				deferred.reject({
-					status: this.status,
-					message : this.response,
+					status: xhr.status,
+					message : xhr.response,
 					stack : new Error().stack
 				});
 

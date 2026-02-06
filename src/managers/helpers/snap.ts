@@ -28,29 +28,29 @@ const EASING_EQUATIONS = {
 
 class Snap implements IEventEmitter {
 	settings: { duration: number; minVelocity: number; minDistance: number; easing: (pos: number) => number; [key: string]: any };
-	manager: DefaultViewManager;
-	layout: Layout;
-	fullsize: boolean;
-	element: HTMLElement;
-	scroller: HTMLElement | Window;
-	isVertical: boolean;
-	touchCanceler: boolean;
-	resizeCanceler: boolean;
-	snapping: boolean;
-	scrollLeft: number;
-	scrollTop: number;
-	startTouchX: number;
-	startTouchY: number;
-	startTime: number;
-	endTouchX: number;
-	endTouchY: number;
-	endTime: number;
-	_onResize: (...args: any[]) => void;
-	_onScroll: (...args: any[]) => void;
-	_onTouchStart: (...args: any[]) => void;
-	_onTouchMove: (...args: any[]) => void;
-	_onTouchEnd: (...args: any[]) => void;
-	_afterDisplayed: (...args: any[]) => void;
+	manager!: DefaultViewManager;
+	layout!: Layout;
+	fullsize!: boolean;
+	element!: HTMLElement;
+	scroller!: HTMLElement | Window;
+	isVertical!: boolean;
+	touchCanceler!: boolean;
+	resizeCanceler!: boolean;
+	snapping!: boolean;
+	scrollLeft!: number;
+	scrollTop!: number;
+	startTouchX!: number;
+	startTouchY!: number;
+	startTime!: number;
+	endTouchX!: number;
+	endTouchY!: number;
+	endTime!: number;
+	_onResize!: (...args: any[]) => void;
+	_onScroll!: (...args: any[]) => void;
+	_onTouchStart!: (...args: any[]) => void;
+	_onTouchMove!: (...args: any[]) => void;
+	_onTouchEnd!: (...args: any[]) => void;
+	_afterDisplayed!: (...args: any[]) => void;
 
 	declare on: IEventEmitter["on"];
 	declare off: IEventEmitter["off"];
@@ -312,7 +312,7 @@ class Snap implements IEventEmitter {
 		this.snapping = true;
 
 		// add animation loop
-		function tick() {
+		const tick = () => {
 			const now = this.now();
 			const time = Math.min(1, ((now - startTime) / duration));
 			const _timeFunction = easing(time);
@@ -326,16 +326,16 @@ class Snap implements IEventEmitter {
 			}
 
 			if (time < 1) {
-					window.requestAnimationFrame(tick.bind(this));
+					window.requestAnimationFrame(tick);
 					this.scrollTo(start + ((destination - start) * time), 0);
 			} else {
 					this.scrollTo(destination, 0);
 					this.snapping = false;
 					deferred.resolve();
 			}
-		}
+		};
 
-		tick.call(this);
+		tick();
 
 		return deferred.promise;
 	}

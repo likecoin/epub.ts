@@ -23,14 +23,14 @@ class Resources {
 		resolver: (href: string, absolute?: boolean) => string;
 		request: RequestFunction;
 	};
-	manifest: PackagingManifestObject;
-	resources: PackagingManifestItem[];
-	replacementUrls: string[];
-	html: PackagingManifestItem[];
-	assets: PackagingManifestItem[];
-	css: PackagingManifestItem[];
-	urls: string[];
-	cssUrls: string[];
+	manifest!: PackagingManifestObject;
+	resources!: PackagingManifestItem[];
+	replacementUrls!: string[];
+	html!: PackagingManifestItem[];
+	assets!: PackagingManifestItem[];
+	css!: PackagingManifestItem[];
+	urls!: string[];
+	cssUrls!: string[];
 
 	constructor(manifest: PackagingManifestObject, options?: { replacements?: string; archive?: Archive; resolver?: (href: string, absolute?: boolean) => string; request?: RequestFunction }) {
 		this.settings = {
@@ -136,8 +136,8 @@ class Resources {
 					.then((blob: Blob) => {
 						return blob2base64(blob);
 					})
-					.then((base64: string) => {
-						return createBase64Url(base64, mimeType)!;
+					.then((base64: string | ArrayBuffer) => {
+						return createBase64Url(base64 as string, mimeType)!;
 					});
 			} else {
 				return this.settings.request(url, "blob").then((blob: Blob) => {
@@ -153,9 +153,9 @@ class Resources {
 	 */
 	replacements(): Promise<string[]> {
 		if (this.settings.replacements === "none") {
-			return new Promise(function(resolve: (value: string[]) => void) {
+			return new Promise((resolve: (value: string[]) => void) => {
 				resolve(this.urls);
-			}.bind(this));
+			});
 		}
 
 		const replacements = this.urls.map( (url) => {
@@ -185,23 +185,21 @@ class Resources {
 	 * @param  {method} [resolver]
 	 * @return {Promise}
 	 */
-	replaceCss(archive?: Archive, resolver?: (href: string, absolute?: boolean) => string): Promise<(string | void)[]> {
+	replaceCss(_archive?: Archive, _resolver?: (href: string, absolute?: boolean) => string): Promise<(string | void)[]> {
 		const replaced: Promise<string | void>[] = [];
-		archive = archive || this.settings.archive;
-		resolver = resolver || this.settings.resolver;
-		this.cssUrls.forEach(function(href: string) {
-			const replacement = this.createCssFile(href, archive, resolver)
-				.then(function (replacementUrl: string) {
+		this.cssUrls.forEach((href: string) => {
+			const replacement = this.createCssFile(href)
+				.then((replacementUrl) => {
 					// switch the url in the replacementUrls
 					const indexInUrls = this.urls.indexOf(href);
-					if (indexInUrls > -1) {
+					if (replacementUrl && indexInUrls > -1) {
 						this.replacementUrls[indexInUrls] = replacementUrl;
 					}
-				}.bind(this))
+				})
 
 
 			replaced.push(replacement);
-		}.bind(this));
+		});
 		return Promise.all(replaced);
 	}
 
@@ -296,9 +294,9 @@ class Resources {
 			return;
 		}
 		if (this.replacementUrls.length) {
-			return new Promise(function(resolve: (value: string) => void, _reject: (reason?: any) => void) {
+			return new Promise((resolve: (value: string) => void, _reject: (reason?: any) => void) => {
 				resolve(this.replacementUrls[indexInUrls]);
-			}.bind(this));
+			});
 		} else {
 			return this.createUrl(path);
 		}
