@@ -106,7 +106,7 @@ class Archive {
 			r = JSON.parse(response);
 		}
 		else
-		if(isXml(type)) {
+		if(isXml(type!)) {
 			r = parse(response, "text/xml");
 		}
 		else

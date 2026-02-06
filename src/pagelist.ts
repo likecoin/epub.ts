@@ -58,6 +58,7 @@ class PageList {
 			return this.parseNcx(xml);
 		}
 
+		return [];
 	}
 
 	/**
@@ -112,11 +113,11 @@ class PageList {
 
 	ncxItem(item: Element): PageListItem {
 		var navLabel = qs(item, "navLabel");
-		var navLabelText = qs(navLabel, "text");
-		var pageText = navLabelText.textContent;
+		var navLabelText = qs(navLabel!, "text");
+		var pageText = navLabelText!.textContent ?? "";
 		var content = qs(item, "content");
 
-		var href = content.getAttribute("src");
+		var href = content!.getAttribute("src") ?? "";
 		var page = parseInt(pageText, 10);
 
 		return {
@@ -132,7 +133,7 @@ class PageList {
 	 * @return {object} pageListItem
 	 */
 	item(item: Element): PageListItem {
-		var content = qs(item, "a"),
+		var content = qs(item, "a")!,
 				href = content.getAttribute("href") || "",
 				text = content.textContent || "",
 				page = parseInt(text),
@@ -271,11 +272,11 @@ class PageList {
 	 * Destroy
 	 */
 	destroy(): void {
-		this.pages = undefined;
-		this.locations = undefined;
-		this.epubcfi = undefined;
+		(this as any).pages = undefined;
+		(this as any).locations = undefined;
+		(this as any).epubcfi = undefined;
 
-		this.pageList = undefined;
+		(this as any).pageList = undefined;
 
 		this.toc = undefined;
 		this.ncx = undefined;

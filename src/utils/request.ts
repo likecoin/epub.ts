@@ -32,7 +32,7 @@ function request(url: string, type?: string, withCredentials?: boolean, headers?
 	xhr.open("GET", url, true);
 
 	for(header in headers) {
-		xhr.setRequestHeader(header, headers[header]);
+		xhr.setRequestHeader(header, headers![header]);
 	}
 
 	if(type == "json") {
@@ -104,7 +104,7 @@ function request(url: string, type?: string, withCredentials?: boolean, headers?
 				if(responseXML){
 					r = this.responseXML;
 				} else
-				if(isXml(type)){
+				if(isXml(type!)){
 					// xhr.overrideMimeType("text/xml"); // for OPF parsing
 					// If this.responseXML wasn't set, try to parse using a DOMParser from text
 					r = parse(this.response, "text/xml");

@@ -137,7 +137,7 @@ export function extend(target: any, ...args: any[]): any {
 	sources.forEach(function (source: any) {
 		if(!source) return;
 		Object.getOwnPropertyNames(source).forEach(function(propName) {
-			Object.defineProperty(target, propName, Object.getOwnPropertyDescriptor(source, propName));
+			Object.defineProperty(target, propName, Object.getOwnPropertyDescriptor(source, propName)!);
 		});
 	});
 	return target;
@@ -178,7 +178,7 @@ export function locationOf(item: any, array: any[], compareFunction?: (a: any, b
 		compareFunction = function(a, b) {
 			if(a > b) return 1;
 			if(a < b) return -1;
-			if(a == b) return 0;
+			return 0;
 		};
 	}
 	if(end-start <= 0) {
@@ -219,7 +219,7 @@ export function indexOfSorted(item: any, array: any[], compareFunction?: (a: any
 		compareFunction = function(a, b) {
 			if(a > b) return 1;
 			if(a < b) return -1;
-			if(a == b) return 0;
+			return 0;
 		};
 	}
 	if(end-start <= 0) {
@@ -312,7 +312,7 @@ export function nodeBounds(node: Node): DOMRect {
 	let elPos;
 	let doc = node.ownerDocument;
 	if(node.nodeType == Node.TEXT_NODE){
-		let elRange = doc.createRange();
+		let elRange = doc!.createRange();
 		elRange.selectNodeContents(node);
 		elPos = elRange.getBoundingClientRect();
 	} else {
@@ -350,7 +350,7 @@ export function windowBounds(): { top: number; left: number; right: number; bott
  * @memberof Core
  */
 export function indexOfNode(node: Node, typeId: number): number {
-	var parent = node.parentNode;
+	var parent = node.parentNode!;
 	var children = parent.childNodes;
 	var sib;
 	var index = -1;
@@ -507,7 +507,7 @@ export function qs(el: Document | Element, sel: string): Element | undefined {
 	}
 
 	if (typeof el.querySelector != "undefined") {
-		return el.querySelector(sel);
+		return el.querySelector(sel) ?? undefined;
 	} else {
 		elements = el.getElementsByTagName(sel);
 		if (elements.length) {
@@ -548,7 +548,7 @@ export function qsp(el: Document | Element, sel: string, props: Record<string, s
 			sel += prop + "~='" + props[prop] + "'";
 		}
 		sel += "]";
-		return el.querySelector(sel);
+		return el.querySelector(sel) ?? undefined;
 	} else {
 		q = el.getElementsByTagName(sel);
 		filtered = Array.prototype.slice.call(q, 0).filter(function(el: Element) {
@@ -610,15 +610,15 @@ export function walk(node: Node, callback: (node: Node) => boolean, _unused?: bo
 	if(callback(node)){
 		return true;
 	}
-	node = node.firstChild;
-	if(node){
+	let child: Node | null = node.firstChild;
+	if(child){
 		do{
-			let walked = walk(node,callback);
+			let walked = walk(child,callback);
 			if(walked){
 				return true;
 			}
-			node = node.nextSibling;
-		} while(node);
+			child = child.nextSibling;
+		} while(child);
 	}
 }
 
@@ -633,7 +633,7 @@ export function blob2base64(blob: Blob): Promise<string | ArrayBuffer> {
 		var reader = new FileReader();
 		reader.readAsDataURL(blob);
 		reader.onloadend = function() {
-			resolve(reader.result);
+			resolve(reader.result!);
 		};
 	});
 }
@@ -646,32 +646,14 @@ export function blob2base64(blob: Blob): Promise<string | ArrayBuffer> {
  */
 export class defer {
 	id: string;
-	resolve: (value?: any) => void;
-	reject: (reason?: any) => void;
+	resolve!: (value?: any) => void;
+	reject!: (reason?: any) => void;
 	promise: Promise<any>;
 
 	constructor() {
-		/* A method to resolve the associated Promise with the value passed.
-		 * If the promise is already settled it does nothing.
-		 *
-		 * @param {anything} value : This value is used to resolve the promise
-		 * If the value is a Promise then the associated promise assumes the state
-		 * of Promise passed as value.
-		 */
-		this.resolve = null;
-
-		/* A method to reject the associated Promise with the value passed.
-		 * If the promise is already settled it does nothing.
-		 *
-		 * @param {anything} reason: The reason for the rejection of the Promise.
-		 * Generally its an Error object. If however a Promise is passed, then the Promise
-		 * itself will be the reason for rejection no matter the state of the Promise.
-		 */
-		this.reject = null;
-
 		this.id = uuid();
 
-		/* A newly created Pomise object.
+		/* A newly created Promise object.
 		 * Initially in pending state.
 		 */
 		this.promise = new Promise((resolve, reject) => {
@@ -733,10 +715,10 @@ export function findChildren(el: Element): Element[] {
  * @returns {element[]} parents
  * @memberof Core
  */
-export function parents(node: Node): Node[] {
-	var nodes = [node];
-	for (; node; node = node.parentNode) {
-		nodes.unshift(node);
+export function parents(node: Node | null | undefined): Node[] {
+	var nodes: Node[] = [];
+	for (let current: Node | null = node ?? null; current; current = current.parentNode) {
+		nodes.unshift(current);
 	}
 	return nodes
 }
@@ -778,7 +760,7 @@ export function getParentByTagName(node: Node, tagname: string): Element | undef
 	let parent;
 	if (node === null || tagname === '') return;
 	parent = node.parentNode;
-	while (parent.nodeType === 1) {
+	while (parent && parent.nodeType === 1) {
 		if ((parent as Element).tagName.toLowerCase() === tagname) {
 			return parent as Element;
 		}
@@ -840,32 +822,31 @@ export class RangeObject {
 		if (toStart) {
 			this.endContainer = this.startContainer;
 			this.endOffset = this.startOffset;
-			this.commonAncestorContainer = this.startContainer.parentNode;
+			this.commonAncestorContainer = this.startContainer?.parentNode ?? undefined;
 		} else {
 			this.startContainer = this.endContainer;
 			this.startOffset = this.endOffset;
-			this.commonAncestorContainer = (this.endOffset as any).parentNode;
+			this.commonAncestorContainer = this.endContainer?.parentNode ?? undefined;
 		}
 	}
 
 	selectNode(referenceNode: Node): void {
-		let parent = referenceNode.parentNode;
+		let parent = referenceNode.parentNode!;
 		let index = Array.prototype.indexOf.call(parent.childNodes, referenceNode);
 		this.setStart(parent, index);
 		this.setEnd(parent, index + 1);
 	}
 
 	selectNodeContents(referenceNode: Node): void {
-		let end = referenceNode.childNodes[(referenceNode as any).childNodes - 1];
 		let endIndex = (referenceNode.nodeType === 3) ?
-				referenceNode.textContent.length : (parent as any).childNodes.length;
+				(referenceNode.textContent ?? "").length : referenceNode.childNodes.length;
 		this.setStart(referenceNode, 0);
 		this.setEnd(referenceNode, endIndex);
 	}
 
 	_commonAncestorContainer(startContainer?: Node, endContainer?: Node): Node | undefined {
-		var startParents = parents(startContainer || this.startContainer);
-		var endParents = parents(endContainer || this.endContainer);
+		var startParents = parents(startContainer ?? this.startContainer);
+		var endParents = parents(endContainer ?? this.endContainer);
 
 		if (startParents[0] != endParents[0]) return undefined;
 

@@ -110,7 +110,7 @@ class Layout implements IEventEmitter {
 			this.update({spread: this._spread});
 		}
 
-		if (min >= 0) {
+		if (min !== undefined && min >= 0) {
 			this._minSpreadWidth = min;
 		}
 
@@ -146,7 +146,7 @@ class Layout implements IEventEmitter {
 			divisor = 1;
 		}
 
-		if (this.name === "reflowable" && this._flow === "paginated" && !(_gap >= 0)) {
+		if (this.name === "reflowable" && this._flow === "paginated" && !(_gap !== undefined && _gap >= 0)) {
 			gap = ((section % 2 === 0) ? section : section - 1);
 		}
 
@@ -220,9 +220,9 @@ class Layout implements IEventEmitter {
 		} else if (this._flow === "paginated") {
 			formating = contents.columns(this.width, this.height, this.columnWidth, this.gap, this.settings.direction);
 		} else if (axis && axis === "horizontal") {
-			formating = contents.size(null, this.height);
+			formating = contents.size(undefined, this.height);
 		} else {
-			formating = contents.size(this.width, null);				
+			formating = contents.size(this.width, undefined);
 		}
 
 		return formating; // might be a promise in some View Managers

@@ -22,8 +22,8 @@ class Section {
 	href: string;
 	url: string;
 	canonical: string;
-	next: () => SpineItem;
-	prev: () => SpineItem;
+	next: () => SpineItem | undefined;
+	prev: () => SpineItem | undefined;
 	cfiBase: string;
 	hooks: { serialize: Hook; content: Hook };
 	document: Document | undefined;
@@ -95,7 +95,7 @@ class Section {
 	 * @private
 	 */
 	base(): void {
-		return replaceBase(this.document, this);
+		return replaceBase(this.document!, this);
 	}
 
 	/**
@@ -145,8 +145,8 @@ class Section {
 		var matches: SearchResult[] = [];
 		var query = _query.toLowerCase();
 		var find = function(node: Node){
-			var text = node.textContent.toLowerCase();
-			var range = section.document.createRange();
+			var text = node.textContent!.toLowerCase();
+			var range: Range;
 			var cfi;
 			var pos;
 			var last = -1;
@@ -159,18 +159,18 @@ class Section {
 
 				if (pos != -1) {
 					// We found it! Generate a CFI
-					range = section.document.createRange();
+					range = section.document!.createRange();
 					range.setStart(node, pos);
 					range.setEnd(node, pos + query.length);
 
 					cfi = section.cfiFromRange(range);
 
 					// Generate the excerpt
-					if (node.textContent.length < limit) {
-						excerpt = node.textContent;
+					if (node.textContent!.length < limit) {
+						excerpt = node.textContent!;
 					}
 					else {
-						excerpt = node.textContent.substring(pos - limit/2, pos + limit/2);
+						excerpt = node.textContent!.substring(pos - limit/2, pos + limit/2);
 						excerpt = "..." + excerpt + "...";
 					}
 
@@ -185,7 +185,7 @@ class Section {
 			}
 		};
 
-		sprint(section.document, function(node) {
+		sprint(section.document!, function(node) {
 			find(node);
 		});
 
@@ -209,7 +209,7 @@ class Section {
 		const query = _query.toLowerCase();
 		const search = function(nodeList: Node[]){
 			const textWithCase =  nodeList.reduce((acc: string ,current: Node)=>{
-				return acc + current.textContent;
+				return acc + (current.textContent ?? "");
 			},"");
 			const text = textWithCase.toLowerCase();
 			const pos = text.indexOf(query);
@@ -227,13 +227,13 @@ class Section {
 					}
 
 					let startNode = nodeList[startNodeIndex] , endNode = nodeList[endNodeIndex];
-					let range = section.document.createRange();
+					let range = section.document!.createRange();
 					range.setStart(startNode,pos);
-					let beforeEndLengthCount =  nodeList.slice(0, endNodeIndex).reduce((acc: number,current: Node)=>{return acc+current.textContent.length;},0) ;
+					let beforeEndLengthCount =  nodeList.slice(0, endNodeIndex).reduce((acc: number,current: Node)=>{return acc+(current.textContent ?? "").length;},0) ;
 					range.setEnd(endNode, beforeEndLengthCount > endPos ? endPos : endPos - beforeEndLengthCount );
 					cfi = section.cfiFromRange(range);
 
-					let excerpt = nodeList.slice(0, endNodeIndex+1).reduce((acc: string,current: Node)=>{return acc+current.textContent ;},"");
+					let excerpt = nodeList.slice(0, endNodeIndex+1).reduce((acc: string,current: Node)=>{return acc+(current.textContent ?? "") ;},"");
 					if (excerpt.length > excerptLimit){
 						excerpt = excerpt.substring(pos - excerptLimit/2, pos + excerptLimit/2);
 						excerpt = "..." + excerpt + "...";
@@ -246,7 +246,7 @@ class Section {
 			}
 		}
 
-		const treeWalker = document.createTreeWalker(section.document, NodeFilter.SHOW_TEXT, null);
+		const treeWalker = document.createTreeWalker(section.document!, NodeFilter.SHOW_TEXT, null);
 		let node: Node | null , nodeList: Node[] = [];
 		while (node = treeWalker.nextNode()) {
 			nodeList.push(node);
@@ -323,17 +323,17 @@ class Section {
 		this.hooks.serialize.clear();
 		this.hooks.content.clear();
 
-		this.hooks = undefined;
-		this.idref = undefined;
-		this.linear = undefined;
-		this.properties = undefined;
-		this.index = undefined;
-		this.href = undefined;
-		this.url = undefined;
-		this.next = undefined;
-		this.prev = undefined;
+		(this as any).hooks = undefined;
+		(this as any).idref = undefined;
+		(this as any).linear = undefined;
+		(this as any).properties = undefined;
+		(this as any).index = undefined;
+		(this as any).href = undefined;
+		(this as any).url = undefined;
+		(this as any).next = undefined;
+		(this as any).prev = undefined;
 
-		this.cfiBase = undefined;
+		(this as any).cfiBase = undefined;
 	}
 }
 

@@ -87,12 +87,12 @@ export interface LandmarkItem {
 export interface SpineItem {
 	index: number;
 	cfiBase: string;
-	idref?: string;
-	href?: string;
-	url?: string;
-	canonical?: string;
-	properties?: string[];
-	linear?: string;
+	idref: string;
+	href: string;
+	url: string;
+	canonical: string;
+	properties: string[];
+	linear: string;
 	id?: string;
 	next: () => SpineItem | undefined;
 	prev: () => SpineItem | undefined;

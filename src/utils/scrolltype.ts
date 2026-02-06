@@ -8,7 +8,7 @@ export default function scrollType(): string {
 	if (definer.scrollLeft > 0) {
 		type = "default";
 	} else {
-		if (typeof Element !== 'undefined' && Element.prototype.scrollIntoView) {
+		if (typeof Element !== 'undefined' && typeof Element.prototype.scrollIntoView === 'function') {
 			definer.children[0].children[1].scrollIntoView();
 			if (definer.scrollLeft < 0) {
 				type = "negative";

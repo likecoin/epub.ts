@@ -301,7 +301,7 @@ class Stage {
 
 		document.head.appendChild(style);
 
-		return style.sheet;
+		return style.sheet!;
 	}
 
 	addStyleRules(selector: string, rulesArray: Record<string, string>[]): void {

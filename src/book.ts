@@ -400,9 +400,9 @@ class Book implements IEventEmitter {
 	load(path: string, _type?: string): Promise<any> {
 		var resolved = this.resolve(path);
 		if(this.archived) {
-			return this.archive.request(resolved);
+			return this.archive!.request(resolved);
 		} else {
-			return this.request(resolved, null, this.settings.requestCredentials, this.settings.requestHeaders);
+			return this.request(resolved, undefined, this.settings.requestCredentials, this.settings.requestHeaders);
 		}
 	}
 
@@ -414,7 +414,7 @@ class Book implements IEventEmitter {
 	 */
 	resolve(path: string, absolute?: boolean): string {
 		if (!path) {
-			return;
+			return "";
 		}
 		var resolved = path;
 		var isAbsolute = (path.indexOf("://") > -1);
@@ -498,6 +498,8 @@ class Book implements IEventEmitter {
 		if(extension === "json"){
 			return INPUT_TYPE.MANIFEST;
 		}
+
+		return INPUT_TYPE.BINARY;
 	}
 
 
@@ -509,50 +511,50 @@ class Book implements IEventEmitter {
 	unpack(packaging: Packaging): void {
 		this.package = packaging; //TODO: deprecated this
 
-		if (this.packaging.metadata.layout === "") {
+		if (this.packaging!.metadata.layout === "") {
 			// rendition:layout not set - check display options if book is pre-paginated
-			this.load(this.url.resolve(IBOOKS_DISPLAY_OPTIONS_PATH)).then((xml) => {
+			this.load(this.url!.resolve(IBOOKS_DISPLAY_OPTIONS_PATH)).then((xml) => {
 				this.displayOptions = new DisplayOptions(xml);
-				this.loading.displayOptions.resolve(this.displayOptions);
+				this.loading!.displayOptions.resolve(this.displayOptions);
 			}).catch((err) => {
 				this.displayOptions = new DisplayOptions();
-				this.loading.displayOptions.resolve(this.displayOptions);
+				this.loading!.displayOptions.resolve(this.displayOptions);
 			});
 		} else {
 			this.displayOptions = new DisplayOptions();
-			this.loading.displayOptions.resolve(this.displayOptions);
+			this.loading!.displayOptions.resolve(this.displayOptions);
 		}
 
-		this.spine.unpack(this.packaging, this.resolve.bind(this), this.canonical.bind(this));
+		this.spine!.unpack(this.packaging!, this.resolve.bind(this), this.canonical.bind(this));
 
-		this.resources = new Resources(this.packaging.manifest, {
+		this.resources = new Resources(this.packaging!.manifest, {
 			archive: this.archive,
 			resolver: this.resolve.bind(this),
 			request: this.request.bind(this),
 			replacements: this.settings.replacements || (this.archived ? "blobUrl" : "base64")
 		});
 
-		this.loadNavigation(this.packaging).then(() => {
+		this.loadNavigation(this.packaging!).then(() => {
 			// this.toc = this.navigation.toc;
-			this.loading.navigation.resolve(this.navigation);
+			this.loading!.navigation.resolve(this.navigation);
 		});
 
-		if (this.packaging.coverPath) {
-			this.cover = this.resolve(this.packaging.coverPath);
+		if (this.packaging!.coverPath) {
+			this.cover = this.resolve(this.packaging!.coverPath);
 		}
 		// Resolve promises
-		this.loading.manifest.resolve(this.packaging.manifest);
-		this.loading.metadata.resolve(this.packaging.metadata);
-		this.loading.spine.resolve(this.spine);
-		this.loading.cover.resolve(this.cover);
-		this.loading.resources.resolve(this.resources);
-		this.loading.pageList.resolve(this.pageList);
+		this.loading!.manifest.resolve(this.packaging!.manifest);
+		this.loading!.metadata.resolve(this.packaging!.metadata);
+		this.loading!.spine.resolve(this.spine);
+		this.loading!.cover.resolve(this.cover);
+		this.loading!.resources.resolve(this.resources);
+		this.loading!.pageList.resolve(this.pageList);
 
 		this.isOpen = true;
 
 		if(this.archived || this.settings.replacements && this.settings.replacements != "none") {
 			this.replacements().then(() => {
-				this.loaded.displayOptions.then(() => {
+				this.loaded!.displayOptions.then(() => {
 					this.opening.resolve(this);
 				});
 			})
@@ -561,7 +563,7 @@ class Book implements IEventEmitter {
 			});
 		} else {
 			// Resolve book opened promise
-			this.loaded.displayOptions.then(() => {
+			this.loaded!.displayOptions.then(() => {
 				this.opening.resolve(this);
 			});
 		}
@@ -614,7 +616,7 @@ class Book implements IEventEmitter {
 	 * @return {Section}
 	 */
 	section(target: string | number): Section | null {
-		return this.spine.get(target);
+		return this.spine!.get(target);
 	}
 
 	/**
@@ -677,35 +679,35 @@ class Book implements IEventEmitter {
 		// Replace request method to go through store
 		this.request = this.storage.request.bind(this.storage);
 
-		this.opened.then(() => {
+		this.opened!.then(() => {
 			if (this.archived) {
-				this.storage.requester = this.archive.request.bind(this.archive);
+				this.storage!.requester = this.archive!.request.bind(this.archive!);
 			}
 			// Substitute hook
 			let substituteResources = (output: string, section: Section) => {
-				section.output = this.resources.substitute(output, section.url);
+				section.output = this.resources!.substitute(output, section.url);
 			};
 
 			// Set to use replacements
-			(this.resources.settings as any).replacements = replacementsSetting || "blobUrl";
+			(this.resources!.settings as any).replacements = replacementsSetting || "blobUrl";
 			// Create replacement urls
-			this.resources.replacements().
+			this.resources!.replacements().
 				then(() => {
-					return this.resources.replaceCss();
+					return this.resources!.replaceCss();
 				});
 
-			this.storage.on("offline", () => {
+			this.storage!.on("offline", () => {
 				// Remove url to use relative resolving for hrefs
 				this.url = new Url("/", "");
 				// Add hook to replace resources in contents
-				this.spine.hooks.serialize.register(substituteResources);
+				this.spine!.hooks.serialize.register(substituteResources);
 			});
 
-			this.storage.on("online", () => {
+			this.storage!.on("online", () => {
 				// Restore original url
 				this.url = originalUrl;
 				// Remove hook
-				this.spine.hooks.serialize.deregister(substituteResources);
+				this.spine!.hooks.serialize.deregister(substituteResources);
 			});
 
 		});
@@ -718,13 +720,13 @@ class Book implements IEventEmitter {
 	 * @return {Promise<?string>} coverUrl
 	 */
 	coverUrl(): Promise<string | null> {
-		return this.loaded.cover.then(() => {
+		return this.loaded!.cover.then(() => {
 			if (!this.cover) {
 				return null;
 			}
 
 			if (this.archived) {
-				return this.archive.createUrl(this.cover);
+				return this.archive!.createUrl(this.cover);
 			} else {
 				return this.cover;
 			}
@@ -737,13 +739,13 @@ class Book implements IEventEmitter {
 	 * @return {Promise} completed loading urls
 	 */
 	replacements(): Promise<void> {
-		this.spine.hooks.serialize.register((output: string, section: Section) => {
-			section.output = this.resources.substitute(output, section.url);
+		this.spine!.hooks.serialize.register((output: string, section: Section) => {
+			section.output = this.resources!.substitute(output, section.url);
 		});
 
-		return this.resources.replacements().
+		return this.resources!.replacements().
 			then(() => {
-				return this.resources.replaceCss();
+				return this.resources!.replaceCss();
 			}).then(() => {});
 	}
 
@@ -754,16 +756,16 @@ class Book implements IEventEmitter {
 	 */
 	getRange(cfiRange: string): Promise<Range> {
 		var cfi = new EpubCFI(cfiRange);
-		var item = this.spine.get(cfi.spinePos);
+		var item = this.spine!.get(cfi.spinePos);
 		var _request = this.load.bind(this);
 		if (!item) {
 			return new Promise((resolve, reject) => {
 				reject("CFI could not be found");
 			});
 		}
-		return item.load(_request).then(function (contents: Element) {
-			var range = cfi.toRange(item.document);
-			return range;
+		return item.load(_request).then(function (contents: Element): Range {
+			var range = cfi.toRange(item!.document);
+			return range!;
 		});
 	}
 
@@ -773,7 +775,7 @@ class Book implements IEventEmitter {
 	 * @return {string} key
 	 */
 	key(identifier?: string): string {
-		var ident = identifier || this.packaging.metadata.identifier || this.url.filename;
+		var ident = identifier || this.packaging!.metadata.identifier || this.url!.filename;
 		return `epubjs:${EPUBJS_VERSION}:${ident}`;
 	}
 

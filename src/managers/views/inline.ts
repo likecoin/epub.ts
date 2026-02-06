@@ -335,10 +335,10 @@ class InlineView implements IEventEmitter {
 				}
 			}.bind(this));
 		*/
-		this.frame.innerHTML = body.innerHTML;
+		this.frame.innerHTML = body!.innerHTML;
 
 		this.document = this.frame.ownerDocument;
-		this.window = this.document.defaultView;
+		this.window = this.document.defaultView!;
 
 		this.contents = new Contents(this.document, this.frame);
 
@@ -452,12 +452,12 @@ class InlineView implements IEventEmitter {
 			this.stopExpanding = true;
 			this.element.removeChild(this.frame);
 			this.displayed = false;
-			this.frame = null;
+			(this as any).frame = undefined;
 
-			this._textWidth = null;
-			this._textHeight = null;
-			this._width = null;
-			this._height = null;
+			(this as any)._textWidth = undefined;
+			(this as any)._textHeight = undefined;
+			(this as any)._width = undefined;
+			(this as any)._height = undefined;
 		}
 		// this.element.style.height = "0px";
 		// this.element.style.width = "0px";

@@ -146,7 +146,7 @@ class IframeView implements IEventEmitter {
 		if (this.settings.allowPopups) {
 			this.iframe.sandbox += " allow-popups";
 		}
-		
+
 		this.iframe.setAttribute("enable-annotation", "true");
 
 		this.resizing = true;
@@ -263,18 +263,18 @@ class IframeView implements IEventEmitter {
 			this.iframe.style.height = "0";
 			this._width = 0;
 			this._height = 0;
-			this._textWidth = undefined;
-			this._contentWidth = undefined;
-			this._textHeight = undefined;
-			this._contentHeight = undefined;
+			(this as any)._textWidth = undefined;
+			(this as any)._contentWidth = undefined;
+			(this as any)._textHeight = undefined;
+			(this as any)._contentHeight = undefined;
 		}
 		this._needsReframe = true;
 	}
 
 	// Determine locks base on settings
 	size(_width?: number, _height?: number): void {
-		var width = _width || this.settings.width;
-		var height = _height || this.settings.height;
+		var width = _width || this.settings.width!;
+		var height = _height || this.settings.height!;
 
 		if(this.layout.name === "pre-paginated") {
 			this.lock("both", width, height);
@@ -347,7 +347,7 @@ class IframeView implements IEventEmitter {
 		// Expand Horizontally
 		else if(this.settings.axis === "horizontal") {
 			// Get the width of the text
-			width = this.contents.textWidth();
+			width = this.contents!.textWidth();
 
 			if (width % this.layout.pageWidth > 0) {
 				width = Math.ceil(width / this.layout.pageWidth) * this.layout.pageWidth;
@@ -365,7 +365,7 @@ class IframeView implements IEventEmitter {
 
 		} // Expand Vertically
 		else if(this.settings.axis === "vertical") {
-			height = this.contents.textHeight();
+			height = this.contents!.textHeight();
 			if (this.settings.flow === "paginated" &&
 				height % this.layout.height > 0) {
 				height = Math.ceil(height / this.layout.height) * this.layout.height;
@@ -386,13 +386,13 @@ class IframeView implements IEventEmitter {
 
 		if(isNumber(width)){
 			this.element.style.width = width + "px";
-			this.iframe.style.width = width + "px";
+			this.iframe!.style.width = width + "px";
 			this._width = width;
 		}
 
 		if(isNumber(height)){
 			this.element.style.height = height + "px";
-			this.iframe.style.height = height + "px";
+			this.iframe!.style.height = height + "px";
 			this._height = height;
 		}
 
@@ -455,24 +455,24 @@ class IframeView implements IEventEmitter {
 
 			this.element.appendChild(this.iframe);
 
-			this.document = this.iframe.contentDocument;
+			this.document = this.iframe.contentDocument!;
 
 			if(!this.document) {
 				loading.reject(new Error("No Document Available"));
 				return loaded;
 			}
 
-			this.iframe.contentDocument.open();
+			this.document.open();
 			// For Cordova windows platform
 			if((window as any).MSApp && (window as any).MSApp.execUnsafeLocalFunction) {
 				var outerThis = this;
 				(window as any).MSApp.execUnsafeLocalFunction(function () {
-					outerThis.iframe.contentDocument.write(contents);
+					outerThis.document.write(contents);
 				});
 			} else {
-				this.iframe.contentDocument.write(contents);
+				this.document.write(contents);
 			}
-			this.iframe.contentDocument.close();
+			this.document.close();
 
 		}
 
@@ -481,8 +481,8 @@ class IframeView implements IEventEmitter {
 
 	onLoad(event: Event, promise: { resolve: (value?: any) => void; reject: (reason?: any) => void }): void {
 
-		this.window = this.iframe.contentWindow;
-		this.document = this.iframe.contentDocument;
+		this.window = this.iframe!.contentWindow!;
+		this.document = this.iframe!.contentDocument!;
 
 		this.contents = new Contents(this.document, this.document.body, this.section.cfiBase, this.section.index);
 
@@ -495,7 +495,7 @@ class IframeView implements IEventEmitter {
 			link = this.document.createElement("link");
 			link.setAttribute("rel", "canonical");
 			link.setAttribute("href", this.section.canonical);
-			this.document.querySelector("head").appendChild(link);
+			this.document.querySelector("head")!.appendChild(link);
 		}
 
 		this.contents.on(EVENTS.CONTENTS.EXPAND, () => {
@@ -591,7 +591,7 @@ class IframeView implements IEventEmitter {
 			// Remind Safari to redraw the iframe
 			this.iframe.style.transform = "translateZ(0)";
 			this.iframe.offsetWidth;
-			this.iframe.style.transform = null;
+			this.iframe.style.transform = "";
 		}
 
 		this.emit(EVENTS.VIEWS.SHOWN, this);
@@ -600,7 +600,7 @@ class IframeView implements IEventEmitter {
 	hide(): void {
 		// this.iframe.style.display = "none";
 		this.element.style.visibility = "hidden";
-		this.iframe.style.visibility = "hidden";
+		this.iframe!.style.visibility = "hidden";
 
 		this.stopExpanding = true;
 		this.emit(EVENTS.VIEWS.HIDDEN, this);
@@ -626,8 +626,8 @@ class IframeView implements IEventEmitter {
 	}
 
 	locationOf(target: string): { left: number; top: number } {
-		var parentPos = this.iframe.getBoundingClientRect();
-		var targetPos = this.contents.locationOf(target, this.settings.ignoreClass);
+		var parentPos = this.iframe!.getBoundingClientRect();
+		var targetPos = this.contents!.locationOf(target, this.settings.ignoreClass);
 
 		return {
 			"left": targetPos.left,
@@ -665,7 +665,7 @@ class IframeView implements IEventEmitter {
 		data["epubcfi"] = cfiRange;
 
 		if (!this.pane) {
-			this.pane = new Pane(this.iframe, this.element);
+			this.pane = new Pane(this.iframe!, this.element);
 		}
 
 		let m = new Highlight(range, className, data, attributes);
@@ -673,13 +673,13 @@ class IframeView implements IEventEmitter {
 
 		this.highlights[cfiRange] = { "mark": h, "element": h.element, "listeners": [emitter, cb] };
 
-		h.element.setAttribute("ref", className);
-		h.element.addEventListener("click", emitter as EventListener);
-		h.element.addEventListener("touchstart", emitter as EventListener);
+		h.element!.setAttribute("ref", className);
+		h.element!.addEventListener("click", emitter as EventListener);
+		h.element!.addEventListener("touchstart", emitter as EventListener);
 
 		if (cb) {
-			h.element.addEventListener("click", cb as EventListener);
-			h.element.addEventListener("touchstart", cb as EventListener);
+			h.element!.addEventListener("click", cb as EventListener);
+			h.element!.addEventListener("touchstart", cb as EventListener);
 		}
 		return h;
 	}
@@ -697,7 +697,7 @@ class IframeView implements IEventEmitter {
 		data["epubcfi"] = cfiRange;
 
 		if (!this.pane) {
-			this.pane = new Pane(this.iframe, this.element);
+			this.pane = new Pane(this.iframe!, this.element);
 		}
 
 		let m = new Underline(range, className, data, attributes);
@@ -705,13 +705,13 @@ class IframeView implements IEventEmitter {
 
 		this.underlines[cfiRange] = { "mark": h, "element": h.element, "listeners": [emitter, cb] };
 
-		h.element.setAttribute("ref", className);
-		h.element.addEventListener("click", emitter as EventListener);
-		h.element.addEventListener("touchstart", emitter as EventListener);
+		h.element!.setAttribute("ref", className);
+		h.element!.addEventListener("click", emitter as EventListener);
+		h.element!.addEventListener("touchstart", emitter as EventListener);
 
 		if (cb) {
-			h.element.addEventListener("click", cb as EventListener);
-			h.element.addEventListener("touchstart", cb as EventListener);
+			h.element!.addEventListener("click", cb as EventListener);
+			h.element!.addEventListener("touchstart", cb as EventListener);
 		}
 		return h;
 	}
@@ -742,7 +742,7 @@ class IframeView implements IEventEmitter {
 			range.selectNodeContents(container);
 		} else if (range.collapsed) { // Webkit doesn't like collapsed ranges
 			range = new Range();
-			range.selectNodeContents(parent);
+			range.selectNodeContents(parent!);
 		}
 
 		let mark = this.document.createElement("a");
@@ -792,7 +792,7 @@ class IframeView implements IEventEmitter {
 				if (!left || rect.left < left) {
 					left = rect.left;
 					// right = rect.right;
-					right = Math.ceil(left / this.layout.props.pageWidth) * this.layout.props.pageWidth - (this.layout.gap / 2);
+					right = Math.ceil(left / this.layout.props.pageWidth!) * this.layout.props.pageWidth! - (this.layout.gap / 2);
 					top = rect.top;
 				}
 			}
@@ -806,11 +806,11 @@ class IframeView implements IEventEmitter {
 		if (cfiRange in this.highlights) {
 			let item = this.highlights[cfiRange];
 
-			this.pane.removeMark(item.mark);
+			this.pane!.removeMark(item.mark);
 			item.listeners.forEach((l: Function | undefined) => {
 				if (l) {
-					item.element.removeEventListener("click", l as EventListener);
-					item.element.removeEventListener("touchstart", l as EventListener);
+					item.element!.removeEventListener("click", l as EventListener);
+					item.element!.removeEventListener("touchstart", l as EventListener);
 				};
 			});
 			delete this.highlights[cfiRange];
@@ -820,11 +820,11 @@ class IframeView implements IEventEmitter {
 	ununderline(cfiRange: string): void {
 		if (cfiRange in this.underlines) {
 			let item = this.underlines[cfiRange];
-			this.pane.removeMark(item.mark);
+			this.pane!.removeMark(item.mark);
 			item.listeners.forEach((l: Function | undefined) => {
 				if (l) {
-					item.element.removeEventListener("click", l as EventListener);
-					item.element.removeEventListener("touchstart", l as EventListener);
+					item.element!.removeEventListener("click", l as EventListener);
+					item.element!.removeEventListener("touchstart", l as EventListener);
 				};
 			});
 			delete this.underlines[cfiRange];
@@ -867,10 +867,10 @@ class IframeView implements IEventEmitter {
 			this.displayed = false;
 
 			this.removeListeners();
-			this.contents.destroy();
+			this.contents!.destroy();
 
 			this.stopExpanding = true;
-			this.element.removeChild(this.iframe);
+			this.element.removeChild(this.iframe!);
 
 			if (this.pane) {
 				this.pane.element.remove();
@@ -880,10 +880,10 @@ class IframeView implements IEventEmitter {
 			this.iframe = undefined;
 			this.contents = undefined;
 
-			this._textWidth = null;
-			this._textHeight = null;
-			this._width = null;
-			this._height = null;
+			(this as any)._textWidth = null;
+			(this as any)._textHeight = null;
+			(this as any)._width = null;
+			(this as any)._height = null;
 		}
 
 		// this.element.style.height = "0px";

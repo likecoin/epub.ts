@@ -33,7 +33,7 @@ class Store implements IEventEmitter {
 
 		this.name = name;
 		this.requester = requester || httpRequest;
-		this.resolver = resolver;
+		this.resolver = resolver!;
 
 		this.online = true;
 
@@ -67,8 +67,8 @@ class Store implements IEventEmitter {
 	 */
 	addListeners(): void {
 		this._status = this.status.bind(this);
-		window.addEventListener('online',  this._status);
-	  window.addEventListener('offline', this._status);
+		window.addEventListener('online',  this._status as EventListener);
+	  window.addEventListener('offline', this._status as EventListener);
 	}
 
 	/**
@@ -76,8 +76,8 @@ class Store implements IEventEmitter {
 	 * @private
 	 */
 	removeListeners(): void {
-		window.removeEventListener('online',  this._status);
-	  window.removeEventListener('offline', this._status);
+		window.removeEventListener('online',  this._status as EventListener);
+	  window.removeEventListener('offline', this._status as EventListener);
 		this._status = undefined;
 	}
 
@@ -218,7 +218,7 @@ class Store implements IEventEmitter {
 			r = JSON.parse(response);
 		}
 		else
-		if(isXml(type)) {
+		if(isXml(type!)) {
 			r = parse(response, "text/xml");
 		}
 		else

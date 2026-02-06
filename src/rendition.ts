@@ -122,14 +122,14 @@ class Rendition implements IEventEmitter {
 		this.hooks.content.register(this.passEvents.bind(this));
 		this.hooks.content.register(this.adjustImages.bind(this));
 
-		this.book.spine.hooks.content.register(this.injectIdentifier.bind(this));
+		this.book!.spine!.hooks.content.register(this.injectIdentifier.bind(this));
 
 		if (this.settings.stylesheet) {
-			this.book.spine.hooks.content.register(this.injectStylesheet.bind(this));
+			this.book!.spine!.hooks.content.register(this.injectStylesheet.bind(this));
 		}
 
 		if (this.settings.script) {
-			this.book.spine.hooks.content.register(this.injectScript.bind(this));
+			this.book!.spine!.hooks.content.register(this.injectScript.bind(this));
 		}
 
 		/**
@@ -243,10 +243,10 @@ class Rendition implements IEventEmitter {
 	 * @return {Promise} rendering has started
 	 */
 	start(): void {
-		if (!this.settings.layout && (this.book.package.metadata.layout === "pre-paginated" || this.book.displayOptions.fixedLayout === "true")) {
+		if (!this.settings.layout && (this.book!.package!.metadata.layout === "pre-paginated" || this.book!.displayOptions!.fixedLayout === "true")) {
 			this.settings.layout = "pre-paginated";
 		}
-		switch(this.book.package.metadata.spread) {
+		switch(this.book!.package!.metadata.spread) {
 			case 'none':
 				this.settings.spread = 'none';
 				break;
@@ -256,21 +256,21 @@ class Rendition implements IEventEmitter {
 		}
 
 		if(!this.manager) {
-			this.ViewManager = this.requireManager(this.settings.manager);
-			this.View = this.requireView(this.settings.view);
+			this.ViewManager = this.requireManager(this.settings.manager!);
+			this.View = this.requireView(this.settings.view!);
 
 			this.manager = new (this.ViewManager as new (options: Record<string, any>) => DefaultViewManager)({
 				view: this.View,
 				queue: this.q,
-				request: this.book.load.bind(this.book),
+				request: this.book!.load.bind(this.book),
 				settings: this.settings
 			});
 		}
 
-		this.direction(this.book.package.metadata.direction || this.settings.defaultDirection);
+		this.direction(this.book!.package!.metadata.direction || this.settings.defaultDirection);
 
 		// Parse metadata to get layout props
-		this.settings.globalLayoutProperties = this.determineLayoutProperties(this.book.package.metadata);
+		this.settings.globalLayoutProperties = this.determineLayoutProperties(this.book!.package!.metadata);
 
 		this.flow(this.settings.globalLayoutProperties.flow);
 
@@ -361,18 +361,18 @@ class Rendition implements IEventEmitter {
 		this.displaying = displaying;
 
 		// Check if this is a book percentage
-		if (this.book.locations.length() && isFloat(target)) {
-			target = this.book.locations.cfiFromPercentage(parseFloat(target as string));
+		if (this.book!.locations!.length() && isFloat(target)) {
+			target = this.book!.locations!.cfiFromPercentage(parseFloat(target as string));
 		}
 
-		section = this.book.spine.get(target);
+		section = this.book!.spine!.get(target);
 
 		if(!section){
 			displaying.reject(new Error("No Section Found"));
 			return displayed;
 		}
 
-		this.manager.display(section, target as string)
+		this.manager!.display(section, target as string)
 			.then(() => {
 				displaying.resolve(section);
 				this.displaying = undefined;
@@ -535,7 +535,7 @@ class Rendition implements IEventEmitter {
 	 * @param {object} offset
 	 */
 	moveTo(offset: { left: number; top: number }): void {
-		this.manager.moveTo(offset);
+		this.manager!.moveTo(offset);
 	}
 
 	/**
@@ -551,14 +551,14 @@ class Rendition implements IEventEmitter {
 		if (height) {
 			this.settings.height = height;
 		}
-		this.manager.resize(width, height, epubcfi);
+		this.manager!.resize(width, height, epubcfi);
 	}
 
 	/**
 	 * Clear all rendered views
 	 */
 	clear(): void {
-		this.manager.clear();
+		this.manager!.clear();
 	}
 
 	/**
@@ -566,7 +566,7 @@ class Rendition implements IEventEmitter {
 	 * @return {Promise}
 	 */
 	next(): Promise<any> {
-		return this.q.enqueue(this.manager.next.bind(this.manager))
+		return this.q.enqueue(this.manager!.next.bind(this.manager))
 			.then(this.reportLocation.bind(this));
 	}
 
@@ -575,7 +575,7 @@ class Rendition implements IEventEmitter {
 	 * @return {Promise}
 	 */
 	prev(): Promise<any> {
-		return this.q.enqueue(this.manager.prev.bind(this.manager))
+		return this.q.enqueue(this.manager!.prev.bind(this.manager))
 			.then(this.reportLocation.bind(this));
 	}
 
@@ -787,7 +787,7 @@ class Rendition implements IEventEmitter {
 	 * @return {displayedLocation | promise} location (may be a promise)
 	 */
 	currentLocation(): Location | undefined {
-		var location = this.manager.currentLocation() as any;
+		var location = this.manager!.currentLocation() as any;
 		if (location && location.then && typeof location.then === "function") {
 			location.then(function(result: ViewLocation[]) {
 				let located = this.located(result);
@@ -833,20 +833,20 @@ class Rendition implements IEventEmitter {
 			}
 		};
 
-		let locationStart = this.book.locations.locationFromCfi(start.mapping.start);
-		let locationEnd = this.book.locations.locationFromCfi(end.mapping.end);
+		let locationStart = this.book!.locations!.locationFromCfi(start.mapping.start);
+		let locationEnd = this.book!.locations!.locationFromCfi(end.mapping.end);
 
 		if (locationStart != null) {
 			located.start.location = locationStart;
-			located.start.percentage = this.book.locations.percentageFromLocation(locationStart);
+			located.start.percentage = this.book!.locations!.percentageFromLocation(locationStart);
 		}
 		if (locationEnd != null) {
 			located.end.location = locationEnd;
-			located.end.percentage = this.book.locations.percentageFromLocation(locationEnd);
+			located.end.percentage = this.book!.locations!.percentageFromLocation(locationEnd);
 		}
 
-		let pageStart = this.book.pageList.pageFromCfi(start.mapping.start);
-		let pageEnd = this.book.pageList.pageFromCfi(end.mapping.end);
+		let pageStart = this.book!.pageList!.pageFromCfi(start.mapping.start);
+		let pageEnd = this.book!.pageList!.pageFromCfi(end.mapping.end);
 
 		if (pageStart != -1) {
 			located.start.page = pageStart;
@@ -855,12 +855,12 @@ class Rendition implements IEventEmitter {
 			located.end.page = pageEnd;
 		}
 
-		if (end.index === this.book.spine.last().index &&
+		if (end.index === this.book!.spine!.last()!.index &&
 				located.end.displayed.page >= located.end.displayed.total) {
 			located.atEnd = true;
 		}
 
-		if (start.index === this.book.spine.first().index &&
+		if (start.index === this.book!.spine!.first()!.index &&
 				located.start.displayed.page === 1) {
 			located.atStart = true;
 		}
@@ -964,13 +964,13 @@ class Rendition implements IEventEmitter {
 	 */
 	getRange(cfi: string, ignoreClass?: string): Range | undefined {
 		var _cfi = new EpubCFI(cfi);
-		var found = this.manager.visible().filter(function (view: any) {
+		var found = this.manager!.visible().filter(function (view: any) {
 			if(_cfi.spinePos === view.index) return true;
 		});
 
 		// Should only every return 1 item
 		if (found.length) {
-			return found[0].contents.range(_cfi as any, ignoreClass);
+			return found[0].contents!.range(_cfi as any, ignoreClass);
 		}
 	}
 
@@ -981,7 +981,7 @@ class Rendition implements IEventEmitter {
 	 */
 	adjustImages(contents: Contents): Promise<void> {
 
-		if (this._layout.name === "pre-paginated") {
+		if (this._layout!.name === "pre-paginated") {
 			return new Promise<void>(function(resolve){
 				resolve();
 			});
@@ -993,7 +993,7 @@ class Rendition implements IEventEmitter {
 
 		contents.addStylesheetRules({
 			"img" : {
-				"max-width": (this._layout.columnWidth ? (this._layout.columnWidth - horizontalPadding) + "px" : "100%") + "!important",
+				"max-width": (this._layout!.columnWidth ? (this._layout!.columnWidth - horizontalPadding) + "px" : "100%") + "!important",
 				"max-height": height + "px" + "!important",
 				"object-fit": "contain",
 				"page-break-inside": "avoid",
@@ -1001,7 +1001,7 @@ class Rendition implements IEventEmitter {
 				"box-sizing": "border-box"
 			},
 			"svg" : {
-				"max-width": (this._layout.columnWidth ? (this._layout.columnWidth - horizontalPadding) + "px" : "100%") + "!important",
+				"max-width": (this._layout!.columnWidth ? (this._layout!.columnWidth - horizontalPadding) + "px" : "100%") + "!important",
 				"max-height": height + "px" + "!important",
 				"page-break-inside": "avoid",
 				"break-inside": "avoid"
@@ -1041,7 +1041,7 @@ class Rendition implements IEventEmitter {
 	handleLinks(contents: Contents): void {
 		if (contents) {
 			contents.on(EVENTS.CONTENTS.LINK_CLICKED, (href: string) => {
-				let relative = this.book.path.relative(href);
+				let relative = this.book!.path!.relative(href);
 				this.display(relative);
 			});
 		}
@@ -1058,7 +1058,7 @@ class Rendition implements IEventEmitter {
 		let style = doc.createElement("link");
 		style.setAttribute("type", "text/css");
 		style.setAttribute("rel", "stylesheet");
-		style.setAttribute("href", this.settings.stylesheet);
+		style.setAttribute("href", this.settings.stylesheet!);
 		doc.getElementsByTagName("head")[0].appendChild(style);
 	}
 
@@ -1072,7 +1072,7 @@ class Rendition implements IEventEmitter {
 	injectScript(doc: Document, section: Section): void {
 		let script = doc.createElement("script");
 		script.setAttribute("type", "text/javascript");
-		script.setAttribute("src", this.settings.script);
+		script.setAttribute("src", this.settings.script!);
 		script.textContent = " "; // Needed to prevent self closing tag
 		doc.getElementsByTagName("head")[0].appendChild(script);
 	}
@@ -1085,7 +1085,7 @@ class Rendition implements IEventEmitter {
 	 * @private
 	 */
 	injectIdentifier(doc: Document, section: Section): void {
-		let ident = this.book.packaging.metadata.identifier;
+		let ident = this.book!.packaging!.metadata.identifier;
 		let meta = doc.createElement("meta");
 		meta.setAttribute("name", "dc.relation.ispartof");
 		if (ident) {

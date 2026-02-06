@@ -124,7 +124,7 @@ class Locations implements IEventEmitter {
 			var dist;
 			var pos = 0;
 
-			if (node.textContent.trim().length === 0) {
+			if ((node.textContent ?? "").trim().length === 0) {
 				return false; // continue
 			}
 
@@ -181,7 +181,7 @@ class Locations implements IEventEmitter {
 			prev = node;
 		};
 
-		sprint(body, parser.bind(this));
+		sprint(body!, parser.bind(this));
 
 		// Close remaining
 		if (range && range.startContainer && prev) {
@@ -240,8 +240,8 @@ class Locations implements IEventEmitter {
 			.then(function(contents: Element) {
 				var completed = new defer();
 				var locations = this.parseWords(contents, section, wordCount, startCfi);
-				var remainingCount = count - this._locationsWords.length;
-				this._locationsWords = this._locationsWords.concat(locations.length >= count ? locations.slice(0, remainingCount) : locations);
+				var remainingCount = count! - this._locationsWords.length;
+				this._locationsWords = this._locationsWords.concat(locations.length >= count! ? locations.slice(0, remainingCount) : locations);
 
 				section.unload();
 
@@ -268,7 +268,7 @@ class Locations implements IEventEmitter {
 		var foundStartNode = startCfi ? startCfi.spinePos !== section.index : true;
 		var startNode: Node | undefined;
 		if (startCfi && section.index === startCfi.spinePos) {
-			startNode = startCfi.findNode(startCfi.range ? startCfi.path.steps.concat(startCfi.start.steps) : startCfi.path.steps, contents.ownerDocument);
+			startNode = startCfi.findNode(startCfi.range ? startCfi.path.steps.concat(startCfi.start!.steps) : startCfi.path.steps, contents.ownerDocument!);
 		}
 		var parser = function(node: Node) {
 			if (!foundStartNode) {
@@ -278,12 +278,12 @@ class Locations implements IEventEmitter {
 					return false;
 				}
 			}
-			if (node.textContent.length < 10) {
-				if (node.textContent.trim().length === 0) {
+			if ((node.textContent ?? "").length < 10) {
+				if ((node.textContent ?? "").trim().length === 0) {
 					return false;
 				}
 			}
-			var len  = this.countWords(node.textContent);
+			var len  = this.countWords(node.textContent ?? "");
 			var dist;
 			var pos = 0;
 
@@ -323,7 +323,7 @@ class Locations implements IEventEmitter {
 			prev = node;
 		};
 
-		sprint(body, parser.bind(this));
+		sprint(body!, parser.bind(this));
 
 		return locations;
 	}
@@ -496,22 +496,22 @@ class Locations implements IEventEmitter {
 	}
 
 	destroy (): void {
-		this.spine = undefined;
-		this.request = undefined;
-		this.pause = undefined;
+		(this as any).spine = undefined;
+		(this as any).request = undefined;
+		(this as any).pause = undefined;
 
 		this.q.stop();
-		this.q = undefined;
-		this.epubcfi = undefined;
+		(this as any).q = undefined;
+		(this as any).epubcfi = undefined;
 
-		this._locations = undefined
-		this.total = undefined;
+		(this as any)._locations = undefined;
+		(this as any).total = undefined;
 
-		this.break = undefined;
-		this._current = undefined;
+		(this as any).break = undefined;
+		(this as any)._current = undefined;
 
-		this.currentLocation = undefined;
-		this._currentCfi = undefined;
+		(this as any).currentLocation = undefined;
+		(this as any)._currentCfi = undefined;
 		clearTimeout(this.processingTimeout);
 	}
 }

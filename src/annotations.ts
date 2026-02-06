@@ -256,12 +256,12 @@ class Annotation implements IEventEmitter {
 	}: { type: string; cfiRange: string; data?: Record<string, any>; sectionIndex?: number; cb?: Function; className?: string; styles?: Record<string, string> }) {
 		this.type = type;
 		this.cfiRange = cfiRange;
-		this.data = data;
-		this.sectionIndex = sectionIndex;
+		this.data = data ?? {};
+		this.sectionIndex = sectionIndex ?? 0;
 		this.mark = undefined;
-		this.cb = cb;
-		this.className = className;
-		this.styles = styles;
+		this.cb = cb!;
+		this.className = className ?? "";
+		this.styles = styles ?? {};
 	}
 
 	/**

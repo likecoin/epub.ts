@@ -432,7 +432,7 @@ class ContinuousViewManager extends DefaultViewManager {
 		this.addScrollListeners();
 
 		if (this.isPaginated && this.settings.snap) {
-			this.snapper = new Snap(this, this.settings.snap && (typeof this.settings.snap === "object") && this.settings.snap);
+			this.snapper = new Snap(this, (typeof this.settings.snap === "object") ? this.settings.snap as Record<string, any> : undefined);
 		}
 	}
 
@@ -475,7 +475,7 @@ class ContinuousViewManager extends DefaultViewManager {
 		}
 
 		scroller.removeEventListener("scroll", this._onScroll);
-		this._onScroll = undefined;
+		(this as any)._onScroll = undefined;
 	}
 
 	onScroll(): void {
@@ -594,13 +594,13 @@ class ContinuousViewManager extends DefaultViewManager {
 	updateFlow(flow: string): void {
 		if (this.rendered && this.snapper) {
 			this.snapper.destroy();
-			this.snapper = undefined;
+			(this as any).snapper = undefined;
 		}
 
 		super.updateFlow(flow, "scroll");
 
 		if (this.rendered && this.isPaginated && this.settings.snap) {
-			this.snapper = new Snap(this, this.settings.snap && (typeof this.settings.snap === "object") && this.settings.snap);
+			this.snapper = new Snap(this, (typeof this.settings.snap === "object") ? this.settings.snap as Record<string, any> : undefined);
 		}
 	}
 

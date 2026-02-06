@@ -163,7 +163,7 @@ var mimeTypes = (function() {
 var defaultValue = "text/plain";//"application/octet-stream";
 
 function lookup(filename: string): string {
-	return filename && (mimeTypes as Record<string, string>)[filename.split(".").pop().toLowerCase()] || defaultValue;
+	return filename && (mimeTypes as Record<string, string>)[filename.split(".").pop()!.toLowerCase()] || defaultValue;
 };
 
 export default { lookup };

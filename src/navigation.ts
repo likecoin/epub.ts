@@ -76,7 +76,7 @@ class Navigation {
 
 			this.length++;
 
-			if (item.subitems.length) {
+			if (item.subitems && item.subitems.length) {
 				this.unpack(item.subitems);
 			}
 		}
@@ -111,18 +111,18 @@ class Navigation {
 	 * @param  {array} navItems
 	 * @return {object} navItem
 	 */
-	getByIndex(target: string, index: number, navItems: NavItem[]): NavItem | undefined {
+	getByIndex(target: string, index: number | undefined, navItems: NavItem[]): NavItem | undefined {
 		if (navItems.length === 0) {
 			return;
 		}
 
-		const item = navItems[index];
+		const item = index !== undefined ? navItems[index] : undefined;
 		if (item && (target === item.id || target === item.href)) {
 			return item;
 		} else {
 			let result;
 			for (let i = 0; i < navItems.length; ++i) {
-				result = this.getByIndex(target, index, navItems[i].subitems);
+				result = this.getByIndex(target, index, navItems[i].subitems ?? []);
 				if (result) {
 					break;
 				}
@@ -248,7 +248,7 @@ class Navigation {
 			item = this.landmarkItem(navItems[i]);
 			if (item) {
 				list.push(item);
-				this.landmarksByType[item.type] = i;
+				this.landmarksByType[item.type!] = i;
 			}
 		}
 
@@ -302,7 +302,7 @@ class Navigation {
 				list.push(item);
 			} else {
 				parent = toc[item.parent];
-				parent.subitems.push(item);
+				parent.subitems!.push(item);
 			}
 		}
 
@@ -318,15 +318,15 @@ class Navigation {
 	ncxItem(item: Element): NavItem {
 		var id = item.getAttribute("id") || "",
 				content = qs(item, "content"),
-				src = content.getAttribute("src"),
+				src = content ? content.getAttribute("src") ?? "" : "",
 				navLabel = qs(item, "navLabel"),
-				text = navLabel.textContent ? navLabel.textContent : "",
+				text = navLabel?.textContent ? navLabel.textContent : "",
 				subitems: NavItem[] = [],
 				parentNode = item.parentNode,
 				parent;
 
 		if(parentNode && (parentNode.nodeName === "navPoint" || parentNode.nodeName.split(':').slice(-1)[0] === "navPoint")) {
-			parent = (parentNode as Element).getAttribute("id");
+			parent = (parentNode as Element).getAttribute("id") ?? undefined;
 		}
 
 

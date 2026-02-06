@@ -21,7 +21,7 @@
 - [x] Replace ~528 explicit `any` with proper types (~123 remain where genuinely needed)
 - [ ] Replace `localforage` with lighter IndexedDB wrapper
 - [ ] Replace `@xmldom/xmldom` with browser-native DOMParser
-- [ ] Enable `strictNullChecks`
+- [x] Enable `strictNullChecks` (476 errors fixed across 30 files)
 - [ ] Full `strict: true`
 - [ ] Node.js support (parsing-only entry point)
 - [ ] Improve test coverage

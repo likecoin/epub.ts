@@ -52,7 +52,7 @@ class DefaultViewManager implements IEventEmitter {
 		this.name = "default";
 		this.optsSettings = options.settings;
 		this.View = options.view as unknown as new (section: Section, options?: ViewSettings) => IframeView;
-		this.request = options.request;
+		this.request = options.request!;
 		this.renditionQueue = options.queue;
 		this.q = new Queue(this);
 
@@ -180,7 +180,7 @@ class DefaultViewManager implements IEventEmitter {
 		}
 
 		scroller.removeEventListener("scroll", this._onScroll);
-		this._onScroll = undefined;
+		(this as any)._onScroll = undefined;
 	}
 
 	destroy(): void {
@@ -245,7 +245,7 @@ class DefaultViewManager implements IEventEmitter {
 		if (this.orientationTimeout &&
 				this.winBounds.width === this.winBounds.height) {
 			// reset the stage size for next resize
-			this._stageSize = undefined;
+			(this as any)._stageSize = undefined;
 			return;
 		}
 
@@ -402,7 +402,7 @@ class DefaultViewManager implements IEventEmitter {
 				before `Math.floor`
 			*/
 			distX = distX + this.layout.delta
-			distX = distX - width
+			distX = distX - width!
 		}
 		this.scrollTo(distX, distY, true);
 	}
@@ -504,7 +504,7 @@ class DefaultViewManager implements IEventEmitter {
 			if(left <= this.container.scrollWidth) {
 				this.scrollBy(this.layout.delta, 0, true);
 			} else {
-				next = this.views.last().section.next();
+				next = this.views.last()!.section.next();
 			}
 		} else if (this.isPaginated && this.settings.axis === "horizontal" && dir === "rtl") {
 
@@ -516,7 +516,7 @@ class DefaultViewManager implements IEventEmitter {
 				if (left > 0) {
 					this.scrollBy(this.layout.delta, 0, true);
 				} else {
-					next = this.views.last().section.next();
+					next = this.views.last()!.section.next();
 				}
 			} else {
 				left = this.container.scrollLeft + ( this.layout.delta * -1 );
@@ -524,7 +524,7 @@ class DefaultViewManager implements IEventEmitter {
 				if (left > this.container.scrollWidth * -1){
 					this.scrollBy(this.layout.delta, 0, true);
 				} else {
-					next = this.views.last().section.next();
+					next = this.views.last()!.section.next();
 				}
 			}
 
@@ -537,11 +537,11 @@ class DefaultViewManager implements IEventEmitter {
 			if(top < this.container.scrollHeight) {
 				this.scrollBy(0, this.layout.height, true);
 			} else {
-				next = this.views.last().section.next();
+				next = this.views.last()!.section.next();
 			}
 
 		} else {
-			next = this.views.last().section.next();
+			next = this.views.last()!.section.next();
 		}
 
 		if(next) {
@@ -593,7 +593,7 @@ class DefaultViewManager implements IEventEmitter {
 			if(left > 0) {
 				this.scrollBy(-this.layout.delta, 0, true);
 			} else {
-				prev = this.views.first().section.prev();
+				prev = this.views.first()!.section.prev();
 			}
 
 		} else if (this.isPaginated && this.settings.axis === "horizontal" && dir === "rtl") {
@@ -606,7 +606,7 @@ class DefaultViewManager implements IEventEmitter {
 				if (left < this.container.scrollWidth) {
 					this.scrollBy(-this.layout.delta, 0, true);
 				} else {
-					prev = this.views.first().section.prev();
+					prev = this.views.first()!.section.prev();
 				}
 			}
 			else{
@@ -615,7 +615,7 @@ class DefaultViewManager implements IEventEmitter {
 				if (left < 0) {
 					this.scrollBy(-this.layout.delta, 0, true);
 				} else {
-					prev = this.views.first().section.prev();
+					prev = this.views.first()!.section.prev();
 				}
 			}
 
@@ -628,12 +628,12 @@ class DefaultViewManager implements IEventEmitter {
 			if(top > 0) {
 				this.scrollBy(0, -(this.layout.height), true);
 			} else {
-				prev = this.views.first().section.prev();
+				prev = this.views.first()!.section.prev();
 			}
 
 		} else {
 
-			prev = this.views.first().section.prev();
+			prev = this.views.first()!.section.prev();
 
 		}
 
@@ -769,7 +769,7 @@ class DefaultViewManager implements IEventEmitter {
 				href,
 				pages,
 				totalPages,
-				mapping
+				mapping: mapping!
 			};
 		});
 
@@ -818,7 +818,7 @@ class DefaultViewManager implements IEventEmitter {
 			let startPage = Math.floor(start / this.layout.pageWidth);
 			let pages = [];
 			let endPage = Math.floor(end / this.layout.pageWidth);
-			
+
 			// start page should not be negative
 			if (startPage < 0) {
 				startPage = 0;
@@ -843,7 +843,7 @@ class DefaultViewManager implements IEventEmitter {
 				href,
 				pages,
 				totalPages,
-				mapping
+				mapping: mapping!
 			};
 		});
 
@@ -971,7 +971,7 @@ class DefaultViewManager implements IEventEmitter {
 		this.layout = layout;
 		this.updateLayout();
 		if (this.views && this.views.length > 0 && this.layout.name === "pre-paginated") {
-			this.display(this.views.first().section);
+			this.display(this.views.first()!.section);
 		}
 		 // this.manager.layout(this.layout.format);
 	}

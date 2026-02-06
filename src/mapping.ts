@@ -55,12 +55,12 @@ class Mapping {
 
 		if (this._dev === true) {
 			let doc = contents.document;
-			let startRange = new EpubCFI(result.start).toRange(doc);
-			let endRange = new EpubCFI(result.end).toRange(doc);
+			let startRange = new EpubCFI(result.start).toRange(doc)!;
+			let endRange = new EpubCFI(result.end).toRange(doc)!;
 
-			let selection = doc.defaultView.getSelection();
+			let selection = doc.defaultView!.getSelection();
 			let r = doc.createRange();
-			selection.removeAllRanges();
+			selection!.removeAllRanges();
 			r.setStart(startRange.startContainer, startRange.startOffset);
 			r.setEnd(endRange.endContainer, endRange.endOffset);
 			selection.addRange(r);
@@ -147,7 +147,7 @@ class Mapping {
 
 			$el = stack.shift();
 
-			found = this.walk($el, (node) => {
+			found = this.walk($el!, (node) => {
 				var left, right, top, bottom;
 				var elPos;
 				var elRange;
@@ -230,7 +230,7 @@ class Mapping {
 
 			$el = stack.shift();
 
-			found = this.walk($el, (node) => {
+			found = this.walk($el!, (node) => {
 
 				var left, right, top, bottom;
 				var elPos;
@@ -421,7 +421,7 @@ class Mapping {
 		var textContent = node.textContent || "";
 		var text = textContent.trim();
 		var range: Range | null;
-		var doc = node.ownerDocument;
+		var doc = node.ownerDocument!;
 		var splitter = _splitter || " ";
 
 		var pos = text.indexOf(splitter);

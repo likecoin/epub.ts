@@ -39,15 +39,15 @@ class Container {
 			throw new Error("No RootFile Found");
 		}
 
-		this.packagePath = rootfile.getAttribute("full-path");
+		this.packagePath = rootfile.getAttribute("full-path") ?? "";
 		this.directory = path.dirname(this.packagePath);
 		this.encoding = (containerDocument as any).xmlEncoding;
 	}
 
 	destroy(): void {
-		this.packagePath = undefined;
-		this.directory = undefined;
-		this.encoding = undefined;
+		(this as any).packagePath = undefined;
+		(this as any).directory = undefined;
+		(this as any).encoding = undefined;
 	}
 }
 

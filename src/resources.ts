@@ -35,9 +35,9 @@ class Resources {
 	constructor(manifest: PackagingManifestObject, options?: { replacements?: string; archive?: Archive; resolver?: (href: string, absolute?: boolean) => string; request?: RequestFunction }) {
 		this.settings = {
 			replacements: (options && options.replacements) || "base64",
-			archive: (options && options.archive),
-			resolver: (options && options.resolver),
-			request: (options && options.request)
+			archive: (options && options.archive)!,
+			resolver: (options && options.resolver)!,
+			request: (options && options.request)!
 		};
 
 		this.process(manifest);
@@ -137,7 +137,7 @@ class Resources {
 						return blob2base64(blob);
 					})
 					.then((base64: string) => {
-						return createBase64Url(base64, mimeType);
+						return createBase64Url(base64, mimeType)!;
 					});
 			} else {
 				return this.settings.request(url, 'blob').then((blob: Blob) => {
@@ -170,10 +170,10 @@ class Resources {
 
 		return Promise.all(replacements)
 			.then( (replacementUrls) => {
-				this.replacementUrls = replacementUrls.filter((url) => {
+				this.replacementUrls = replacementUrls.filter((url): url is string => {
 					return (typeof(url) === "string");
 				});
-				return replacementUrls;
+				return replacementUrls as string[];
 			});
 	}
 

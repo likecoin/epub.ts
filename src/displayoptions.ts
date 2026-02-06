@@ -42,7 +42,7 @@ class DisplayOptions {
 			let value = "";
 
 			if (el.childNodes.length) {
-				value = el.childNodes[0].nodeValue;
+				value = el.childNodes[0].nodeValue ?? "";
 			}
 
 			switch ((el.attributes as any).name.value) {
@@ -65,10 +65,10 @@ class DisplayOptions {
 	}
 
 	destroy(): void {
-		this.interactive = undefined;
-		this.fixedLayout = undefined;
-		this.openToSpread = undefined;
-		this.orientationLock = undefined;
+		(this as any).interactive = undefined;
+		(this as any).fixedLayout = undefined;
+		(this as any).openToSpread = undefined;
+		(this as any).orientationLock = undefined;
 	}
 }
 

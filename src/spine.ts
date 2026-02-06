@@ -38,11 +38,11 @@ class Spine {
 
 		this.loaded = false;
 
-		this.items = undefined;
-		this.manifest = undefined;
-		this.spineNodeIndex = undefined;
-		this.baseUrl = undefined;
-		this.length = undefined;
+		this.items = [];
+		this.manifest = {};
+		this.spineNodeIndex = 0;
+		this.baseUrl = '';
+		this.length = 0;
 	}
 
 	/**
@@ -60,7 +60,7 @@ class Spine {
 		this.length = this.items.length;
 
 		this.items.forEach( (item, index) => {
-			var manifestItem = this.manifest[item.idref];
+			var manifestItem = this.manifest[item.idref!];
 			var spineItem;
 
 			item.index = index;
@@ -264,23 +264,23 @@ class Spine {
 	destroy(): void {
 		this.each((section: Section) => section.destroy());
 
-		this.spineItems = undefined
-		this.spineByHref = undefined
-		this.spineById = undefined
+		(this as any).spineItems = undefined;
+		(this as any).spineByHref = undefined;
+		(this as any).spineById = undefined;
 
 		this.hooks.serialize.clear();
 		this.hooks.content.clear();
-		this.hooks = undefined;
+		(this as any).hooks = undefined;
 
-		this.epubcfi = undefined;
+		(this as any).epubcfi = undefined;
 
 		this.loaded = false;
 
-		this.items = undefined;
-		this.manifest = undefined;
-		this.spineNodeIndex = undefined;
-		this.baseUrl = undefined;
-		this.length = undefined;
+		(this as any).items = undefined;
+		(this as any).manifest = undefined;
+		(this as any).spineNodeIndex = undefined;
+		(this as any).baseUrl = undefined;
+		(this as any).length = undefined;
 	}
 }
 

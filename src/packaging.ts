@@ -70,7 +70,7 @@ class Packaging {
 		this.uniqueIdentifier = this.findUniqueIdentifier(packageDocument);
 		this.metadata = this.parseMetadata(metadataNode);
 
-		this.metadata.direction = spineNode.getAttribute("page-progression-direction");
+		this.metadata.direction = spineNode.getAttribute("page-progression-direction") ?? "";
 
 		return {
 			"metadata" : this.metadata,
@@ -133,7 +133,7 @@ class Packaging {
 
 		//-- Create an object with the id as key
 		items.forEach(function(item: Element){
-			var id = item.getAttribute("id"),
+			var id = item.getAttribute("id") ?? "",
 					href = item.getAttribute("href") || "",
 					type = item.getAttribute("media-type") || "",
 					overlay = item.getAttribute("media-overlay") || "",
@@ -178,8 +178,8 @@ class Packaging {
 			// var manifestPropArray = manifestProps.length ? manifestProps.split(" ") : [];
 
 			var itemref = {
-				"id" : item.getAttribute("id"),
-				"idref" : idref,
+				"id" : item.getAttribute("id") ?? undefined,
+				"idref" : idref!,
 				"linear" : item.getAttribute("linear") || "yes",
 				"properties" : propArray,
 				// "href" : manifest[Id].href,
@@ -210,7 +210,7 @@ class Packaging {
 		}
 
 		if (identifier.localName === "identifier" && identifier.namespaceURI === "http://purl.org/dc/elements/1.1/") {
-			return identifier.childNodes.length > 0 ? identifier.childNodes[0].nodeValue.trim() : "";
+			return identifier.childNodes.length > 0 ? (identifier.childNodes[0].nodeValue ?? "").trim() : "";
 		}
 
 		return "";
@@ -250,7 +250,7 @@ class Packaging {
 			tocId = spineNode.getAttribute("toc");
 			if(tocId) {
 				// node = manifestNode.querySelector("item[id='" + tocId + "']");
-				node = manifestNode.querySelector(`#${tocId}`);
+				node = manifestNode.querySelector(`#${tocId}`) ?? undefined;
 			}
 		}
 
@@ -267,21 +267,21 @@ class Packaging {
 	 */
 	findCoverPath(packageXml: Document): string {
 		var pkg = qs(packageXml, "package");
-		var epubVersion = pkg.getAttribute("version");
-		
+		var epubVersion = pkg?.getAttribute("version");
+
 		// Try parsing cover with epub 3.
 		// var node = packageXml.querySelector("item[properties='cover-image']");
 		var node = qsp(packageXml, "item", {"properties":"cover-image"});
-		if (node) return node.getAttribute("href");
-		
+		if (node) return node.getAttribute("href") ?? "";
+
 		// Fallback to epub 2.
 		var metaCover = qsp(packageXml, "meta", {"name":"cover"});
 
 		if (metaCover) {
 			var coverId = metaCover.getAttribute("content");
 			// var cover = packageXml.querySelector("item[id='" + coverId + "']");
-			var cover = packageXml.getElementById(coverId);
-			return cover ? cover.getAttribute("href") : "";
+			var cover = packageXml.getElementById(coverId!);
+			return cover ? cover.getAttribute("href") ?? "" : "";
 		}
 		else {
 			return "";
@@ -304,7 +304,7 @@ class Packaging {
 		el = found[0];
 
 		if(el.childNodes.length){
-			return el.childNodes[0].nodeValue;
+			return el.childNodes[0].nodeValue ?? "";
 		}
 
 		return "";
@@ -322,7 +322,7 @@ class Packaging {
 		var el = qsp(xml, "meta", {"property":property});
 
 		if(el && el.childNodes.length){
-			return el.childNodes[0].nodeValue;
+			return el.childNodes[0].nodeValue ?? "";
 		}
 
 		return "";
@@ -371,13 +371,13 @@ class Packaging {
 	}
 
 	destroy(): void {
-		this.manifest = undefined;
-		this.navPath = undefined;
-		this.ncxPath = undefined;
-		this.coverPath = undefined;
-		this.spineNodeIndex = undefined;
-		this.spine = undefined;
-		this.metadata = undefined;
+		(this as any).manifest = undefined;
+		(this as any).navPath = undefined;
+		(this as any).ncxPath = undefined;
+		(this as any).coverPath = undefined;
+		(this as any).spineNodeIndex = undefined;
+		(this as any).spine = undefined;
+		(this as any).metadata = undefined;
 	}
 }
 

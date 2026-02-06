@@ -55,7 +55,7 @@ class Contents implements IEventEmitter {
 		this.document = doc;
 		this.documentElement =  this.document.documentElement as HTMLElement;
 		this.content = content || this.document.body as HTMLElement;
-		this.window = this.document.defaultView;
+		this.window = this.document.defaultView!;
 
 		this._size = {
 			width: 0,
@@ -316,7 +316,7 @@ class Contents implements IEventEmitter {
 		* <meta name="viewport" content="width=1024,height=697" />
 		*/
 		if($viewport && $viewport.hasAttribute("content")) {
-			let content = $viewport.getAttribute("content");
+			let content = $viewport.getAttribute("content") ?? "";
 			let _width = content.match(/width\s*=\s*([^,]*)/);
 			let _height = content.match(/height\s*=\s*([^,]*)/);
 			let _scale = content.match(/initial-scale\s*=\s*([^,]*)/);
@@ -381,7 +381,7 @@ class Contents implements IEventEmitter {
 			if (!$viewport) {
 				$viewport = this.document.createElement("meta");
 				$viewport.setAttribute("name", "viewport");
-				this.document.querySelector("head").appendChild($viewport);
+				this.document.querySelector("head")!.appendChild($viewport);
 			}
 
 			$viewport.setAttribute("content", newContent.join(", "));
@@ -509,7 +509,7 @@ class Contents implements IEventEmitter {
 		body.style['transitionDelay'] = "0";
 
 		this._resizeCheck = this.resizeCheck.bind(this);
-		this.document.addEventListener('transitionend', this._resizeCheck);
+		this.document.addEventListener('transitionend', this._resizeCheck!);
 	}
 
 	/**
@@ -641,9 +641,9 @@ class Contents implements IEventEmitter {
 						// true. This in turn leads to inconsistent behaviour when calling
 						// getBoundingRect. Wrong bounds lead to the wrong page being displayed.
 						// https://developer.microsoft.com/en-us/microsoft-edge/platform/issues/15684911/
-						let pos = range.startContainer.textContent.indexOf(" ", range.startOffset);
+						let pos = (range.startContainer.textContent ?? "").indexOf(" ", range.startOffset);
 						if (pos == -1) {
-							pos = range.startContainer.textContent.length;
+							pos = (range.startContainer.textContent ?? "").length;
 						}
 						range.setEnd(range.startContainer, pos);
 					}
@@ -954,7 +954,7 @@ class Contents implements IEventEmitter {
 			return;
 		}
 		this._onSelectionChange = this.onSelectionChange.bind(this);
-		this.document.addEventListener("selectionchange", this._onSelectionChange, { passive: true });
+		this.document.addEventListener("selectionchange", this._onSelectionChange!, { passive: true });
 	}
 
 	/**
@@ -965,7 +965,7 @@ class Contents implements IEventEmitter {
 		if(!this.document) {
 			return;
 		}
-		this.document.removeEventListener("selectionchange", this._onSelectionChange);
+		this.document.removeEventListener("selectionchange", this._onSelectionChange!);
 		this._onSelectionChange = undefined;
 	}
 
@@ -1009,7 +1009,7 @@ class Contents implements IEventEmitter {
 	 */
 	range(_cfi: string, ignoreClass?: string): Range {
 		var cfi = new EpubCFI(_cfi);
-		return cfi.toRange(this.document, ignoreClass);
+		return cfi.toRange(this.document, ignoreClass)!;
 	}
 
 	/**
@@ -1048,13 +1048,13 @@ class Contents implements IEventEmitter {
 
 		this.layoutStyle("scrolling");
 
-		if (width >= 0) {
+		if (width !== undefined && width >= 0) {
 			this.width(width);
 			viewport.width = width;
 			this.css("padding", "0 "+(width/12)+"px");
 		}
 
-		if (height >= 0) {
+		if (height !== undefined && height >= 0) {
 			this.height(height);
 			viewport.height = height;
 		}
@@ -1140,7 +1140,7 @@ class Contents implements IEventEmitter {
 		// this.css("position", "absolute"));
 		this.css("transform-origin", "top left");
 
-		if (offsetX >= 0 || offsetY >= 0) {
+		if ((offsetX !== undefined && offsetX >= 0) || (offsetY !== undefined && offsetY >= 0)) {
 			translateStr = " translate(" + (offsetX || 0 )+ "px, " + (offsetY || 0 )+ "px )";
 		}
 

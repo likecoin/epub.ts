@@ -44,7 +44,7 @@ function proxyMouse(target: HTMLElement | HTMLIFrameElement, tracked: Mark[]): v
 	}
 
 	for (var ev of ["mouseup", "mousedown", "click", "touchstart"]) {
-		eventTarget.addEventListener(ev, (e) => dispatch(e), false);
+		eventTarget!.addEventListener(ev, (e) => dispatch(e), false);
 	}
 }
 
@@ -159,7 +159,7 @@ export class Pane {
 			return;
 		}
 		var el = mark.unbind();
-		this.element.removeChild(el);
+		this.element.removeChild(el!);
 		this.marks.splice(idx, 1);
 	}
 
@@ -199,12 +199,12 @@ export class Mark {
 	}
 
 	getBoundingClientRect(): DOMRect {
-		return this.element.getBoundingClientRect();
+		return this.element!.getBoundingClientRect();
 	}
 
 	getClientRects(): DOMRect[] {
 		var rects: DOMRect[] = [];
-		var el = this.element.firstChild as any;
+		var el = this.element!.firstChild as any;
 		while (el) {
 			rects.push(el.getBoundingClientRect());
 			el = el.nextSibling;
@@ -248,29 +248,29 @@ export class Highlight extends Mark {
 
 		for (var attr in this.data) {
 			if (this.data.hasOwnProperty(attr)) {
-				this.element.dataset[attr] = this.data[attr];
+				this.element!.dataset[attr] = this.data[attr];
 			}
 		}
 
 		for (var attr in this.attributes) {
 			if (this.attributes.hasOwnProperty(attr)) {
-				this.element.setAttribute(attr, this.attributes[attr]);
+				this.element!.setAttribute(attr, this.attributes[attr]);
 			}
 		}
 
 		if (this.className) {
-			this.element.classList.add(this.className);
+			this.element!.classList.add(this.className);
 		}
 	}
 
 	render(): void {
-		while (this.element.firstChild) {
-			this.element.removeChild(this.element.firstChild);
+		while (this.element!.firstChild) {
+			this.element!.removeChild(this.element!.firstChild);
 		}
 
-		var docFrag = this.element.ownerDocument.createDocumentFragment();
+		var docFrag = this.element!.ownerDocument!.createDocumentFragment();
 		var filtered = this.filteredRanges();
-		var offset = this.element.getBoundingClientRect();
+		var offset = this.element!.getBoundingClientRect();
 		var container = this.container.getBoundingClientRect();
 
 		for (var i = 0, len = filtered.length; i < len; i++) {
@@ -283,7 +283,7 @@ export class Highlight extends Mark {
 			docFrag.appendChild(el);
 		}
 
-		this.element.appendChild(docFrag);
+		this.element!.appendChild(docFrag);
 	}
 }
 
@@ -293,13 +293,13 @@ export class Underline extends Highlight {
 	}
 
 	render(): void {
-		while (this.element.firstChild) {
-			this.element.removeChild(this.element.firstChild);
+		while (this.element!.firstChild) {
+			this.element!.removeChild(this.element!.firstChild);
 		}
 
-		var docFrag = this.element.ownerDocument.createDocumentFragment();
+		var docFrag = this.element!.ownerDocument!.createDocumentFragment();
 		var filtered = this.filteredRanges();
-		var offset = this.element.getBoundingClientRect();
+		var offset = this.element!.getBoundingClientRect();
 		var container = this.container.getBoundingClientRect();
 
 		for (var i = 0, len = filtered.length; i < len; i++) {
@@ -326,6 +326,6 @@ export class Underline extends Highlight {
 			docFrag.appendChild(line);
 		}
 
-		this.element.appendChild(docFrag);
+		this.element!.appendChild(docFrag);
 	}
 }

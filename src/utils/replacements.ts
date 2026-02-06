@@ -13,11 +13,11 @@ export function replaceBase(doc: Document, section: { url: string }): void {
 	}
 
 	head = qs(doc, "head");
-	base = qs(head, "base");
+	base = qs(head!, "base");
 
 	if(!base) {
 		base = doc.createElement("base");
-		head.insertBefore(base, head.firstChild);
+		head!.insertBefore(base, head!.firstChild);
 	}
 
 	// Fix for Safari crashing if the url doesn't have an origin
@@ -38,7 +38,7 @@ export function replaceCanonical(doc: Document, section: { canonical: string }):
 	}
 
 	head = qs(doc, "head");
-	link = qs(head, "link[rel='canonical']");
+	link = qs(head!, "link[rel='canonical']");
 
 	if (link) {
 		link.setAttribute("href", url);
@@ -46,7 +46,7 @@ export function replaceCanonical(doc: Document, section: { canonical: string }):
 		link = doc.createElement("link");
 		link.setAttribute("rel", "canonical");
 		link.setAttribute("href", url);
-		head.appendChild(link);
+		head!.appendChild(link);
 	}
 }
 
@@ -59,7 +59,7 @@ export function replaceMeta(doc: Document, section: { idref: string }): void {
 	}
 
 	head = qs(doc, "head");
-	meta = qs(head, "link[property='dc.identifier']");
+	meta = qs(head!, "link[property='dc.identifier']");
 
 	if (meta) {
 		meta.setAttribute("content", id);
@@ -67,7 +67,7 @@ export function replaceMeta(doc: Document, section: { idref: string }): void {
 		meta = doc.createElement("meta");
 		meta.setAttribute("name", "dc.identifier");
 		meta.setAttribute("content", id);
-		head.appendChild(meta);
+		head!.appendChild(meta);
 	}
 }
 
@@ -81,9 +81,9 @@ export function replaceLinks(contents: Element, fn: (path: string) => void): voi
 	}
 
 	var base = qs(contents.ownerDocument, "base");
-	var location = base ? base.getAttribute("href") : undefined;
+	var location = base ? base.getAttribute("href") ?? undefined : undefined;
 	var replaceLink = function(link: Element){
-		var href = link.getAttribute("href");
+		var href = link.getAttribute("href") ?? "";
 
 		if(href.indexOf("mailto:") === 0){
 			return;
@@ -98,7 +98,7 @@ export function replaceLinks(contents: Element, fn: (path: string) => void): voi
 		}else{
 			var linkUrl: Url | undefined;
 			try {
-				linkUrl = new Url(href, location);	
+				linkUrl = new Url(href, location);
 			} catch(error) {
 				// NOOP
 			}
