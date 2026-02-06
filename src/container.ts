@@ -7,7 +7,11 @@ import {qs} from "./utils/core";
  * @param {document} [containerDocument] xml document
  */
 class Container {
-	constructor(containerDocument) {
+	packagePath: string;
+	directory: string;
+	encoding: string;
+
+	constructor(containerDocument?: Document) {
 		this.packagePath = '';
 		this.directory = '';
 		this.encoding = '';
@@ -21,7 +25,7 @@ class Container {
 	 * Parse the Container XML
 	 * @param  {document} containerDocument
 	 */
-	parse(containerDocument){
+	parse(containerDocument: Document): void {
 		//-- <rootfile full-path="OPS/package.opf" media-type="application/oebps-package+xml"/>
 		var rootfile;
 
@@ -37,10 +41,10 @@ class Container {
 
 		this.packagePath = rootfile.getAttribute("full-path");
 		this.directory = path.dirname(this.packagePath);
-		this.encoding = containerDocument.xmlEncoding;
+		this.encoding = (containerDocument as any).xmlEncoding;
 	}
 
-	destroy() {
+	destroy(): void {
 		this.packagePath = undefined;
 		this.directory = undefined;
 		this.encoding = undefined;

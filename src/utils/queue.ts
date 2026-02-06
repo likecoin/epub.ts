@@ -1,4 +1,5 @@
 import {defer, requestAnimationFrame} from "./core";
+import type { Deferred } from "../types";
 
 /**
  * Queue for handling tasks one at a time
@@ -6,7 +7,14 @@ import {defer, requestAnimationFrame} from "./core";
  * @param {scope} context what this will resolve to in the tasks
  */
 class Queue {
-	constructor(context){
+	_q: any[];
+	context: any;
+	tick: any;
+	running: any;
+	paused: boolean;
+	defered: any;
+
+	constructor(context: any){
 		this._q = [];
 		this.context = context;
 		this.tick = requestAnimationFrame;
@@ -18,7 +26,7 @@ class Queue {
 	 * Add an item to the queue
 	 * @return {Promise}
 	 */
-	enqueue() {
+	enqueue(..._args: any[]): Promise<any> {
 		var deferred, promise;
 		var queued;
 		var task = [].shift.call(arguments);
@@ -69,7 +77,7 @@ class Queue {
 	 * Run one item
 	 * @return {Promise}
 	 */
-	dequeue(){
+	dequeue(): any {
 		var inwait, task, result;
 
 		if(this._q.length && !this.paused) {
@@ -109,7 +117,7 @@ class Queue {
 	}
 
 	// Run All Immediately
-	dump(){
+	dump(): void {
 		while(this._q.length) {
 			this.dequeue();
 		}
@@ -119,7 +127,7 @@ class Queue {
 	 * Run all tasks sequentially, at convince
 	 * @return {Promise}
 	 */
-	run(){
+	run(): Promise<any> {
 
 		if(!this.running){
 			this.running = true;
@@ -154,7 +162,7 @@ class Queue {
 	 * Flush all, as quickly as possible
 	 * @return {Promise}
 	 */
-	flush(){
+	flush(): any {
 
 		if(this.running){
 			return this.running;
@@ -175,7 +183,7 @@ class Queue {
 	/**
 	 * Clear all items in wait
 	 */
-	clear(){
+	clear(): void {
 		this._q = [];
 	}
 
@@ -183,21 +191,21 @@ class Queue {
 	 * Get the number of tasks in the queue
 	 * @return {number} tasks
 	 */
-	length(){
+	length(): number {
 		return this._q.length;
 	}
 
 	/**
 	 * Pause a running queue
 	 */
-	pause(){
+	pause(): void {
 		this.paused = true;
 	}
 
 	/**
 	 * End the queue
 	 */
-	stop(){
+	stop(): void {
 		this._q = [];
 		this.running = false;
 		this.paused = true;
@@ -215,13 +223,13 @@ class Queue {
  * @return {function} task
  */
 class Task {
-	constructor(task, args, context){
+	constructor(task: Function, args: any[], context: any){
 
 		return function(){
-			var toApply = arguments || [];
+			var toApply = (arguments as any) || [];
 
 			return new Promise( (resolve, reject) => {
-				var callback = function(value, err){
+				var callback = function(value: any, err: any){
 					if (!value && err) {
 						reject(err);
 					} else {

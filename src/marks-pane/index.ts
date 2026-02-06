@@ -5,14 +5,14 @@
 
 // -- SVG helpers --
 
-function svgCreate(name) {
+function svgCreate(name: string): SVGElement {
 	return document.createElementNS("http://www.w3.org/2000/svg", name);
 }
 
 // -- Mouse event proxying --
 
-function proxyMouse(target, tracked) {
-	function dispatch(e) {
+function proxyMouse(target: HTMLElement | HTMLIFrameElement, tracked: Mark[]): void {
+	function dispatch(e: any): void {
 		for (var i = tracked.length - 1; i >= 0; i--) {
 			var t = tracked[i];
 			var x = e.clientX;
@@ -35,7 +35,7 @@ function proxyMouse(target, tracked) {
 	var eventTarget;
 	if (target.nodeName === "iframe" || target.nodeName === "IFRAME") {
 		try {
-			eventTarget = target.contentDocument;
+			eventTarget = (target as HTMLIFrameElement).contentDocument;
 		} catch (err) {
 			eventTarget = target;
 		}
@@ -48,7 +48,7 @@ function proxyMouse(target, tracked) {
 	}
 }
 
-function cloneEvent(e) {
+function cloneEvent(e: any): MouseEvent {
 	var opts = Object.assign({}, e, { bubbles: false });
 	try {
 		return new MouseEvent(e.type, opts);
@@ -63,10 +63,10 @@ function cloneEvent(e) {
 	}
 }
 
-function hitTest(item, target, x, y) {
+function hitTest(item: Mark, target: HTMLElement | HTMLIFrameElement, x: number, y: number): boolean {
 	var offset = target.getBoundingClientRect();
 
-	function rectContains(r, x, y) {
+	function rectContains(r: DOMRect, x: number, y: number): boolean {
 		var top = r.top - offset.top;
 		var left = r.left - offset.left;
 		var bottom = top + r.height;
@@ -90,7 +90,7 @@ function hitTest(item, target, x, y) {
 
 // -- Geometry helpers --
 
-function coords(el, container) {
+function coords(el: Element, container: Element): { top: number; left: number; height: number; width: number } {
 	var offset = container.getBoundingClientRect();
 	var rect = el.getBoundingClientRect();
 
@@ -102,14 +102,14 @@ function coords(el, container) {
 	};
 }
 
-function setCoords(el, c) {
+function setCoords(el: any, c: { top: number; left: number; height: number; width: number }): void {
 	el.style.setProperty("top", `${c.top}px`, "important");
 	el.style.setProperty("left", `${c.left}px`, "important");
 	el.style.setProperty("height", `${c.height}px`, "important");
 	el.style.setProperty("width", `${c.width}px`, "important");
 }
 
-function containsRect(rect1, rect2) {
+function containsRect(rect1: DOMRect, rect2: DOMRect): boolean {
 	return (
 		(rect2.right <= rect1.right) &&
 		(rect2.left >= rect1.left) &&
@@ -121,7 +121,12 @@ function containsRect(rect1, rect2) {
 // -- Classes --
 
 export class Pane {
-	constructor(target, container = document.body) {
+	target: HTMLElement | HTMLIFrameElement;
+	element: SVGElement;
+	marks: Mark[];
+	container: HTMLElement;
+
+	constructor(target: HTMLElement | HTMLIFrameElement, container: HTMLElement = document.body) {
 		this.target = target;
 		this.element = svgCreate("svg");
 		this.marks = [];
@@ -137,7 +142,7 @@ export class Pane {
 		this.render();
 	}
 
-	addMark(mark) {
+	addMark(mark: Mark): Mark {
 		var g = svgCreate("g");
 		this.element.appendChild(g);
 		mark.bind(g, this.container);
@@ -148,7 +153,7 @@ export class Pane {
 		return mark;
 	}
 
-	removeMark(mark) {
+	removeMark(mark: Mark): void {
 		var idx = this.marks.indexOf(mark);
 		if (idx === -1) {
 			return;
@@ -158,7 +163,7 @@ export class Pane {
 		this.marks.splice(idx, 1);
 	}
 
-	render() {
+	render(): void {
 		setCoords(this.element, coords(this.target, this.container));
 		for (var m of this.marks) {
 			m.render();
@@ -167,35 +172,39 @@ export class Pane {
 }
 
 export class Mark {
+	element: SVGElement | null;
+	container: HTMLElement;
+	range: Range;
+
 	constructor() {
 		this.element = null;
 	}
 
-	bind(element, container) {
+	bind(element: SVGElement, container: HTMLElement): void {
 		this.element = element;
 		this.container = container;
 	}
 
-	unbind() {
+	unbind(): SVGElement | null {
 		var el = this.element;
 		this.element = null;
 		return el;
 	}
 
-	render() {}
+	render(): void {}
 
-	dispatchEvent(e) {
+	dispatchEvent(e: Event): void {
 		if (!this.element) return;
 		this.element.dispatchEvent(e);
 	}
 
-	getBoundingClientRect() {
+	getBoundingClientRect(): DOMRect {
 		return this.element.getBoundingClientRect();
 	}
 
-	getClientRects() {
-		var rects = [];
-		var el = this.element.firstChild;
+	getClientRects(): DOMRect[] {
+		var rects: DOMRect[] = [];
+		var el = this.element.firstChild as any;
 		while (el) {
 			rects.push(el.getBoundingClientRect());
 			el = el.nextSibling;
@@ -203,7 +212,7 @@ export class Mark {
 		return rects;
 	}
 
-	filteredRanges() {
+	filteredRanges(): DOMRect[] {
 		var rects = Array.from(this.range.getClientRects());
 
 		return rects.filter((box) => {
@@ -221,7 +230,12 @@ export class Mark {
 }
 
 export class Highlight extends Mark {
-	constructor(range, className, data, attributes) {
+	range: Range;
+	className: string;
+	data: Record<string, string>;
+	attributes: Record<string, string>;
+
+	constructor(range: Range, className: string, data?: Record<string, string>, attributes?: Record<string, string>) {
 		super();
 		this.range = range;
 		this.className = className;
@@ -229,7 +243,7 @@ export class Highlight extends Mark {
 		this.attributes = attributes || {};
 	}
 
-	bind(element, container) {
+	bind(element: SVGElement, container: HTMLElement): void {
 		super.bind(element, container);
 
 		for (var attr in this.data) {
@@ -249,7 +263,7 @@ export class Highlight extends Mark {
 		}
 	}
 
-	render() {
+	render(): void {
 		while (this.element.firstChild) {
 			this.element.removeChild(this.element.firstChild);
 		}
@@ -262,10 +276,10 @@ export class Highlight extends Mark {
 		for (var i = 0, len = filtered.length; i < len; i++) {
 			var r = filtered[i];
 			var el = svgCreate("rect");
-			el.setAttribute("x", r.left - offset.left + container.left);
-			el.setAttribute("y", r.top - offset.top + container.top);
-			el.setAttribute("height", r.height);
-			el.setAttribute("width", r.width);
+			el.setAttribute("x", (r.left - offset.left + container.left) as any);
+			el.setAttribute("y", (r.top - offset.top + container.top) as any);
+			el.setAttribute("height", r.height as any);
+			el.setAttribute("width", r.width as any);
 			docFrag.appendChild(el);
 		}
 
@@ -274,11 +288,11 @@ export class Highlight extends Mark {
 }
 
 export class Underline extends Highlight {
-	constructor(range, className, data, attributes) {
+	constructor(range: Range, className: string, data?: Record<string, string>, attributes?: Record<string, string>) {
 		super(range, className, data, attributes);
 	}
 
-	render() {
+	render(): void {
 		while (this.element.firstChild) {
 			this.element.removeChild(this.element.firstChild);
 		}
@@ -292,19 +306,19 @@ export class Underline extends Highlight {
 			var r = filtered[i];
 
 			var rect = svgCreate("rect");
-			rect.setAttribute("x", r.left - offset.left + container.left);
-			rect.setAttribute("y", r.top - offset.top + container.top);
-			rect.setAttribute("height", r.height);
-			rect.setAttribute("width", r.width);
+			rect.setAttribute("x", (r.left - offset.left + container.left) as any);
+			rect.setAttribute("y", (r.top - offset.top + container.top) as any);
+			rect.setAttribute("height", r.height as any);
+			rect.setAttribute("width", r.width as any);
 			rect.setAttribute("fill", "none");
 
 			var line = svgCreate("line");
-			line.setAttribute("x1", r.left - offset.left + container.left);
-			line.setAttribute("x2", r.left - offset.left + container.left + r.width);
-			line.setAttribute("y1", r.top - offset.top + container.top + r.height - 1);
-			line.setAttribute("y2", r.top - offset.top + container.top + r.height - 1);
+			line.setAttribute("x1", (r.left - offset.left + container.left) as any);
+			line.setAttribute("x2", (r.left - offset.left + container.left + r.width) as any);
+			line.setAttribute("y1", (r.top - offset.top + container.top + r.height - 1) as any);
+			line.setAttribute("y2", (r.top - offset.top + container.top + r.height - 1) as any);
 
-			line.setAttribute("stroke-width", 1);
+			line.setAttribute("stroke-width", 1 as any);
 			line.setAttribute("stroke", "black");
 			line.setAttribute("stroke-linecap", "square");
 

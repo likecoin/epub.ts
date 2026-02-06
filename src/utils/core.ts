@@ -9,12 +9,12 @@ import { DOMParser as XMLDOMParser } from "@xmldom/xmldom";
  * @returns {function} requestAnimationFrame
  * @memberof Core
  */
-export const requestAnimationFrame = (typeof window != "undefined") ? (window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame || window.msRequestAnimationFrame) : false;
+export const requestAnimationFrame = (typeof window != "undefined") ? ((window as any).requestAnimationFrame || (window as any).mozRequestAnimationFrame || (window as any).webkitRequestAnimationFrame || (window as any).msRequestAnimationFrame) : false;
 const ELEMENT_NODE = 1;
 const TEXT_NODE = 3;
 const COMMENT_NODE = 8;
 const DOCUMENT_NODE = 9;
-const _URL = typeof URL != "undefined" ? URL : (typeof window != "undefined" ? (window.URL || window.webkitURL || window.mozURL) : undefined);
+const _URL = typeof URL != "undefined" ? URL : (typeof window != "undefined" ? ((window as any).URL || (window as any).webkitURL || (window as any).mozURL) : undefined);
 
 /**
  * Generates a UUID
@@ -22,7 +22,7 @@ const _URL = typeof URL != "undefined" ? URL : (typeof window != "undefined" ? (
  * @returns {string} uuid
  * @memberof Core
  */
-export function uuid() {
+export function uuid(): string {
 	var d = new Date().getTime();
 	var uuid = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function(c) {
 		var r = (d + Math.random()*16)%16 | 0;
@@ -37,7 +37,7 @@ export function uuid() {
  * @returns {number} height
  * @memberof Core
  */
-export function documentHeight() {
+export function documentHeight(): number {
 	return Math.max(
 			document.documentElement.clientHeight,
 			document.body.scrollHeight,
@@ -53,7 +53,7 @@ export function documentHeight() {
  * @returns {boolean}
  * @memberof Core
  */
-export function isElement(obj) {
+export function isElement(obj: any): boolean {
 	return !!(obj && obj.nodeType == 1);
 }
 
@@ -62,7 +62,7 @@ export function isElement(obj) {
  * @returns {boolean}
  * @memberof Core
  */
-export function isNumber(n) {
+export function isNumber(n: any): boolean {
 	return !isNaN(parseFloat(n)) && isFinite(n);
 }
 
@@ -71,7 +71,7 @@ export function isNumber(n) {
  * @returns {boolean}
  * @memberof Core
  */
-export function isFloat(n) {
+export function isFloat(n: any): boolean {
 	let f = parseFloat(n);
 
 	if (isNumber(n) === false) {
@@ -91,18 +91,18 @@ export function isFloat(n) {
  * @returns {string}
  * @memberof Core
  */
-export function prefixed(unprefixed) {
+export function prefixed(unprefixed: string): string {
 	var vendors = ["Webkit", "webkit", "Moz", "O", "ms" ];
 	var prefixes = ["-webkit-", "-webkit-", "-moz-", "-o-", "-ms-"];
 	var lower = unprefixed.toLowerCase();
 	var length = vendors.length;
 
-	if (typeof(document) === "undefined" || typeof(document.body.style[lower]) != "undefined") {
+	if (typeof(document) === "undefined" || typeof((document.body.style as any)[lower]) != "undefined") {
 		return unprefixed;
 	}
 
 	for (var i = 0; i < length; i++) {
-		if (typeof(document.body.style[prefixes[i] + lower]) != "undefined") {
+		if (typeof((document.body.style as any)[prefixes[i] + lower]) != "undefined") {
 			return prefixes[i] + lower;
 		}
 	}
@@ -116,7 +116,7 @@ export function prefixed(unprefixed) {
  * @returns {object}
  * @memberof Core
  */
-export function defaults(obj) {
+export function defaults(obj: any): any {
 	for (var i = 1, length = arguments.length; i < length; i++) {
 		var source = arguments[i];
 		for (var prop in source) {
@@ -132,7 +132,7 @@ export function defaults(obj) {
  * @returns {object}
  * @memberof Core
  */
-export function extend(target) {
+export function extend(target: any, ...args: any[]): any {
 	var sources = [].slice.call(arguments, 1);
 	sources.forEach(function (source) {
 		if(!source) return;
@@ -152,7 +152,7 @@ export function extend(target) {
  * @returns {number} location (in array)
  * @memberof Core
  */
-export function insert(item, array, compareFunction) {
+export function insert(item: any, array: any[], compareFunction?: (a: any, b: any) => number): number {
 	var location = locationOf(item, array, compareFunction);
 	array.splice(location, 0, item);
 
@@ -169,10 +169,10 @@ export function insert(item, array, compareFunction) {
  * @returns {number} location (in array)
  * @memberof Core
  */
-export function locationOf(item, array, compareFunction, _start, _end) {
+export function locationOf(item: any, array: any[], compareFunction?: (a: any, b: any) => number, _start?: number, _end?: number): number {
 	var start = _start || 0;
 	var end = _end || array.length;
-	var pivot = parseInt(start + (end - start) / 2);
+	var pivot = parseInt(start + (end - start) / 2 as any);
 	var compared;
 	if(!compareFunction){
 		compareFunction = function(a, b) {
@@ -210,10 +210,10 @@ export function locationOf(item, array, compareFunction, _start, _end) {
  * @returns {number} index (in array) or -1
  * @memberof Core
  */
-export function indexOfSorted(item, array, compareFunction, _start, _end) {
+export function indexOfSorted(item: any, array: any[], compareFunction?: (a: any, b: any) => number, _start?: number, _end?: number): number {
 	var start = _start || 0;
 	var end = _end || array.length;
-	var pivot = parseInt(start + (end - start) / 2);
+	var pivot = parseInt(start + (end - start) / 2 as any);
 	var compared;
 	if(!compareFunction){
 		compareFunction = function(a, b) {
@@ -246,7 +246,7 @@ export function indexOfSorted(item, array, compareFunction, _start, _end) {
  * @returns {{ width: Number, height: Number}}
  * @memberof Core
  */
-export function bounds(el) {
+export function bounds(el: Element): { width: number; height: number } {
 
 	var style = window.getComputedStyle(el);
 	var widthProps = ["width", "paddingRight", "paddingLeft", "marginRight", "marginLeft", "borderRightWidth", "borderLeftWidth"];
@@ -256,11 +256,11 @@ export function bounds(el) {
 	var height = 0;
 
 	widthProps.forEach(function(prop){
-		width += parseFloat(style[prop]) || 0;
+		width += parseFloat((style as any)[prop]) || 0;
 	});
 
 	heightProps.forEach(function(prop){
-		height += parseFloat(style[prop]) || 0;
+		height += parseFloat((style as any)[prop]) || 0;
 	});
 
 	return {
@@ -277,7 +277,7 @@ export function bounds(el) {
  * @returns {{ width: Number, height: Number}}
  * @memberof Core
  */
-export function borders(el) {
+export function borders(el: Element): { width: number; height: number } {
 
 	var style = window.getComputedStyle(el);
 	var widthProps = ["paddingRight", "paddingLeft", "marginRight", "marginLeft", "borderRightWidth", "borderLeftWidth"];
@@ -287,11 +287,11 @@ export function borders(el) {
 	var height = 0;
 
 	widthProps.forEach(function(prop){
-		width += parseFloat(style[prop]) || 0;
+		width += parseFloat((style as any)[prop]) || 0;
 	});
 
 	heightProps.forEach(function(prop){
-		height += parseFloat(style[prop]) || 0;
+		height += parseFloat((style as any)[prop]) || 0;
 	});
 
 	return {
@@ -308,7 +308,7 @@ export function borders(el) {
  * @returns {BoundingClientRect}
  * @memberof Core
  */
-export function nodeBounds(node) {
+export function nodeBounds(node: Node): DOMRect {
 	let elPos;
 	let doc = node.ownerDocument;
 	if(node.nodeType == Node.TEXT_NODE){
@@ -316,7 +316,7 @@ export function nodeBounds(node) {
 		elRange.selectNodeContents(node);
 		elPos = elRange.getBoundingClientRect();
 	} else {
-		elPos = node.getBoundingClientRect();
+		elPos = (node as Element).getBoundingClientRect();
 	}
 	return elPos;
 }
@@ -326,7 +326,7 @@ export function nodeBounds(node) {
  * @returns {{ width: Number, height: Number, top: Number, left: Number, right: Number, bottom: Number }}
  * @memberof Core
  */
-export function windowBounds() {
+export function windowBounds(): { top: number; left: number; right: number; bottom: number; width: number; height: number } {
 
 	var width = window.innerWidth;
 	var height = window.innerHeight;
@@ -349,7 +349,7 @@ export function windowBounds() {
  * @return {number} index
  * @memberof Core
  */
-export function indexOfNode(node, typeId) {
+export function indexOfNode(node: Node, typeId: number): number {
 	var parent = node.parentNode;
 	var children = parent.childNodes;
 	var sib;
@@ -371,7 +371,7 @@ export function indexOfNode(node, typeId) {
  * @returns {number} index
  * @memberof Core
  */
-export function indexOfTextNode(textNode) {
+export function indexOfTextNode(textNode: Node): number {
 	return indexOfNode(textNode, TEXT_NODE);
 }
 
@@ -381,7 +381,7 @@ export function indexOfTextNode(textNode) {
  * @returns {number} index
  * @memberof Core
  */
-export function indexOfElementNode(elementNode) {
+export function indexOfElementNode(elementNode: Node): number {
 	return indexOfNode(elementNode, ELEMENT_NODE);
 }
 
@@ -391,7 +391,7 @@ export function indexOfElementNode(elementNode) {
  * @returns {boolean}
  * @memberof Core
  */
-export function isXml(ext) {
+export function isXml(ext: string): boolean {
 	return ["xml", "opf", "ncx"].indexOf(ext) > -1;
 }
 
@@ -402,7 +402,7 @@ export function isXml(ext) {
  * @returns {Blob}
  * @memberof Core
  */
-export function createBlob(content, mime){
+export function createBlob(content: any, mime: string): Blob {
 	return new Blob([content], {type : mime });
 }
 
@@ -413,7 +413,7 @@ export function createBlob(content, mime){
  * @returns {string} url
  * @memberof Core
  */
-export function createBlobUrl(content, mime){
+export function createBlobUrl(content: any, mime: string): string {
 	var tempUrl;
 	var blob = createBlob(content, mime);
 
@@ -427,7 +427,7 @@ export function createBlobUrl(content, mime){
  * @param {string} url
  * @memberof Core
  */
-export function revokeBlobUrl(url){
+export function revokeBlobUrl(url: string): void {
 	return _URL.revokeObjectURL(url);
 }
 
@@ -438,7 +438,7 @@ export function revokeBlobUrl(url){
  * @returns {string} url
  * @memberof Core
  */
-export function createBase64Url(content, mime){
+export function createBase64Url(content: any, mime: string): string | undefined {
 	var data;
 	var datauri;
 
@@ -460,7 +460,7 @@ export function createBase64Url(content, mime){
  * @returns {string} type
  * @memberof Core
  */
-export function type(obj){
+export function type(obj: any): string {
 	return Object.prototype.toString.call(obj).slice(8, -1);
 }
 
@@ -472,7 +472,7 @@ export function type(obj){
  * @returns {document} document
  * @memberof Core
  */
-export function parse(markup, mime, forceXMLDom) {
+export function parse(markup: string, mime: string, forceXMLDom?: boolean): Document {
 	var doc;
 	var Parser;
 
@@ -488,7 +488,7 @@ export function parse(markup, mime, forceXMLDom) {
 		markup = markup.slice(1);
 	}
 
-	doc = new Parser().parseFromString(markup, mime);
+	doc = new Parser().parseFromString(markup, mime as DOMParserSupportedType);
 
 	return doc;
 }
@@ -500,7 +500,7 @@ export function parse(markup, mime, forceXMLDom) {
  * @returns {element} element
  * @memberof Core
  */
-export function qs(el, sel) {
+export function qs(el: any, sel: string): Element | undefined {
 	var elements;
 	if (!el) {
 		throw new Error("No Element Provided");
@@ -523,7 +523,7 @@ export function qs(el, sel) {
  * @returns {element[]} elements
  * @memberof Core
  */
-export function qsa(el, sel) {
+export function qsa(el: any, sel: string): NodeListOf<Element> | HTMLCollectionOf<Element> {
 
 	if (typeof el.querySelector != "undefined") {
 		return el.querySelectorAll(sel);
@@ -540,7 +540,7 @@ export function qsa(el, sel) {
  * @returns {element[]} elements
  * @memberof Core
  */
-export function qsp(el, sel, props) {
+export function qsp(el: any, sel: string, props: Record<string, string>): Element | undefined {
 	var q, filtered;
 	if (typeof el.querySelector != "undefined") {
 		sel += "[";
@@ -572,15 +572,16 @@ export function qsp(el, sel, props) {
  * @param  {element} root element to start with
  * @param  {function} func function to run on each element
  */
-export function sprint(root, func) {
+export function sprint(root: Node, func: (node: Node) => void): void {
 	var doc = root.ownerDocument || root;
-	if (typeof(doc.createTreeWalker) !== "undefined") {
+	if (typeof((doc as any).createTreeWalker) !== "undefined") {
 		treeWalker(root, func, NodeFilter.SHOW_TEXT);
 	} else {
 		walk(root, function(node) {
 			if (node && node.nodeType === 3) { // Node.TEXT_NODE
 				func(node);
 			}
+			return false;
 		}, true);
 	}
 }
@@ -592,8 +593,8 @@ export function sprint(root, func) {
  * @param  {function} func function to run on each element
  * @param  {function | object} filter function or object to filter with
  */
-export function treeWalker(root, func, filter) {
-	var treeWalker = document.createTreeWalker(root, filter, null, false);
+export function treeWalker(root: Node, func: (node: Node) => void, filter: number): void {
+	var treeWalker = (document as any).createTreeWalker(root, filter, null, false);
 	let node;
 	while ((node = treeWalker.nextNode())) {
 		func(node);
@@ -605,7 +606,7 @@ export function treeWalker(root, func, filter) {
  * @param {node} node
  * @param {callback} return false for continue,true for break inside callback
  */
-export function walk(node,callback){
+export function walk(node: Node, callback: (node: Node) => boolean, _unused?: boolean): boolean | undefined {
 	if(callback(node)){
 		return true;
 	}
@@ -627,7 +628,7 @@ export function walk(node,callback){
  * @returns {string}
  * @memberof Core
  */
-export function blob2base64(blob) {
+export function blob2base64(blob: Blob): Promise<string | ArrayBuffer> {
 	return new Promise(function(resolve, reject) {
 		var reader = new FileReader();
 		reader.readAsDataURL(blob);
@@ -643,35 +644,42 @@ export function blob2base64(blob) {
  * From: https://developer.mozilla.org/en-US/docs/Mozilla/JavaScript_code_modules/Promise.jsm/Deferred#backwards_forwards_compatible
  * @memberof Core
  */
-export function defer() {
-	/* A method to resolve the associated Promise with the value passed.
-	 * If the promise is already settled it does nothing.
-	 *
-	 * @param {anything} value : This value is used to resolve the promise
-	 * If the value is a Promise then the associated promise assumes the state
-	 * of Promise passed as value.
-	 */
-	this.resolve = null;
+export class defer {
+	id: string;
+	resolve: (value?: any) => void;
+	reject: (reason?: any) => void;
+	promise: Promise<any>;
 
-	/* A method to reject the associated Promise with the value passed.
-	 * If the promise is already settled it does nothing.
-	 *
-	 * @param {anything} reason: The reason for the rejection of the Promise.
-	 * Generally its an Error object. If however a Promise is passed, then the Promise
-	 * itself will be the reason for rejection no matter the state of the Promise.
-	 */
-	this.reject = null;
+	constructor() {
+		/* A method to resolve the associated Promise with the value passed.
+		 * If the promise is already settled it does nothing.
+		 *
+		 * @param {anything} value : This value is used to resolve the promise
+		 * If the value is a Promise then the associated promise assumes the state
+		 * of Promise passed as value.
+		 */
+		this.resolve = null;
 
-	this.id = uuid();
+		/* A method to reject the associated Promise with the value passed.
+		 * If the promise is already settled it does nothing.
+		 *
+		 * @param {anything} reason: The reason for the rejection of the Promise.
+		 * Generally its an Error object. If however a Promise is passed, then the Promise
+		 * itself will be the reason for rejection no matter the state of the Promise.
+		 */
+		this.reject = null;
 
-	/* A newly created Pomise object.
-	 * Initially in pending state.
-	 */
-	this.promise = new Promise((resolve, reject) => {
-		this.resolve = resolve;
-		this.reject = reject;
-	});
-	Object.freeze(this);
+		this.id = uuid();
+
+		/* A newly created Pomise object.
+		 * Initially in pending state.
+		 */
+		this.promise = new Promise((resolve, reject) => {
+			this.resolve = resolve;
+			this.reject = reject;
+		});
+		Object.freeze(this);
+	}
 }
 
 /**
@@ -682,7 +690,7 @@ export function defer() {
  * @returns {element[]} elements
  * @memberof Core
  */
-export function querySelectorByType(html, element, type){
+export function querySelectorByType(html: any, element: string, type: string): Element | undefined {
 	var query;
 	if (typeof html.querySelector != "undefined") {
 		query = html.querySelector(`${element}[*|type="${type}"]`);
@@ -707,13 +715,13 @@ export function querySelectorByType(html, element, type){
  * @returns {element[]} children
  * @memberof Core
  */
-export function findChildren(el) {
+export function findChildren(el: Element): Element[] {
 	var result = [];
 	var childNodes = el.childNodes;
 	for (var i = 0; i < childNodes.length; i++) {
 		let node = childNodes[i];
 		if (node.nodeType === 1) {
-			result.push(node);
+			result.push(node as Element);
 		}
 	}
 	return result;
@@ -725,7 +733,7 @@ export function findChildren(el) {
  * @returns {element[]} parents
  * @memberof Core
  */
-export function parents(node) {
+export function parents(node: Node): Node[] {
 	var nodes = [node];
 	for (; node; node = node.parentNode) {
 		nodes.unshift(node);
@@ -741,16 +749,16 @@ export function parents(node) {
  * @returns {element[]} children
  * @memberof Core
  */
-export function filterChildren(el, nodeName, single) {
+export function filterChildren(el: Element, nodeName: string, single?: boolean): Element | Element[] | undefined {
 	var result = [];
 	var childNodes = el.childNodes;
 	for (var i = 0; i < childNodes.length; i++) {
 		let node = childNodes[i];
 		if (node.nodeType === 1 && node.nodeName.toLowerCase() === nodeName) {
 			if (single) {
-				return node;
+				return node as Element;
 			} else {
-				result.push(node);
+				result.push(node as Element);
 			}
 		}
 	}
@@ -766,13 +774,13 @@ export function filterChildren(el, nodeName, single) {
  * @returns {element[]} parents
  * @memberof Core
  */
-export function getParentByTagName(node, tagname) {
+export function getParentByTagName(node: Node, tagname: string): Element | undefined {
 	let parent;
 	if (node === null || tagname === '') return;
 	parent = node.parentNode;
 	while (parent.nodeType === 1) {
-		if (parent.tagName.toLowerCase() === tagname) {
-			return parent;
+		if ((parent as Element).tagName.toLowerCase() === tagname) {
+			return parent as Element;
 		}
 		parent = parent.parentNode;
 	}
@@ -784,6 +792,13 @@ export function getParentByTagName(node, tagname) {
  * @memberof Core
  */
 export class RangeObject {
+	collapsed: boolean;
+	commonAncestorContainer: Node | undefined;
+	endContainer: Node | undefined;
+	endOffset: number | undefined;
+	startContainer: Node | undefined;
+	startOffset: number | undefined;
+
 	constructor() {
 		this.collapsed = false;
 		this.commonAncestorContainer = undefined;
@@ -793,7 +808,7 @@ export class RangeObject {
 		this.startOffset = undefined;
 	}
 
-	setStart(startNode, startOffset) {
+	setStart(startNode: Node, startOffset: number): void {
 		this.startContainer = startNode;
 		this.startOffset = startOffset;
 
@@ -806,7 +821,7 @@ export class RangeObject {
 		this._checkCollapsed();
 	}
 
-	setEnd(endNode, endOffset) {
+	setEnd(endNode: Node, endOffset: number): void {
 		this.endContainer = endNode;
 		this.endOffset = endOffset;
 
@@ -820,7 +835,7 @@ export class RangeObject {
 		this._checkCollapsed();
 	}
 
-	collapse(toStart) {
+	collapse(toStart: boolean): void {
 		this.collapsed = true;
 		if (toStart) {
 			this.endContainer = this.startContainer;
@@ -829,26 +844,26 @@ export class RangeObject {
 		} else {
 			this.startContainer = this.endContainer;
 			this.startOffset = this.endOffset;
-			this.commonAncestorContainer = this.endOffset.parentNode;
+			this.commonAncestorContainer = (this.endOffset as any).parentNode;
 		}
 	}
 
-	selectNode(referenceNode) {
+	selectNode(referenceNode: Node): void {
 		let parent = referenceNode.parentNode;
 		let index = Array.prototype.indexOf.call(parent.childNodes, referenceNode);
 		this.setStart(parent, index);
 		this.setEnd(parent, index + 1);
 	}
 
-	selectNodeContents(referenceNode) {
-		let end = referenceNode.childNodes[referenceNode.childNodes - 1];
+	selectNodeContents(referenceNode: Node): void {
+		let end = referenceNode.childNodes[(referenceNode as any).childNodes - 1];
 		let endIndex = (referenceNode.nodeType === 3) ?
-				referenceNode.textContent.length : parent.childNodes.length;
+				referenceNode.textContent.length : (parent as any).childNodes.length;
 		this.setStart(referenceNode, 0);
 		this.setEnd(referenceNode, endIndex);
 	}
 
-	_commonAncestorContainer(startContainer, endContainer) {
+	_commonAncestorContainer(startContainer?: Node, endContainer?: Node): Node | undefined {
 		var startParents = parents(startContainer || this.startContainer);
 		var endParents = parents(endContainer || this.endContainer);
 
@@ -861,7 +876,7 @@ export class RangeObject {
 		}
 	}
 
-	_checkCollapsed() {
+	_checkCollapsed(): void {
 		if (this.startContainer === this.endContainer &&
 				this.startOffset === this.endOffset) {
 			this.collapsed = true;
@@ -870,7 +885,8 @@ export class RangeObject {
 		}
 	}
 
-	toString() {
+	toString(): string {
 		// TODO: implement walking between start and end to find text
+		return "";
 	}
 }

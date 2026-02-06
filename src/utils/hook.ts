@@ -6,7 +6,10 @@
  * @example this.content = new EPUBJS.Hook(this);
  */
 class Hook {
-	constructor(context){
+	context: any;
+	hooks: Function[];
+
+	constructor(context?: any){
 		this.context = context || this;
 		this.hooks = [];
 	}
@@ -15,7 +18,7 @@ class Hook {
 	 * Adds a function to be run before a hook completes
 	 * @example this.content.register(function(){...});
 	 */
-	register(){
+	register(): void {
 		for(var i = 0; i < arguments.length; ++i) {
 			if (typeof arguments[i]  === "function") {
 				this.hooks.push(arguments[i]);
@@ -32,7 +35,7 @@ class Hook {
 	 * Removes a function
 	 * @example this.content.deregister(function(){...});
 	 */
-	deregister(func){
+	deregister(func: Function): void {
 		let hook;
 		for (let i = 0; i < this.hooks.length; i++) {
 			hook = this.hooks[i];
@@ -47,7 +50,7 @@ class Hook {
 	 * Triggers a hook to run all functions
 	 * @example this.content.trigger(args).then(function(){...});
 	 */
-	trigger(){
+	trigger(): Promise<any[]> {
 		var args = arguments;
 		var context = this.context;
 		var promises = [];
@@ -71,11 +74,11 @@ class Hook {
 	}
 
 	// Adds a function to be run before a hook completes
-	list(){
+	list(): Function[] {
 		return this.hooks;
 	}
 
-	clear(){
+	clear(): Function[] {
 		return this.hooks = [];
 	}
 }

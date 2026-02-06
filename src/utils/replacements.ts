@@ -2,7 +2,7 @@ import { qs, qsa } from "./core";
 import Url from "./url";
 import Path from "./path";
 
-export function replaceBase(doc, section){
+export function replaceBase(doc: Document, section: any): void {
 	var base;
 	var head;
 	var url = section.url;
@@ -28,7 +28,7 @@ export function replaceBase(doc, section){
 	base.setAttribute("href", url);
 }
 
-export function replaceCanonical(doc, section){
+export function replaceCanonical(doc: Document, section: any): void {
 	var head;
 	var link;
 	var url = section.canonical;
@@ -50,7 +50,7 @@ export function replaceCanonical(doc, section){
 	}
 }
 
-export function replaceMeta(doc, section){
+export function replaceMeta(doc: Document, section: any): void {
 	var head;
 	var meta;
 	var id = section.idref;
@@ -72,7 +72,7 @@ export function replaceMeta(doc, section){
 }
 
 // TODO: move me to Contents
-export function replaceLinks(contents, fn) {
+export function replaceLinks(contents: any, fn: (path: string) => void): void {
 
 	var links = contents.querySelectorAll("a[href]");
 
@@ -82,7 +82,7 @@ export function replaceLinks(contents, fn) {
 
 	var base = qs(contents.ownerDocument, "base");
 	var location = base ? base.getAttribute("href") : undefined;
-	var replaceLink = function(link){
+	var replaceLink = function(link: any){
 		var href = link.getAttribute("href");
 
 		if(href.indexOf("mailto:") === 0){
@@ -125,7 +125,7 @@ export function replaceLinks(contents, fn) {
 
 }
 
-export function substitute(content, urls, replacements) {
+export function substitute(content: string, urls: string[], replacements: string[]): string {
 	urls.forEach(function(url, i){
 		if (url && replacements[i]) {
 			// Account for special characters in the file name.

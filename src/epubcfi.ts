@@ -1,4 +1,5 @@
 import {extend, type, findChildren, RangeObject, isNumber} from "./utils/core";
+import type { EpubCFIStep, EpubCFIComponent } from "./types";
 
 const ELEMENT_NODE = 1;
 const TEXT_NODE = 3;
@@ -23,7 +24,16 @@ const DOCUMENT_NODE = 9;
 	@param {string} [ignoreClass] class to ignore when parsing DOM
 */
 class EpubCFI {
-	constructor(cfiFrom, base, ignoreClass){
+	str: string;
+	base: EpubCFIComponent | any;
+	spinePos: number;
+	range: boolean;
+	path: EpubCFIComponent | any;
+	start: EpubCFIComponent | null;
+	end: EpubCFIComponent | null;
+	id: string | null;
+
+	constructor(cfiFrom?: any, base?: any, ignoreClass?: string) {
 		var type;
 
 		this.str = "";
@@ -72,7 +82,7 @@ class EpubCFI {
 	 * Check the type of constructor input
 	 * @private
 	 */
-	checkType(cfi) {
+	checkType(cfi: any): string | false {
 
 		if (this.isCfiString(cfi)) {
 			return "string";
@@ -93,8 +103,8 @@ class EpubCFI {
 	 * @param {string} cfiStr
 	 * @returns {object} cfi
 	 */
-	parse(cfiStr) {
-		var cfi = {
+	parse(cfiStr: string): any {
+		var cfi: any = {
 			spinePos: -1,
 			range: false,
 			base: {},
@@ -142,7 +152,7 @@ class EpubCFI {
 		return cfi;
 	}
 
-	parseComponent(componentStr){
+	parseComponent(componentStr: string): EpubCFIComponent {
 		var component = {
 			steps: [],
 			terminal: {
@@ -170,7 +180,7 @@ class EpubCFI {
 		return component;
 	}
 
-	parseStep(stepStr){
+	parseStep(stepStr: string): any {
 		var type, num, index, has_brackets, id;
 
 		has_brackets = stepStr.match(/\[(.*)\]/);
@@ -200,7 +210,7 @@ class EpubCFI {
 		};
 	}
 
-	parseTerminal(termialStr){
+	parseTerminal(termialStr: string): { offset: number | null; assertion: string | undefined } {
 		var characterOffset, textLocationAssertion;
 		var assertion = termialStr.match(/\[(.*)\]/);
 
@@ -222,14 +232,14 @@ class EpubCFI {
 
 	}
 
-	getChapterComponent(cfiStr) {
+	getChapterComponent(cfiStr: string): string {
 
 		var indirection = cfiStr.split("!");
 
 		return indirection[0];
 	}
 
-	getPathComponent(cfiStr) {
+	getPathComponent(cfiStr: string): string | undefined {
 
 		var indirection = cfiStr.split("!");
 
@@ -240,7 +250,7 @@ class EpubCFI {
 
 	}
 
-	getRange(cfiStr) {
+	getRange(cfiStr: string): [string, string] | false {
 
 		var ranges = cfiStr.split(",");
 
@@ -254,12 +264,12 @@ class EpubCFI {
 		return false;
 	}
 
-	getCharecterOffsetComponent(cfiStr) {
+	getCharecterOffsetComponent(cfiStr: string): string {
 		var splitStr = cfiStr.split(":");
 		return splitStr[1] || "";
 	}
 
-	joinSteps(steps) {
+	joinSteps(steps: EpubCFIStep[]): string {
 		if(!steps) {
 			return "";
 		}
@@ -285,7 +295,7 @@ class EpubCFI {
 
 	}
 
-	segmentString(segment) {
+	segmentString(segment: EpubCFIComponent): string {
 		var segmentString = "/";
 
 		segmentString += this.joinSteps(segment.steps);
@@ -305,7 +315,7 @@ class EpubCFI {
 	 * Convert CFI to a epubcfi(...) string
 	 * @returns {string} epubcfi
 	 */
-	toString() {
+	toString(): string {
 		var cfiString = "epubcfi(";
 
 		cfiString += this.segmentString(this.base);
@@ -334,7 +344,7 @@ class EpubCFI {
 	 * Compare which of two CFIs is earlier in the text
 	 * @returns {number} First is earlier = -1, Second is earlier = 1, They are equal = 0
 	 */
-	compare(cfiOne, cfiTwo) {
+	compare(cfiOne: any, cfiTwo: any): number {
 		var stepsA, stepsB;
 		var terminalA, terminalB;
 
@@ -407,7 +417,7 @@ class EpubCFI {
 		return 0;
 	}
 
-	step(node) {
+	step(node: any): any {
 		var nodeType = (node.nodeType === TEXT_NODE) ? "text" : "element";
 
 		return {
@@ -418,7 +428,7 @@ class EpubCFI {
 		};
 	}
 
-	filteredStep(node, ignoreClass) {
+	filteredStep(node: any, ignoreClass: string): any {
 		var filteredNode = this.filter(node, ignoreClass);
 		var nodeType;
 
@@ -438,7 +448,7 @@ class EpubCFI {
 		};
 	}
 
-	pathTo(node, offset, ignoreClass) {
+	pathTo(node: any, offset: number | null, ignoreClass?: string): any {
 		var segment = {
 			steps: [],
 			terminal: {
@@ -484,7 +494,7 @@ class EpubCFI {
 		return segment;
 	}
 
-	equalStep(stepA, stepB) {
+	equalStep(stepA: any, stepB: any): boolean {
 		if (!stepA || !stepB) {
 			return false;
 		}
@@ -505,8 +515,8 @@ class EpubCFI {
 	 * @param {string} [ignoreClass]
 	 * @returns {object} cfi
 	 */
-	fromRange(range, base, ignoreClass) {
-		var cfi = {
+	fromRange(range: Range, base: any, ignoreClass?: string): any {
+		var cfi: any = {
 			range: false,
 			base: {},
 			path: {},
@@ -599,8 +609,8 @@ class EpubCFI {
 	 * @param {string} [ignoreClass]
 	 * @returns {object} cfi
 	 */
-	fromNode(anchor, base, ignoreClass) {
-		var cfi = {
+	fromNode(anchor: Node, base: any, ignoreClass?: string): any {
+		var cfi: any = {
 			range: false,
 			base: {},
 			path: {},
@@ -620,7 +630,7 @@ class EpubCFI {
 		return cfi;
 	}
 
-	filter(anchor, ignoreClass) {
+	filter(anchor: any, ignoreClass: string): any {
 		var needsIgnoring;
 		var sibling; // to join with
 		var parent, previousSibling, nextSibling;
@@ -663,7 +673,7 @@ class EpubCFI {
 
 	}
 
-	patchOffset(anchor, offset, ignoreClass) {
+	patchOffset(anchor: any, offset: number, ignoreClass: string): number {
 		if (anchor.nodeType != TEXT_NODE) {
 			throw new Error("Anchor must be a text node");
 		}
@@ -696,7 +706,7 @@ class EpubCFI {
 
 	}
 
-	normalizedMap(children, nodeType, ignoreClass) {
+	normalizedMap(children: any, nodeType: number, ignoreClass: string): Record<number, number> {
 		var output = {};
 		var prevIndex = -1;
 		var i, len = children.length;
@@ -730,7 +740,7 @@ class EpubCFI {
 		return output;
 	}
 
-	position(anchor) {
+	position(anchor: any): number {
 		var children, index;
 		if (anchor.nodeType === ELEMENT_NODE) {
 			children = anchor.parentNode.children;
@@ -746,7 +756,7 @@ class EpubCFI {
 		return index;
 	}
 
-	filteredPosition(anchor, ignoreClass) {
+	filteredPosition(anchor: any, ignoreClass: string): number {
 		var children, index, map;
 
 		if (anchor.nodeType === ELEMENT_NODE) {
@@ -768,7 +778,7 @@ class EpubCFI {
 		return map[index];
 	}
 
-	stepsToXpath(steps) {
+	stepsToXpath(steps: EpubCFIStep[]): string {
 		var xpath = [".", "*"];
 
 		steps.forEach(function(step){
@@ -802,7 +812,7 @@ class EpubCFI {
 		container = startContainerParent.childNodes[lastStep.index];
 	}
 	*/
-	stepsToQuerySelector(steps) {
+	stepsToQuerySelector(steps: EpubCFIStep[]): string {
 		var query = ["html"];
 
 		steps.forEach(function(step){
@@ -822,7 +832,7 @@ class EpubCFI {
 
 	}
 
-	textNodes(container, ignoreClass) {
+	textNodes(container: any, ignoreClass?: string): any[] {
 		return Array.prototype.slice.call(container.childNodes).
 			filter(function (node) {
 				if (node.nodeType === TEXT_NODE) {
@@ -834,7 +844,7 @@ class EpubCFI {
 			});
 	}
 
-	walkToNode(steps, _doc, ignoreClass) {
+	walkToNode(steps: EpubCFIStep[], _doc?: Document, ignoreClass?: string): any {
 		var doc = _doc || document;
 		var container = doc.documentElement;
 		var children;
@@ -870,7 +880,7 @@ class EpubCFI {
 		return container;
 	}
 
-	findNode(steps, _doc, ignoreClass) {
+	findNode(steps: EpubCFIStep[], _doc?: Document, ignoreClass?: string): any {
 		var doc = _doc || document;
 		var container;
 		var xpath;
@@ -887,7 +897,7 @@ class EpubCFI {
 		return container;
 	}
 
-	fixMiss(steps, offset, _doc, ignoreClass) {
+	fixMiss(steps: EpubCFIStep[], offset: number, _doc?: Document, ignoreClass?: string): any {
 		var container = this.findNode(steps.slice(0,-1), _doc, ignoreClass);
 		var children = container.childNodes;
 		var map = this.normalizedMap(children, TEXT_NODE, ignoreClass);
@@ -927,7 +937,7 @@ class EpubCFI {
 	 * @param {string} [ignoreClass]
 	 * @return {Range}
 	 */
-	toRange(_doc, ignoreClass) {
+	toRange(_doc?: Document, ignoreClass?: string): Range | null {
 		var doc = _doc || document;
 		var range;
 		var start, end, startContainer, endContainer;
@@ -999,7 +1009,7 @@ class EpubCFI {
 	 * @param {string} str
 	 * @returns {boolean}
 	 */
-	isCfiString(str) {
+	isCfiString(str: any): boolean {
 		if(typeof str === "string" &&
 			str.indexOf("epubcfi(") === 0 &&
 			str[str.length-1] === ")") {
@@ -1009,8 +1019,8 @@ class EpubCFI {
 		return false;
 	}
 
-	generateChapterComponent(_spineNodeIndex, _pos, id) {
-		var pos = parseInt(_pos),
+	generateChapterComponent(_spineNodeIndex: number, _pos: number | string, id?: string): string {
+		var pos = parseInt(_pos as string),
 				spineNodeIndex = (_spineNodeIndex + 1) * 2,
 				cfi = "/"+spineNodeIndex+"/";
 
@@ -1027,7 +1037,7 @@ class EpubCFI {
 	 * Collapse a CFI Range to a single CFI Position
 	 * @param {boolean} [toStart=false]
 	 */
-	collapse(toStart) {
+	collapse(toStart?: boolean): void {
 		if (!this.range) {
 			return;
 		}

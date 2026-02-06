@@ -2,14 +2,15 @@
  * Minimal POSIX path utilities for browser use.
  * Replaces the path-webpack dependency.
  */
+import type { ParsedPath } from "../types";
 
-function assertPath(path) {
+function assertPath(path: any): void {
 	if (typeof path !== "string") {
 		throw new TypeError("Path must be a string. Received " + path);
 	}
 }
 
-function normalizeStringPosix(path, allowAboveRoot) {
+function normalizeStringPosix(path: string, allowAboveRoot: boolean): string {
 	var res = "";
 	var lastSlash = -1;
 	var dots = 0;
@@ -74,7 +75,7 @@ function normalizeStringPosix(path, allowAboveRoot) {
 	return res;
 }
 
-export function resolve() {
+export function resolve(..._args: string[]): string {
 	var resolvedPath = "";
 	var resolvedAbsolute = false;
 
@@ -110,7 +111,7 @@ export function resolve() {
 	}
 }
 
-export function relative(from, to) {
+export function relative(from: string, to: string): string {
 	assertPath(from);
 	assertPath(to);
 
@@ -187,7 +188,7 @@ export function relative(from, to) {
 	}
 }
 
-export function dirname(path) {
+export function dirname(path: string): string {
 	assertPath(path);
 	if (path.length === 0)
 		return ".";
@@ -214,12 +215,12 @@ export function dirname(path) {
 	return path.slice(0, end);
 }
 
-export function isAbsolute(path) {
+export function isAbsolute(path: string): boolean {
 	assertPath(path);
 	return path.length > 0 && path.charCodeAt(0) === 47;
 }
 
-export function parse(path) {
+export function parse(path: string): ParsedPath {
 	assertPath(path);
 
 	var ret = { root: "", dir: "", base: "", ext: "", name: "" };

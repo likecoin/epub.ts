@@ -1,7 +1,7 @@
 export const EPUBJS_VERSION = "0.3";
 
 // Dom events to listen for
-export const DOM_EVENTS = ["keydown", "keyup", "keypressed", "mouseup", "mousedown", "mousemove", "click", "touchend", "touchstart", "touchmove"];
+export const DOM_EVENTS = ["keydown", "keyup", "keypressed", "mouseup", "mousedown", "mousemove", "click", "touchend", "touchstart", "touchmove"] as const;
 
 export const EVENTS = {
   BOOK : {
@@ -59,4 +59,4 @@ export const EVENTS = {
     ATTACH : "attach",
     DETACH : "detach"
   }
-}
+} as const

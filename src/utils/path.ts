@@ -1,4 +1,5 @@
 import path from "./path-utils";
+import type { ParsedPath } from "../types";
 
 /**
  * Creates a Path object for parsing and manipulation of a path strings
@@ -8,7 +9,12 @@ import path from "./path-utils";
  * @class
  */
 class Path {
-	constructor(pathString) {
+	path: string;
+	directory: string;
+	filename: string;
+	extension: string;
+
+	constructor(pathString: string) {
 		var protocol;
 		var parsed;
 
@@ -37,7 +43,7 @@ class Path {
 	 * @param	{string} what
 	 * @returns {object}
 	 */
-	parse (what) {
+	parse (what: string): ParsedPath {
 		return path.parse(what);
 	}
 
@@ -45,7 +51,7 @@ class Path {
 	 * @param	{string} what
 	 * @returns {boolean}
 	 */
-	isAbsolute (what) {
+	isAbsolute (what?: string): boolean {
 		return path.isAbsolute(what || this.path);
 	}
 
@@ -54,7 +60,7 @@ class Path {
 	 * @param	{string} what
 	 * @returns {boolean}
 	 */
-	isDirectory (what) {
+	isDirectory (what: string): boolean {
 		return (what.charAt(what.length-1) === "/");
 	}
 
@@ -65,7 +71,7 @@ class Path {
 	 * @param	{string} what
 	 * @returns {string} resolved
 	 */
-	resolve (what) {
+	resolve (what: string): string {
 		return path.resolve(this.directory, what);
 	}
 
@@ -76,7 +82,7 @@ class Path {
 	 * @param	{string} what
 	 * @returns {string} relative
 	 */
-	relative (what) {
+	relative (what: string): string {
 		var isAbsolute = what && (what.indexOf("://") > -1);
 
 		if (isAbsolute) {
@@ -86,15 +92,15 @@ class Path {
 		return path.relative(this.directory, what);
 	}
 
-	splitPath(filename) {
-		return this.splitPathRe.exec(filename).slice(1);
+	splitPath(filename: string): string[] {
+		return (this as any).splitPathRe.exec(filename).slice(1);
 	}
 
 	/**
 	 * Return the path string
 	 * @returns {string} path
 	 */
-	toString () {
+	toString (): string {
 		return this.path;
 	}
 }

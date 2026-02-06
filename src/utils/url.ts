@@ -8,7 +8,19 @@ import path from "./path-utils";
  * default to window.location.href
  */
 class Url {
-	constructor(urlString, baseString) {
+	Url: URL | undefined;
+	href: string;
+	protocol: string;
+	origin: string;
+	hash: string;
+	search: string;
+	base: string | false | undefined;
+	Path: Path;
+	directory: string;
+	filename: string;
+	extension: string;
+
+	constructor(urlString: string, baseString?: string | false) {
 		var absolute = (urlString.indexOf("://") > -1);
 		var pathname = urlString;
 		var basePath;
@@ -67,7 +79,7 @@ class Url {
 	/**
 	 * @returns {Path}
 	 */
-	path () {
+	path (): Path {
 		return this.Path;
 	}
 
@@ -76,7 +88,7 @@ class Url {
 	 * @param {string} what
 	 * @returns {string} url
 	 */
-	resolve (what) {
+	resolve (what: string): string {
 		var isAbsolute = (what.indexOf("://") > -1);
 		var fullpath;
 
@@ -93,14 +105,14 @@ class Url {
 	 * @param {string} what
 	 * @returns {string} path
 	 */
-	relative (what) {
+	relative (what: string): string {
 		return path.relative(what, this.directory);
 	}
 
 	/**
 	 * @returns {string}
 	 */
-	toString () {
+	toString (): string {
 		return this.href;
 	}
 }

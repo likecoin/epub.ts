@@ -1,9 +1,9 @@
 import {defer, isXml, parse} from "./core";
 import Path from "./path";
 
-function request(url, type, withCredentials, headers) {
+function request(url: string, type?: string, withCredentials?: boolean, headers?: Record<string, string>): Promise<any> {
 	var supportsURL = (typeof window != "undefined") ? window.URL : false; // TODO: fallback for url if window isn't defined
-	var BLOB_RESPONSE = supportsURL ? "blob" : "arraybuffer";
+	var BLOB_RESPONSE: XMLHttpRequestResponseType = supportsURL ? "blob" : "arraybuffer";
 
 	var deferred = new defer();
 
