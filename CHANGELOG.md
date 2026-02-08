@@ -1,5 +1,34 @@
 # Changelog
 
+## 0.3.97 (2026-02-08)
+
+### Documentation
+
+- Overhauled README: added CI/npm/license badges, features section, API summary
+  table, epubjs comparison table, supported environments, expanded development
+  section with prerequisites and scripts table, acknowledgments, related projects
+- Improved AGENTS.md: added coding conventions, code style, commit messages,
+  testing guidelines, key files table, current stage summary
+- Expanded PROJECT_STATUS.md: added build output table, epubjs comparison,
+  known limitations, priority next steps
+- Migrated API docs from documentation.js to typedoc (HTML + Markdown output)
+- Cleaned up invalid JSDoc across 7 source files (stale `@param` names,
+  unsupported `@memberof`/`@fires` tags)
+- Rebranded all 26 example HTML titles from "EPUB.js" to "epub.ts"
+- Added fork attribution to examples index page
+
+### Build & tooling
+
+- Added `"sideEffects": false` to package.json for better tree-shaking
+- Added `typedoc` as devDependency with `npm run docs` script
+- Added GitHub Actions workflow for auto-deploying API docs to GitHub Pages
+
+### Type safety
+
+- Enabled full `strict: true` in TypeScript config (strictPropertyInitialization,
+  noImplicitThis — 377 errors fixed)
+- Enabled stricter ESLint rules
+
 ## 0.3.96 (2026-02-07)
 
 ### Type safety

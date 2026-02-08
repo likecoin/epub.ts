@@ -142,6 +142,7 @@ npm install
 | `npm run typecheck` | TypeScript type checking (`tsc --noEmit`) |
 | `npm run lint` | ESLint |
 | `npm run lint:fix` | ESLint with auto-fix |
+| `npm run docs` | Generate API docs (HTML + Markdown) |
 
 ## Contributing
 

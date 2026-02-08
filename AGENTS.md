@@ -8,6 +8,7 @@ All project rules and conventions are below. See also `README.md` for project ov
 - `npm test` — Vitest
 - `npm run typecheck` — tsc --noEmit
 - `npm run lint` — ESLint
+- `npm run docs` — Generate API docs (HTML + Markdown via typedoc)
 
 ## Codebase
 
