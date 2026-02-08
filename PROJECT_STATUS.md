@@ -26,7 +26,7 @@
 - [x] GitHub Actions CI
 - [ ] Replace `localforage` with lighter IndexedDB wrapper
 - [ ] Replace `@xmldom/xmldom` with browser-native DOMParser
-- [ ] Add `"sideEffects": false` to package.json (enables better tree-shaking for consumers)
+- [x] Add `"sideEffects": false` to package.json (enables better tree-shaking for consumers)
 - [ ] Node.js support (parsing-only entry point)
 - [ ] Improve test coverage
 
