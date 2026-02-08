@@ -1,23 +1,63 @@
 # AGENTS.md
 
+All project rules and conventions are below. See also `README.md` for project overview and `PROJECT_STATUS.md` for volatile status.
+
 ## Commands
+
 - `npm run build` — Vite library build
 - `npm test` — Vitest
 - `npm run typecheck` — tsc --noEmit
 - `npm run lint` — ESLint
 
 ## Codebase
+
 - `src/` — Library source (TypeScript)
 - `test/` — Vitest tests
 - `dist/` — Build output (gitignored)
 - `types/` — Legacy TS declarations (will be removed after full TS conversion)
+- `documentation/md/API.md` — Generated API docs
 
 ## Conventions
+
+### TypeScript
+- Full `strict: true` (noImplicitAny, strictNullChecks, strictPropertyInitialization, etc.)
+- API-compatible with epubjs v0.3.93 — do not break the public API
 - ES6 classes with inline typed emitter
-- Strict TS (noImplicitAny, strictNullChecks)
-- API-compatible with epubjs v0.3.93
 - Tabs for indentation, double quotes for strings
-- BSD-2-Clause license
+
+### Code Style
+- Do not add unnecessary comments — only comment where logic isn't self-evident
+- Prefer editing existing files over creating new ones
+- Keep changes minimal — don't refactor surrounding code when fixing a bug
+
+### Commit Messages
+- `feat: add CFI range support`
+- `fix: handle missing spine item`
+- `refactor: simplify event emitter`
+- `test: add section search tests`
+- `chore: update dependencies`
+
+## Testing
+
+- Tests live in `test/` directory
+- Use Vitest with globals
+- Run `npm test` to verify all tests pass before committing
+
+## Key Files
+
+| File | Purpose |
+|------|---------|
+| `src/epub.ts` | Default export factory function |
+| `src/book.ts` | Main Book class |
+| `src/rendition.ts` | Rendering engine |
+| `src/epubcfi.ts` | EPUB CFI parser |
+| `src/index.ts` | Public API exports |
 
 ## Status
+
 See [PROJECT_STATUS.md](./PROJECT_STATUS.md) for conversion progress.
+
+### Current Stage: C (Improvements)
+- TypeScript strict mode: complete
+- ESLint: 0 errors, 0 warnings
+- Remaining: replace `localforage`, replace `@xmldom/xmldom`, Node.js support, improve test coverage
