@@ -874,33 +874,27 @@ class Rendition implements IEventEmitter {
 	 * Remove and Clean Up the Rendition
 	 */
 	destroy(): void {
-		// Clear the queue
-		// this.q.clear();
-		// this.q = undefined;
+		this.q.clear();
 
-		this.manager && this.manager.destroy();
+		if (this.manager) {
+			this.manager.destroy();
+			this.manager = undefined;
+		}
 
 		this.book = undefined;
 
-		// this.views = null;
+		this.hooks.display.clear();
+		this.hooks.serialize.clear();
+		this.hooks.content.clear();
+		this.hooks.unloaded.clear();
+		this.hooks.layout.clear();
+		this.hooks.render.clear();
+		this.hooks.show.clear();
 
-		// this.hooks.display.clear();
-		// this.hooks.serialize.clear();
-		// this.hooks.content.clear();
-		// this.hooks.layout.clear();
-		// this.hooks.render.clear();
-		// this.hooks.show.clear();
-		// this.hooks = {};
+		this.themes.destroy();
 
-		// this.themes.destroy();
-		// this.themes = undefined;
-
-		// this.epubcfi = undefined;
-
-		// this.starting = undefined;
-		// this.started = undefined;
-
-
+		this._layout = undefined;
+		this.location = undefined;
 	}
 
 	/**

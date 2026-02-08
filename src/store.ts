@@ -49,12 +49,11 @@ class Store implements IEventEmitter {
 	 */
 	checkRequirements(): void {
 		try {
-			let store: any;
 			if (typeof localforage === "undefined") {
-				store = localforage;
+				throw new Error("localForage lib not loaded");
 			}
-			this.storage = store!.createInstance({
-					name: this.name
+			this.storage = localforage.createInstance({
+				name: this.name
 			});
 		} catch (_e) {
 			throw new Error("localForage lib not loaded");

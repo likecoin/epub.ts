@@ -45,6 +45,8 @@ class Contents implements IEventEmitter {
 	_resizeCheck: (() => void) | undefined;
 	_triggerEvent: ((e: Event) => void) | undefined;
 	_onSelectionChange: ((e: Event) => void) | undefined;
+	_onVisibilityChange: (() => void) | undefined;
+	_mediaQueryHandlers: { mql: MediaQueryList; handler: (e: MediaQueryListEvent) => void }[];
 	selectionEndTimeout: ReturnType<typeof setTimeout> | undefined;
 	_layoutStyle!: string;
 
@@ -65,6 +67,7 @@ class Contents implements IEventEmitter {
 		this.sectionIndex = sectionIndex || 0;
 		this.cfiBase = cfiBase || "";
 
+		this._mediaQueryHandlers = [];
 		this.epubReadingSystem("epub.js", EPUBJS_VERSION);
 		this.called = 0;
 		this.active = true;
@@ -437,6 +440,21 @@ class Contents implements IEventEmitter {
 
 		this.removeSelectionListeners();
 
+		if (this._onVisibilityChange) {
+			document.removeEventListener("visibilitychange", this._onVisibilityChange);
+			this._onVisibilityChange = undefined;
+		}
+
+		if (this._resizeCheck) {
+			this.document.removeEventListener("transitionend", this._resizeCheck);
+			this._resizeCheck = undefined;
+		}
+
+		for (const { mql, handler } of this._mediaQueryHandlers) {
+			mql.removeEventListener("change", handler);
+		}
+		this._mediaQueryHandlers = [];
+
 		if (this.observer) {
 			this.observer.disconnect();
 		}
@@ -482,7 +500,7 @@ class Contents implements IEventEmitter {
 	 * @private
 	 */
 	visibilityListeners(): void {
-		document.addEventListener("visibilitychange", () => {
+		this._onVisibilityChange = (): void => {
 			if (document.visibilityState === "visible" && this.active === false) {
 				this.active = true;
 				this.resizeListeners();
@@ -490,7 +508,8 @@ class Contents implements IEventEmitter {
 				this.active = false;
 				clearTimeout(this.expanding);
 			}
-		});
+		};
+		document.addEventListener("visibilitychange", this._onVisibilityChange);
 	}
 
 	/**
@@ -532,11 +551,10 @@ class Contents implements IEventEmitter {
 			}
 			if(!rules) return; // Stylesheets changed
 			for (let j = 0; j < rules.length; j += 1) {
-				//if (rules[j].constructor === CSSMediaRule) {
 				if((rules[j] as CSSMediaRule).media){
 					const mql = this.window.matchMedia((rules[j] as CSSMediaRule).media.mediaText);
-					mql.addListener(mediaChangeHandler);
-					//mql.onchange = mediaChangeHandler;
+					mql.addEventListener("change", mediaChangeHandler);
+					this._mediaQueryHandlers.push({ mql, handler: mediaChangeHandler });
 				}
 			}
 		}
@@ -1277,10 +1295,7 @@ class Contents implements IEventEmitter {
 	}
 
 	destroy(): void {
-		// this.document.removeEventListener('transitionend', this._resizeCheck);
-
 		this.removeListeners();
-
 	}
 }
 
