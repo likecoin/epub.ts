@@ -7,7 +7,7 @@
  * @returns {function} requestAnimationFrame
  * @memberof Core
  */
-export const requestAnimationFrame = (typeof window != "undefined") ? window.requestAnimationFrame : false;
+export const requestAnimationFrame = (typeof window != "undefined") ? window.requestAnimationFrame.bind(window) : false;
 const ELEMENT_NODE = 1;
 const TEXT_NODE = 3;
 const _COMMENT_NODE = 8;
