@@ -751,7 +751,7 @@ class EpubCFI {
 			if (!children) {
 				children = findChildren(anchor.parentNode as Element);
 			}
-			index = Array.prototype.indexOf.call(children, anchor);
+			index = Array.from(children as ArrayLike<Node>).indexOf(anchor);
 		} else {
 			children = this.textNodes(anchor.parentNode!);
 			index = children.indexOf(anchor);
@@ -778,7 +778,7 @@ class EpubCFI {
 
 
 		// anchor is always a child of its parentNode, so indexOf is guaranteed to find it
-		const index = Array.prototype.indexOf.call(children, anchor);
+		const index = Array.from(children as ArrayLike<Node>).indexOf(anchor);
 
 		return map[index]!;
 	}
@@ -838,7 +838,7 @@ class EpubCFI {
 	}
 
 	textNodes(container: Node, ignoreClass?: string): Node[] {
-		return Array.prototype.slice.call(container.childNodes).
+		return Array.from(container.childNodes).
 			filter(function (node: Node) {
 				if (node.nodeType === TEXT_NODE) {
 					return true;

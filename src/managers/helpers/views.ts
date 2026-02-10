@@ -31,7 +31,7 @@ class Views {
 	}
 
 	slice(...args: [start?: number, end?: number]): IframeView[] {
-		return this._views.slice.apply(this._views, args);
+		return this._views.slice(...args);
 	}
 
 	get(i: number): IframeView | undefined {

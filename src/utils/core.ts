@@ -114,9 +114,9 @@ export function prefixed(unprefixed: string): string {
  * @returns {object}
  * @memberof Core
  */
-export function defaults(obj: any, ..._sources: any[]): any {
-	for (let i = 1, length = arguments.length; i < length; i++) {
-		const source = arguments[i];
+export function defaults(obj: any, ...sources: any[]): any {
+	for (let i = 0; i < sources.length; i++) {
+		const source = sources[i];
 		for (const prop in source) {
 			if (obj[prop] === void 0) obj[prop] = source[prop];
 		}
@@ -130,8 +130,7 @@ export function defaults(obj: any, ..._sources: any[]): any {
  * @returns {object}
  * @memberof Core
  */
-export function extend(target: any, ..._args: any[]): any {
-	const sources = [].slice.call(arguments, 1);
+export function extend(target: any, ...sources: any[]): any {
 	sources.forEach(function (source: any) {
 		if(!source) return;
 		Object.getOwnPropertyNames(source).forEach(function(propName) {
@@ -770,7 +769,7 @@ export class RangeObject {
 
 	selectNode(referenceNode: Node): void {
 		const parent = referenceNode.parentNode!;
-		const index = Array.prototype.indexOf.call(parent.childNodes, referenceNode);
+		const index = Array.from(parent.childNodes as ArrayLike<Node>).indexOf(referenceNode);
 		this.setStart(parent, index);
 		this.setEnd(parent, index + 1);
 	}

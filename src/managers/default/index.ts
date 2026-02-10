@@ -136,9 +136,9 @@ class DefaultViewManager implements IEventEmitter {
 
 		// Function to handle a resize event.
 		// Will only attach if width and height are both fixed.
-		this.stage.onResize(this.onResized.bind(this));
+		this.stage.onResize(() => this.onResized());
 
-		this.stage.onOrientationChange(this.onOrientationChange.bind(this));
+		this.stage.onOrientationChange((e: Event) => this.onOrientationChange(e));
 
 		// Add Event Listeners
 		this.addEventListeners();
@@ -414,8 +414,8 @@ class DefaultViewManager implements IEventEmitter {
 		this.views.append(view);
 
 		// view.on(EVENTS.VIEWS.SHOWN, this.afterDisplayed.bind(this));
-		view.onDisplayed = this.afterDisplayed.bind(this);
-		view.onResize = this.afterResized.bind(this);
+		view.onDisplayed = (view): void => this.afterDisplayed(view);
+		view.onResize = (view): void => this.afterResized(view);
 
 		view.on(EVENTS.VIEWS.AXIS, (axis: string) => {
 			this.updateAxis(axis);
@@ -432,8 +432,8 @@ class DefaultViewManager implements IEventEmitter {
 		const view = this.createView(section, forceRight);
 		this.views.append(view);
 
-		view.onDisplayed = this.afterDisplayed.bind(this);
-		view.onResize = this.afterResized.bind(this);
+		view.onDisplayed = (view): void => this.afterDisplayed(view);
+		view.onResize = (view): void => this.afterResized(view);
 
 		view.on(EVENTS.VIEWS.AXIS, (axis: string) => {
 			this.updateAxis(axis);
@@ -455,8 +455,8 @@ class DefaultViewManager implements IEventEmitter {
 
 		this.views.prepend(view);
 
-		view.onDisplayed = this.afterDisplayed.bind(this);
-		view.onResize = this.afterResized.bind(this);
+		view.onDisplayed = (view): void => this.afterDisplayed(view);
+		view.onResize = (view): void => this.afterResized(view);
 
 		view.on(EVENTS.VIEWS.AXIS, (axis: string) => {
 			this.updateAxis(axis);

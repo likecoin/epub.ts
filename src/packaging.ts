@@ -125,7 +125,7 @@ class Packaging {
 		//-- Turn items into an array
 		// var selected = manifestXml.querySelectorAll("item");
 		const selected = qsa(manifestXml, "item");
-		const items = Array.prototype.slice.call(selected);
+		const items = Array.from(selected);
 
 		//-- Create an object with the id as key
 		items.forEach(function(item: Element){
@@ -160,7 +160,7 @@ class Packaging {
 		const spine: PackagingSpineItem[] = [];
 
 		const selected = qsa(spineXml, "itemref");
-		const items = Array.prototype.slice.call(selected);
+		const items = Array.from(selected);
 
 		// var epubcfi = new EpubCFI();
 

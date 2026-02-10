@@ -195,7 +195,7 @@ class Book implements IEventEmitter {
 		 * @member {Locations} locations
 		 * @memberof Book
 		 */
-		this.locations = new Locations(this.spine, this.load.bind(this));
+		this.locations = new Locations(this.spine, (section) => this.load(section));
 
 		/**
 		 * @member {Navigation} navigation
@@ -315,7 +315,7 @@ class Book implements IEventEmitter {
 			this.archived = true;
 			this.url = new Url("/", "");
 			opening = this.request(input as string, "binary", this.settings.requestCredentials, this.settings.requestHeaders)
-				.then(this.openEpub.bind(this));
+				.then((result) => this.openEpub(result));
 		} else if(type == INPUT_TYPE.OPF) {
 			this.url = new Url(input as string);
 			opening = this.openPackaging(this.url.Path.toString());
@@ -325,7 +325,7 @@ class Book implements IEventEmitter {
 		} else {
 			this.url = new Url(input as string);
 			opening = this.openContainer(CONTAINER_PATH)
-				.then(this.openPackaging.bind(this));
+				.then((result) => this.openPackaging(result));
 		}
 
 		return opening;
@@ -524,12 +524,12 @@ class Book implements IEventEmitter {
 			this.loading!.displayOptions.resolve(this.displayOptions);
 		}
 
-		this.spine!.unpack(this.packaging!, this.resolve.bind(this), this.canonical.bind(this));
+		this.spine!.unpack(this.packaging!, (path: string, absolute?: boolean): string => this.resolve(path, absolute), (path: string): string => this.canonical(path));
 
 		this.resources = new Resources(this.packaging!.manifest, {
 			archive: this.archive,
-			resolver: this.resolve.bind(this),
-			request: this.request.bind(this),
+			resolver: (path: string, absolute?: boolean): string => this.resolve(path, absolute),
+			request: (path: string, type?: string): Promise<any> => this.request(path, type),
 			replacements: this.settings.replacements || (this.archived ? "blobUrl" : "base64")
 		});
 
@@ -673,15 +673,15 @@ class Book implements IEventEmitter {
 		// Save original url
 		const originalUrl = this.url;
 		// Save original request method
-		const requester = this.settings.requestMethod || request.bind(this);
+		const requester = this.settings.requestMethod || ((url: string, type?: string): Promise<any> => request(url, type));
 		// Create new Store
-		this.storage = new Store(name as string, requester, this.resolve.bind(this));
+		this.storage = new Store(name as string, requester, (path: string, absolute?: boolean): string => this.resolve(path, absolute));
 		// Replace request method to go through store
-		this.request = this.storage.request.bind(this.storage);
+		this.request = (path: string, type?: string): Promise<any> => this.storage!.request(path, type);
 
 		this.opened!.then(() => {
 			if (this.archived) {
-				this.storage!.requester = this.archive!.request.bind(this.archive!);
+				this.storage!.requester = (path: string, type?: string): Promise<any> => this.archive!.request(path, type);
 			}
 			// Substitute hook
 			const substituteResources = (output: string, section: Section): void => {
@@ -757,7 +757,7 @@ class Book implements IEventEmitter {
 	getRange(cfiRange: string): Promise<Range> {
 		const cfi = new EpubCFI(cfiRange);
 		const item = this.spine!.get(cfi.spinePos);
-		const _request = this.load.bind(this);
+		const _request = (section: any): Promise<any> => this.load(section);
 		if (!item) {
 			return new Promise((resolve, reject) => {
 				reject("CFI could not be found");

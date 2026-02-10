@@ -23,12 +23,11 @@ export default function EventEmitter(target: any): any {
 		return this;
 	};
 
-	proto.emit = function (type: string): void {
+	proto.emit = function (type: string, ...args: any[]): void {
 		if (!this.__listeners || !this.__listeners[type]) return;
-		const args = Array.prototype.slice.call(arguments, 1);
 		const listeners = this.__listeners[type].slice();
 		for (let i = 0; i < listeners.length; i++) {
-			listeners[i].apply(this, args);
+			listeners[i](...args);
 		}
 	};
 

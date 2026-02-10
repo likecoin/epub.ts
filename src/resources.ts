@@ -111,9 +111,9 @@ class Resources {
 
 		// All Assets Urls
 		this.urls = this.assets.
-			map(function(item: PackagingManifestItem): string {
+			map((item: PackagingManifestItem): string => {
 				return item.href;
-			}.bind(this));
+			});
 
 		// Css Urls
 		this.cssUrls = this.css.map(function(item) {
@@ -279,11 +279,11 @@ class Resources {
 
 		// Get Urls relative to current sections
 		return this.urls.
-			map(function(href: string): string {
+			map((href: string): string => {
 				const resolved = resolver(href);
 				const relative = new Path(absolute).relative(resolved);
 				return relative;
-			}.bind(this));
+			});
 	}
 
 	/**

@@ -69,7 +69,7 @@ class Locations implements IEventEmitter {
 
 		this.spine.each((section: Section) => {
 			if (section.linear) {
-				this.q.enqueue(this.process.bind(this), section);
+				this.q.enqueue((s: Section) => this.process(s), section);
 			}
 		});
 
@@ -214,10 +214,10 @@ class Locations implements IEventEmitter {
 			if (section.linear) {
 				if (start) {
 					if (section.index >= start.spinePos) {
-						this.q.enqueue(this.processWords.bind(this), section, wordCount, start, count);
+						this.q.enqueue((s: Section, wc: number, st: any, c: number) => this.processWords(s, wc, st, c), section, wordCount, start, count);
 					}
 				} else {
-					this.q.enqueue(this.processWords.bind(this), section, wordCount, start, count);
+					this.q.enqueue((s: Section, wc: number, st: any, c: number) => this.processWords(s, wc, st, c), section, wordCount, start, count);
 				}
 			}
 		});

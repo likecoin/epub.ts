@@ -6,14 +6,12 @@ import type Section from "../../section";
 import type IframeView from "../views/iframe";
 import type Stage from "../helpers/stage";
 import type { ManagerOptions, ReframeBounds } from "../../types";
-function debounce(func: Function, wait: number): () => void {
+function debounce(func: Function, wait: number): (...args: any[]) => void {
 	let timeout: ReturnType<typeof setTimeout>;
-	return function(this: unknown) {
-		const context = this;
-		const args = arguments;
+	return function(this: unknown, ...args: any[]) {
 		clearTimeout(timeout);
-		timeout = setTimeout(function() {
-			func.apply(context, args);
+		timeout = setTimeout(() => {
+			func.call(this, ...args);
 		}, wait);
 	};
 }
@@ -150,8 +148,8 @@ class ContinuousViewManager extends DefaultViewManager {
 		});
 
 		// view.on(EVENTS.VIEWS.SHOWN, this.afterDisplayed.bind(this));
-		view.onDisplayed = this.afterDisplayed.bind(this);
-		view.onResize = this.afterResized.bind(this);
+		view.onDisplayed = (view): void => this.afterDisplayed(view);
+		view.onResize = (view): void => this.afterResized(view);
 
 		return view.display(this.request);
 	}
@@ -173,7 +171,7 @@ class ContinuousViewManager extends DefaultViewManager {
 
 		this.views.append(view);
 
-		view.onDisplayed = this.afterDisplayed.bind(this);
+		view.onDisplayed = (view): void => this.afterDisplayed(view);
 
 		return view;
 	}
@@ -196,7 +194,7 @@ class ContinuousViewManager extends DefaultViewManager {
 
 		this.views.prepend(view);
 
-		view.onDisplayed = this.afterDisplayed.bind(this);
+		view.onDisplayed = (view): void => this.afterDisplayed(view);
 
 		return view;
 	}
@@ -241,12 +239,12 @@ class ContinuousViewManager extends DefaultViewManager {
 				}
 				visible.push(view);
 			} else {
-				this.q.enqueue(view.destroy.bind(view));
+				this.q.enqueue(() => view.destroy());
 				// console.log("hidden " + view.index, view.displayed);
 
 				clearTimeout(this.trimTimeout);
 				this.trimTimeout = setTimeout(() => {
-					this.q.enqueue(this.trim.bind(this));
+					this.q.enqueue(() => this.trim());
 				}, 250);
 			}
 
@@ -462,7 +460,7 @@ class ContinuousViewManager extends DefaultViewManager {
 
 		this._onScroll = this.onScroll.bind(this);
 		scroller.addEventListener("scroll", this._onScroll);
-		this._scrolled = debounce(this.scrolled.bind(this), 30);
+		this._scrolled = debounce(() => this.scrolled(), 30);
 		// this.tick.call(window, this.onScroll.bind(this));
 
 		this.didScroll = false;

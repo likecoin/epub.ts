@@ -119,18 +119,18 @@ class Rendition implements IEventEmitter {
 		this.hooks.render = new Hook(this);
 		this.hooks.show = new Hook(this);
 
-		this.hooks.content.register(this.handleLinks.bind(this));
-		this.hooks.content.register(this.passEvents.bind(this));
-		this.hooks.content.register(this.adjustImages.bind(this));
+		this.hooks.content.register((contents: any) => this.handleLinks(contents));
+		this.hooks.content.register((contents: any) => this.passEvents(contents));
+		this.hooks.content.register((contents: any) => this.adjustImages(contents));
 
-		this.book!.spine!.hooks.content.register(this.injectIdentifier.bind(this));
+		this.book!.spine!.hooks.content.register((doc: any, section: any) => this.injectIdentifier(doc, section));
 
 		if (this.settings.stylesheet) {
-			this.book!.spine!.hooks.content.register(this.injectStylesheet.bind(this));
+			this.book!.spine!.hooks.content.register((doc: any, section: any) => this.injectStylesheet(doc, section));
 		}
 
 		if (this.settings.script) {
-			this.book!.spine!.hooks.content.register(this.injectScript.bind(this));
+			this.book!.spine!.hooks.content.register((doc: any, section: any) => this.injectScript(doc, section));
 		}
 
 		/**
@@ -278,17 +278,17 @@ class Rendition implements IEventEmitter {
 		this.layout(this.settings.globalLayoutProperties);
 
 		// Listen for displayed views
-		this.manager.on(EVENTS.MANAGERS.ADDED, this.afterDisplayed.bind(this));
-		this.manager.on(EVENTS.MANAGERS.REMOVED, this.afterRemoved.bind(this));
+		this.manager.on(EVENTS.MANAGERS.ADDED, (view: any) => this.afterDisplayed(view));
+		this.manager.on(EVENTS.MANAGERS.REMOVED, (view: any) => this.afterRemoved(view));
 
 		// Listen for resizing
-		this.manager.on(EVENTS.MANAGERS.RESIZED, this.onResized.bind(this));
+		this.manager.on(EVENTS.MANAGERS.RESIZED, (size: any, epubcfi?: string) => this.onResized(size, epubcfi));
 
 		// Listen for rotation
-		this.manager.on(EVENTS.MANAGERS.ORIENTATION_CHANGE, this.onOrientationChange.bind(this));
+		this.manager.on(EVENTS.MANAGERS.ORIENTATION_CHANGE, (orientation: any) => this.onOrientationChange(orientation));
 
 		// Listen for scroll changes
-		this.manager.on(EVENTS.MANAGERS.SCROLLED, this.reportLocation.bind(this));
+		this.manager.on(EVENTS.MANAGERS.SCROLLED, () => this.reportLocation());
 
 		/**
 		 * Emit that rendering has started
@@ -569,8 +569,8 @@ class Rendition implements IEventEmitter {
 	 * @return {Promise}
 	 */
 	next(): Promise<void> {
-		return this.q.enqueue(this.manager!.next.bind(this.manager))
-			.then(this.reportLocation.bind(this));
+		return this.q.enqueue(() => this.manager!.next())
+			.then(() => this.reportLocation());
 	}
 
 	/**
@@ -578,8 +578,8 @@ class Rendition implements IEventEmitter {
 	 * @return {Promise}
 	 */
 	prev(): Promise<void> {
-		return this.q.enqueue(this.manager!.prev.bind(this.manager))
-			.then(this.reportLocation.bind(this));
+		return this.q.enqueue(() => this.manager!.prev())
+			.then(() => this.reportLocation());
 	}
 
 	//-- http://www.idpf.org/epub/301/spec/epub-publications.html#meta-properties-rendering

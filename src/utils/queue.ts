@@ -29,8 +29,7 @@ class Queue {
 	enqueue(..._args: any[]): Promise<any> {
 		let deferred, promise;
 		let queued;
-		const task = [].shift.call(arguments);
-		const args = arguments;
+		const [task, ...args] = _args;
 
 		// Handle single args without context
 		// if(args && !Array.isArray(args)) {
@@ -86,18 +85,18 @@ class Queue {
 			if(task){
 				// console.log(task)
 
-				result = task.apply(this.context, inwait.args);
+				result = task.call(this.context, ...inwait.args);
 
 				if(result && typeof result["then"] === "function") {
 					// Task is a function that returns a promise
 					return result.then((...args: any[]) => {
-						inwait.deferred.resolve.apply(this.context, args);
+						inwait.deferred.resolve(...args);
 					}, (...args: any[]) => {
-						inwait.deferred.reject.apply(this.context, args);
+						inwait.deferred.reject(...args);
 					});
 				} else {
 					// Task resolves immediately
-					inwait.deferred.resolve.apply(this.context, result);
+					inwait.deferred.resolve(result);
 					return inwait.promise;
 				}
 
@@ -134,7 +133,7 @@ class Queue {
 			this.defered = new defer();
 		}
 
-		this.tick.call(window, () => {
+		this.tick(() => {
 
 			if(this._q.length) {
 
@@ -225,8 +224,7 @@ class Queue {
 class Task {
 	constructor(task: Function, args: any[], context: any){
 
-		return function(this: unknown): Promise<any> {
-			const toApply = (arguments as any) || [];
+		return function(this: unknown, ...toApply: any[]): Promise<any> {
 
 			return new Promise( (resolve, reject) => {
 				const callback = function(value: any, err: any): void {
@@ -240,7 +238,7 @@ class Task {
 				toApply.push(callback);
 
 				// Apply all arguments to the functions
-				task.apply(context || this, toApply);
+				task.call(context || this, ...toApply);
 
 			});
 

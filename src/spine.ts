@@ -76,7 +76,7 @@ class Spine {
 				item.canonical = canonical(item.href);
 
 				if(manifestItem.properties.length){
-					item.properties.push.apply(item.properties, manifestItem.properties);
+					item.properties.push(...manifestItem.properties);
 				}
 			}
 

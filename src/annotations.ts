@@ -35,8 +35,8 @@ class Annotations {
 		this._annotations = {};
 		this._annotationsBySectionIndex = {};
 
-		this.rendition.hooks.render.register(this.inject.bind(this));
-		this.rendition.hooks.unloaded.register(this.clear.bind(this));
+		this.rendition.hooks.render.register((view: any) => this.inject(view));
+		this.rendition.hooks.unloaded.register((section: any) => this.clear(section));
 	}
 
 	/**

@@ -75,17 +75,12 @@ function normalizeStringPosix(path: string, allowAboveRoot: boolean): string {
 	return res;
 }
 
-export function resolve(..._args: string[]): string {
+export function resolve(...args: string[]): string {
 	let resolvedPath = "";
 	let resolvedAbsolute = false;
 
-	for (let i = arguments.length - 1; i >= -1 && !resolvedAbsolute; i--) {
-		let path;
-		if (i >= 0)
-			path = arguments[i];
-		else {
-			path = "/";
-		}
+	for (let i = args.length - 1; i >= -1 && !resolvedAbsolute; i--) {
+		const path = i >= 0 ? args[i]! : "/";
 
 		assertPath(path);
 

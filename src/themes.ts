@@ -27,8 +27,8 @@ class Themes {
 		this._overrides = {};
 		this._current = "default";
 		this._injected = [];
-		this.rendition.hooks.content.register(this.inject.bind(this));
-		this.rendition.hooks.content.register(this.overrides.bind(this));
+		this.rendition.hooks.content.register((contents: any) => this.inject(contents));
+		this.rendition.hooks.content.register((contents: any) => this.overrides(contents));
 
 	}
 
@@ -38,21 +38,21 @@ class Themes {
 	 * @example themes.register("light", { "body": { "color": "purple"}})
 	 * @example themes.register({ "light" : {...}, "dark" : {...}})
 	 */
-	register (..._args: any[]): void {
-		if (arguments.length === 0) {
+	register (...args: any[]): void {
+		if (args.length === 0) {
 			return;
 		}
-		if (arguments.length === 1 && typeof(arguments[0]) === "object") {
-			return this.registerThemes(arguments[0]);
+		if (args.length === 1 && typeof(args[0]) === "object") {
+			return this.registerThemes(args[0]);
 		}
-		if (arguments.length === 1 && typeof(arguments[0]) === "string") {
-			return this.default(arguments[0]);
+		if (args.length === 1 && typeof(args[0]) === "string") {
+			return this.default(args[0]);
 		}
-		if (arguments.length === 2 && typeof(arguments[1]) === "string") {
-			return this.registerUrl(arguments[0], arguments[1]);
+		if (args.length === 2 && typeof(args[1]) === "string") {
+			return this.registerUrl(args[0], args[1]);
 		}
-		if (arguments.length === 2 && typeof(arguments[1]) === "object") {
-			return this.registerRules(arguments[0], arguments[1]);
+		if (args.length === 2 && typeof(args[1]) === "object") {
+			return this.registerRules(args[0], args[1]);
 		}
 	}
 
