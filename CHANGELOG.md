@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.4.1 (2026-02-11)
+
+### Bug fixes
+
+- Fix `requestAnimationFrame` illegal invocation caused by lost `window` context
+  after ES6 modernization removed `.call(window, ...)` from Queue
+
 ## 0.4.0 (2026-02-11)
 
 ### Breaking changes
