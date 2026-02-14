@@ -85,6 +85,12 @@ export function replaceLinks(contents: Element, fn: (path: string) => void): voi
 			return;
 		}
 
+		const hrefTrimmed = href.trimStart().toLowerCase();
+		if(hrefTrimmed.startsWith("javascript:") || hrefTrimmed.startsWith("data:text/html")){
+			link.removeAttribute("href");
+			return;
+		}
+
 		const absolute = (href.indexOf("://") > -1);
 
 		if(absolute){

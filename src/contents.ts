@@ -801,7 +801,7 @@ class Contents implements IEventEmitter {
 
 		const styleEl = this._getStylesheetNode(key);
 		if (!styleEl) return false;
-		styleEl.innerHTML = serializedCss;
+		styleEl.textContent = serializedCss;
 
 		return true;
 	}
