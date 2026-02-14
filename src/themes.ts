@@ -169,7 +169,7 @@ class Themes {
 		for (const name in themes) {
 			if (themes.hasOwnProperty(name) && (name === this._current || name === "default")) {
 				theme = themes[name]!;
-				if((theme.rules && Object.keys(theme.rules).length > 0) || (theme.url && links.indexOf(theme.url) === -1)) {
+				if((theme.rules && Object.keys(theme.rules).length > 0) || (theme.url && links.indexOf(theme.url) === -1) || (theme.serialized)) {
 					this.add(name, contents);
 				}
 				this._injected.push(name);
