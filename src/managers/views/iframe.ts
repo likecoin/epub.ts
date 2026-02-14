@@ -668,7 +668,14 @@ class IframeView implements IEventEmitter {
 		}
 
 		const m = new Highlight(range, className, data, attributes);
-		const h = this.pane.addMark(m);
+		let h: Mark;
+		try {
+			h = this.pane.addMark(m);
+		} catch (e) {
+			// eslint-disable-next-line no-console
+			console.error("Failed to add highlight for", cfiRange, e);
+			return;
+		}
 
 		this.highlights[cfiRange] = { "mark": h, "element": h.element, "listeners": [emitter, cb] };
 
@@ -700,7 +707,14 @@ class IframeView implements IEventEmitter {
 		}
 
 		const m = new Underline(range, className, data, attributes);
-		const h = this.pane.addMark(m);
+		let h: Mark;
+		try {
+			h = this.pane.addMark(m);
+		} catch (e) {
+			// eslint-disable-next-line no-console
+			console.error("Failed to add underline for", cfiRange, e);
+			return;
+		}
 
 		this.underlines[cfiRange] = { "mark": h, "element": h.element, "listeners": [emitter, cb] };
 

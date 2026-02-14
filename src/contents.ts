@@ -1133,10 +1133,6 @@ class Contents implements IEventEmitter {
 
 		this.css(COLUMN_GAP, gap+"px");
 		this.css(COLUMN_WIDTH, columnWidth+"px");
-
-		// Fix glyph clipping in WebKit
-		// https://github.com/futurepress/epub.js/issues/983
-		this.css("-webkit-line-box-contain", "block glyphs replaced");
 	}
 
 	/**
