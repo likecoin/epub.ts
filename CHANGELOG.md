@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.4.2 (2026-02-15)
+
+### Bug fixes (ported from epub.js upstream PRs and forks)
+
+- Fix `orientationchange` event listener case mismatch in `Stage.destroy()`
+- Fix memory leak: store `unload` listeners as named properties for proper removal
+- Fix `Navigation.get()` failing when target has `#` prefix
+- Ensure at least one location per section for image-only/empty content
+- Parse manifest `fallback` attribute per EPUB spec
+- Fix bottom-of-page detection using floating-point-safe comparison
+- Fix vertical `moveTo` using `layout.height` instead of `layout.delta`
+- Fix `substitute()` for percent-encoded URLs with CJK filenames
+- Disable scroll anchoring (`overflow-anchor: none`) on epub container
+- Add `dblclick` to `DOM_EVENTS` for iframe event forwarding
+- Fix themes registered via `registerCss()` not injected into new views
+- Guard `pane.addMark()` with try/catch to prevent invalid highlights from
+  breaking section navigation
+- Remove deprecated `-webkit-line-box-contain` CSS that causes line-height
+  rendering issues on iOS Safari
+
 ## 0.4.1 (2026-02-11)
 
 ### Bug fixes
