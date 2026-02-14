@@ -395,10 +395,10 @@ class DefaultViewManager implements IEventEmitter {
 				distX = this.container.scrollWidth - this.layout.delta;
 			}
 
-			distY = Math.floor(offset.top / this.layout.delta) * this.layout.delta;
+			distY = Math.floor(offset.top / this.layout.height) * this.layout.height;
 
-			if (distY + this.layout.delta > this.container.scrollHeight) {
-				distY = this.container.scrollHeight - this.layout.delta;
+			if (distY + this.layout.height > this.container.scrollHeight) {
+				distY = this.container.scrollHeight - this.layout.height;
 			}
 		}
 		if(this.settings.direction === "rtl"){
@@ -538,9 +538,9 @@ class DefaultViewManager implements IEventEmitter {
 
 			this.scrollTop = this.container.scrollTop;
 
-			const top  = this.container.scrollTop + this.container.offsetHeight;
+			const reachedBottom = Math.abs(this.container.scrollHeight - this.container.clientHeight - this.container.scrollTop) < 1;
 
-			if(top < this.container.scrollHeight) {
+			if(!reachedBottom) {
 				this.scrollBy(0, this.layout.height, true);
 			} else {
 				next = this.views.last()!.section.next();

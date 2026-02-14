@@ -124,6 +124,16 @@ export function replaceLinks(contents: Element, fn: (path: string) => void): voi
 export function substitute(content: string, urls: string[], replacements: string[]): string {
 	urls.forEach(function(url, i){
 		if (url && replacements[i]) {
+			// Also try decoded form for URLs with percent-encoded characters (e.g. CJK filenames)
+			try {
+				const decoded = decodeURIComponent(url);
+				if (decoded !== url) {
+					const escapedDecoded = decoded.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
+					content = content.replace(new RegExp(escapedDecoded, "g"), replacements[i]);
+				}
+			} catch (_e) {
+				// Invalid URI encoding, skip decoded replacement
+			}
 			// Account for special characters in the file name.
 			// See https://stackoverflow.com/a/6318729.
 			url = url.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
