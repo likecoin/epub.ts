@@ -30,7 +30,7 @@ class Mapping {
 	 */
 	section(view: IframeView): EpubCFIPair[] {
 		const ranges = this.findRanges(view);
-		const map = this.rangeListToCfiList(view.section.cfiBase, ranges);
+		const map = this.rangeListToCfiList(view.section.cfiBase!, ranges);
 
 		return map;
 	}

@@ -18,18 +18,18 @@ class Locations implements IEventEmitter {
 	declare off: (type: string, fn?: (...args: any[]) => void) => this;
 	declare emit: (type: string, ...args: any[]) => void;
 
-	spine: Spine;
-	request: RequestFunction;
-	pause: number;
-	q: Queue;
-	epubcfi: EpubCFI;
-	_locations: string[];
+	spine: Spine | undefined;
+	request: RequestFunction | undefined;
+	pause: number | undefined;
+	q: Queue | undefined;
+	epubcfi: EpubCFI | undefined;
+	_locations: string[] | undefined;
 	_locationsWords: { cfi: string; wordCount: number }[];
-	total: number;
-	break: number;
-	_current: number;
+	total: number | undefined;
+	break: number | undefined;
+	_current: number | undefined;
 	_wordCounter: number;
-	_currentCfi: string;
+	_currentCfi: string | undefined;
 	processingTimeout: ReturnType<typeof setTimeout> | undefined;
 
 	constructor(spine: Spine, request: RequestFunction, pause?: number) {
@@ -65,22 +65,22 @@ class Locations implements IEventEmitter {
 			this.break = chars;
 		}
 
-		this.q.pause();
+		this.q!.pause();
 
-		this.spine.each((section: Section) => {
+		this.spine!.each((section: Section) => {
 			if (section.linear) {
-				this.q.enqueue((s: Section) => this.process(s), section);
+				this.q!.enqueue((s: Section) => this.process(s), section);
 			}
 		});
 
-		return this.q.run().then(() => {
-			this.total = this._locations.length - 1;
+		return this.q!.run().then(() => {
+			this.total = this._locations!.length - 1;
 
 			if (this._currentCfi) {
 				this.currentLocation = this._currentCfi;
 			}
 
-			return this._locations;
+			return this._locations!;
 			// console.log(this.percentage(this.book.rendition.location.start), this.percentage(this.book.rendition.location.end));
 		});
 
@@ -100,8 +100,8 @@ class Locations implements IEventEmitter {
 		return section.load(this.request)
 			.then((contents: Element) => {
 				const completed = new defer();
-				const locations = this.parse(contents, section.cfiBase);
-				this._locations = this._locations.concat(locations);
+				const locations = this.parse(contents, section.cfiBase!);
+				this._locations = this._locations!.concat(locations);
 
 				section.unload();
 
@@ -136,7 +136,7 @@ class Locations implements IEventEmitter {
 				return false; // continue
 			}
 
-			dist = _break - counter;
+			dist = _break! - counter;
 
 			// Node is smaller than a break,
 			// skip over it
@@ -147,7 +147,7 @@ class Locations implements IEventEmitter {
 
 
 			while (pos < len) {
-				dist = _break - counter;
+				dist = _break! - counter;
 
 				if (counter === 0) {
 					// Start new range
@@ -207,23 +207,23 @@ class Locations implements IEventEmitter {
 	 */
 	generateFromWords(startCfi?: string, wordCount?: number, count?: number): Promise<{ cfi: string; wordCount: number }[]> {
 		const start = startCfi ? new EpubCFI(startCfi) : undefined;
-		this.q.pause();
+		this.q!.pause();
 		this._locationsWords = [];
 		this._wordCounter = 0;
 
-		this.spine.each((section: Section) => {
+		this.spine!.each((section: Section) => {
 			if (section.linear) {
 				if (start) {
-					if (section.index >= start.spinePos) {
-						this.q.enqueue((s: Section, wc: number, st: any, c: number) => this.processWords(s, wc, st, c), section, wordCount, start, count);
+					if (section.index! >= start.spinePos) {
+						this.q!.enqueue((s: Section, wc: number, st: any, c: number) => this.processWords(s, wc, st, c), section, wordCount, start, count);
 					}
 				} else {
-					this.q.enqueue((s: Section, wc: number, st: any, c: number) => this.processWords(s, wc, st, c), section, wordCount, start, count);
+					this.q!.enqueue((s: Section, wc: number, st: any, c: number) => this.processWords(s, wc, st, c), section, wordCount, start, count);
 				}
 			}
 		});
 
-		return this.q.run().then(() => {
+		return this.q!.run().then(() => {
 			if (this._currentCfi) {
 				this.currentLocation = this._currentCfi;
 			}
@@ -341,14 +341,14 @@ class Locations implements IEventEmitter {
 			cfi = new EpubCFI(cfi);
 		}
 		// Check if the location has not been set yet
-		if(this._locations.length === 0) {
+		if(this._locations!.length === 0) {
 			return -1;
 		}
 
-		const loc = locationOf(cfi, this._locations, this.epubcfi.compare);
+		const loc = locationOf(cfi, this._locations!, this.epubcfi!.compare);
 
-		if (loc > this.total) {
-			return this.total;
+		if (loc > this.total!) {
+			return this.total!;
 		}
 
 		return loc;
@@ -360,7 +360,7 @@ class Locations implements IEventEmitter {
 	 * @return {number}
 	 */
 	percentageFromCfi(cfi: string | EpubCFI): number | null {
-		if(this._locations.length === 0) {
+		if(this._locations!.length === 0) {
 			return null;
 		}
 		// Find closest cfi
@@ -394,8 +394,8 @@ class Locations implements IEventEmitter {
 			loc = parseInt(loc);
 		}
 
-		if(loc >= 0 && loc < this._locations.length) {
-			cfi = this._locations[loc]!;
+		if(loc >= 0 && loc < this._locations!.length) {
+			cfi = this._locations![loc]!;
 		}
 
 		return cfi;
@@ -414,12 +414,12 @@ class Locations implements IEventEmitter {
 
 		// Make sure 1 goes to very end
 		if (percentage >= 1) {
-			const cfi = new EpubCFI(this._locations[this.total]);
+			const cfi = new EpubCFI(this._locations![this.total!]);
 			cfi.collapse();
 			return cfi.toString();
 		}
 
-		const loc = Math.ceil(this.total * percentage);
+		const loc = Math.ceil(this.total! * percentage);
 		return this.cfiFromLocation(loc);
 	}
 
@@ -433,8 +433,8 @@ class Locations implements IEventEmitter {
 		} else {
 			this._locations = locations;
 		}
-		this.total = this._locations.length - 1;
-		return this._locations;
+		this.total = this._locations!.length - 1;
+		return this._locations!;
 	}
 
 	/**
@@ -446,10 +446,10 @@ class Locations implements IEventEmitter {
 	}
 
 	getCurrent(): number {
-		return this._current;
+		return this._current!;
 	}
 
-	setCurrent(curr: string | number): void {
+	setCurrent(curr: string | number | undefined): void {
 		let loc;
 
 		if(typeof curr == "string"){
@@ -460,7 +460,7 @@ class Locations implements IEventEmitter {
 			return;
 		}
 
-		if(this._locations.length === 0) {
+		if(this._locations!.length === 0) {
 			return;
 		}
 
@@ -479,14 +479,14 @@ class Locations implements IEventEmitter {
 	/**
 	 * Get the current location
 	 */
-	get currentLocation(): number {
+	get currentLocation(): number | undefined {
 		return this._current;
 	}
 
 	/**
 	 * Set the current location
 	 */
-	set currentLocation(curr: string | number) {
+	set currentLocation(curr: string | number | undefined) {
 		this.setCurrent(curr);
 	}
 
@@ -494,26 +494,26 @@ class Locations implements IEventEmitter {
 	 * Locations length
 	 */
 	length (): number {
-		return this._locations.length;
+		return this._locations!.length;
 	}
 
 	destroy (): void {
-		(this as any).spine = undefined;
-		(this as any).request = undefined;
-		(this as any).pause = undefined;
+		this.spine = undefined;
+		this.request = undefined;
+		this.pause = undefined;
 
-		this.q.stop();
-		(this as any).q = undefined;
-		(this as any).epubcfi = undefined;
+		this.q?.stop();
+		this.q = undefined;
+		this.epubcfi = undefined;
 
-		(this as any)._locations = undefined;
-		(this as any).total = undefined;
+		this._locations = undefined;
+		this.total = undefined;
 
-		(this as any).break = undefined;
-		(this as any)._current = undefined;
+		this.break = undefined;
+		this._current = undefined;
 
-		(this as any).currentLocation = undefined;
-		(this as any)._currentCfi = undefined;
+		this.currentLocation = undefined;
+		this._currentCfi = undefined;
 		clearTimeout(this.processingTimeout);
 	}
 }

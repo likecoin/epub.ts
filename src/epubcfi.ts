@@ -917,7 +917,7 @@ class EpubCFI {
 			if (!map.hasOwnProperty(childIndex)) continue;
 
 			if(map[childIndex] === lastStepIndex) {
-				child = children[childIndex as any]!;
+				child = children[childIndex]!;
 				len = (child.textContent ?? "").length;
 				if(offset > len) {
 					offset = offset - len;

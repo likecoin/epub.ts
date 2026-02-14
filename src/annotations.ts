@@ -3,6 +3,7 @@ import EpubCFI from "./epubcfi";
 import { EVENTS } from "./utils/constants";
 import type { IEventEmitter } from "./types";
 import type Rendition from "./rendition";
+import type IframeView from "./managers/views/iframe";
 
 interface AnnotationView {
 	index: number;
@@ -35,8 +36,8 @@ class Annotations {
 		this._annotations = {};
 		this._annotationsBySectionIndex = {};
 
-		this.rendition.hooks.render.register((view: any) => this.inject(view));
-		this.rendition.hooks.unloaded.register((section: any) => this.clear(section));
+		this.rendition.hooks.render.register((view: IframeView) => this.inject(view));
+		this.rendition.hooks.unloaded.register((view: IframeView) => this.clear(view));
 	}
 
 	/**

@@ -13,15 +13,15 @@ import type { PageListItem } from "./types";
  * @param {document} [xml]
  */
 class PageList {
-	pages: number[];
-	locations: string[];
-	epubcfi: EpubCFI;
+	pages: number[] | undefined;
+	locations: string[] | undefined;
+	epubcfi: EpubCFI | undefined;
 	firstPage: number;
 	lastPage: number;
 	totalPages: number;
 	toc: Document | undefined;
 	ncx: Document | undefined;
-	pageList!: PageListItem[];
+	pageList: PageListItem[] | undefined;
 
 	constructor(xml?: Document) {
 		this.pages = [];
@@ -165,13 +165,13 @@ class PageList {
 	 */
 	process(pageList: PageListItem[]): void {
 		pageList.forEach((item) => {
-			this.pages.push(item.page);
+			this.pages!.push(item.page);
 			if (item.cfi) {
-				this.locations.push(item.cfi);
+				this.locations!.push(item.cfi);
 			}
 		});
-		this.firstPage = this.pages[0]!;
-		this.lastPage = this.pages[this.pages.length-1]!;
+		this.firstPage = this.pages![0]!;
+		this.lastPage = this.pages![this.pages!.length-1]!;
 		this.totalPages = this.lastPage - this.firstPage;
 	}
 
@@ -184,7 +184,7 @@ class PageList {
 		let pg = -1;
 
 		// Check if the pageList has not been set yet
-		if(this.locations.length === 0) {
+		if(this.locations!.length === 0) {
 			return -1;
 		}
 
@@ -192,16 +192,16 @@ class PageList {
 
 		// check if the cfi is in the location list
 		// var index = this.locations.indexOf(cfi);
-		let index = indexOfSorted(cfi, this.locations, this.epubcfi.compare);
+		let index = indexOfSorted(cfi, this.locations!, this.epubcfi!.compare);
 		if(index != -1) {
-			pg = this.pages[index]!;
+			pg = this.pages![index]!;
 		} else {
 			// Otherwise add it to the list of locations
 			// Insert it in the correct position in the locations page
 			//index = EPUBJS.core.insert(cfi, this.locations, this.epubcfi.compare);
-			index = locationOf(cfi, this.locations, this.epubcfi.compare);
+			index = locationOf(cfi, this.locations!, this.epubcfi!.compare);
 			// Get the page at the location just before the new one, or return the first
-			pg = index-1 >= 0 ? this.pages[index-1]! : this.pages[0]!;
+			pg = index-1 >= 0 ? this.pages![index-1]! : this.pages![0]!;
 			if(pg !== undefined) {
 				// Add the new page in so that the locations and page array match up
 				//this.pages.splice(index, 0, pg);
@@ -227,9 +227,9 @@ class PageList {
 
 		// check if the cfi is in the page list
 		// Pages could be unsorted.
-		const index = this.pages.indexOf(pg);
-		if(index != -1 && index < this.locations.length) {
-			cfi = this.locations[index]!;
+		const index = this.pages!.indexOf(pg);
+		if(index != -1 && index < this.locations!.length) {
+			cfi = this.locations![index]!;
 		}
 		// TODO: handle pages not in the list
 		return cfi;
@@ -270,11 +270,11 @@ class PageList {
 	 * Destroy
 	 */
 	destroy(): void {
-		(this as any).pages = undefined;
-		(this as any).locations = undefined;
-		(this as any).epubcfi = undefined;
+		this.pages = undefined;
+		this.locations = undefined;
+		this.epubcfi = undefined;
 
-		(this as any).pageList = undefined;
+		this.pageList = undefined;
 
 		this.toc = undefined;
 		this.ncx = undefined;

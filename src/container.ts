@@ -7,9 +7,9 @@ import {qs} from "./utils/core";
  * @param {document} [containerDocument] xml document
  */
 class Container {
-	packagePath: string;
-	directory: string;
-	encoding: string;
+	packagePath: string | undefined;
+	directory: string | undefined;
+	encoding: string | undefined;
 
 	constructor(containerDocument?: Document) {
 		this.packagePath = "";
@@ -43,9 +43,9 @@ class Container {
 	}
 
 	destroy(): void {
-		(this as any).packagePath = undefined;
-		(this as any).directory = undefined;
-		(this as any).encoding = undefined;
+		this.packagePath = undefined;
+		this.directory = undefined;
+		this.encoding = undefined;
 	}
 }
 

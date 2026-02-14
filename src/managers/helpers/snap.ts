@@ -32,25 +32,26 @@ class Snap implements IEventEmitter {
 	layout!: Layout;
 	fullsize!: boolean;
 	element!: HTMLElement;
-	scroller!: HTMLElement | Window;
+	_supportsTouch: boolean | undefined;
+	scroller: HTMLElement | Window | undefined;
 	isVertical!: boolean;
 	touchCanceler!: boolean;
 	resizeCanceler!: boolean;
 	snapping!: boolean;
 	scrollLeft!: number;
 	scrollTop!: number;
-	startTouchX!: number;
-	startTouchY!: number;
-	startTime!: number;
-	endTouchX!: number;
-	endTouchY!: number;
-	endTime!: number;
-	_onResize!: (...args: any[]) => void;
-	_onScroll!: (...args: any[]) => void;
-	_onTouchStart!: (...args: any[]) => void;
-	_onTouchMove!: (...args: any[]) => void;
-	_onTouchEnd!: (...args: any[]) => void;
-	_afterDisplayed!: (...args: any[]) => void;
+	startTouchX: number | undefined;
+	startTouchY: number | undefined;
+	startTime: number | undefined;
+	endTouchX: number | undefined;
+	endTouchY: number | undefined;
+	endTime: number | undefined;
+	_onResize: ((...args: any[]) => void) | undefined;
+	_onScroll: ((...args: any[]) => void) | undefined;
+	_onTouchStart: ((...args: any[]) => void) | undefined;
+	_onTouchMove: ((...args: any[]) => void) | undefined;
+	_onTouchEnd: ((...args: any[]) => void) | undefined;
+	_afterDisplayed: ((...args: any[]) => void) | undefined;
 
 	declare on: IEventEmitter["on"];
 	declare off: IEventEmitter["off"];
@@ -65,9 +66,9 @@ class Snap implements IEventEmitter {
 			easing: EASING_EQUATIONS["easeInCubic"]
 		}, options || {});
 
-		(this as any).supportsTouch = this.supportsTouch();
+		this._supportsTouch = this.supportsTouch();
 
-		if ((this as any).supportsTouch) {
+		if (this._supportsTouch) {
 			this.setup(manager);
 		}
 	}
@@ -109,12 +110,12 @@ class Snap implements IEventEmitter {
 		this.scrollLeft;
 		this.scrollTop;
 
-		(this as any).startTouchX = undefined;
-		(this as any).startTouchY = undefined;
-		(this as any).startTime = undefined;
-		(this as any).endTouchX = undefined;
-		(this as any).endTouchY = undefined;
-		(this as any).endTime = undefined;
+		this.startTouchX = undefined;
+		this.startTouchY = undefined;
+		this.startTime = undefined;
+		this.endTouchX = undefined;
+		this.endTouchY = undefined;
+		this.endTime = undefined;
 
 		this.addListeners();
 	}
@@ -140,18 +141,18 @@ class Snap implements IEventEmitter {
 		window.addEventListener("resize", this._onResize);
 
 		this._onScroll = this.onScroll.bind(this);
-		this.scroller.addEventListener("scroll", this._onScroll);
+		this.scroller!.addEventListener("scroll", this._onScroll);
 
 		this._onTouchStart = this.onTouchStart.bind(this);
-		this.scroller.addEventListener("touchstart", this._onTouchStart, { passive: true });
+		this.scroller!.addEventListener("touchstart", this._onTouchStart, { passive: true });
 		this.on("touchstart", this._onTouchStart);
 
 		this._onTouchMove = this.onTouchMove.bind(this);
-		this.scroller.addEventListener("touchmove", this._onTouchMove, { passive: true });
+		this.scroller!.addEventListener("touchmove", this._onTouchMove, { passive: true });
 		this.on("touchmove", this._onTouchMove);
 
 		this._onTouchEnd = this.onTouchEnd.bind(this);
-		this.scroller.addEventListener("touchend", this._onTouchEnd, { passive: true });
+		this.scroller!.addEventListener("touchend", this._onTouchEnd, { passive: true });
 		this.on("touchend", this._onTouchEnd);
 
 		this._afterDisplayed = this.afterDisplayed.bind(this);
@@ -159,26 +160,26 @@ class Snap implements IEventEmitter {
 	}
 
 	removeListeners(): void {
-		window.removeEventListener("resize", this._onResize);
-		(this as any)._onResize = undefined;
+		window.removeEventListener("resize", this._onResize!);
+		this._onResize = undefined;
 
-		this.scroller.removeEventListener("scroll", this._onScroll);
-		(this as any)._onScroll = undefined;
+		this.scroller!.removeEventListener("scroll", this._onScroll!);
+		this._onScroll = undefined;
 
-		this.scroller.removeEventListener("touchstart", this._onTouchStart, { passive: true } as EventListenerOptions);
-		this.off("touchstart", this._onTouchStart);
-		(this as any)._onTouchStart = undefined;
+		this.scroller!.removeEventListener("touchstart", this._onTouchStart!, { passive: true } as EventListenerOptions);
+		this.off("touchstart", this._onTouchStart!);
+		this._onTouchStart = undefined;
 
-		this.scroller.removeEventListener("touchmove", this._onTouchMove, { passive: true } as EventListenerOptions);
-		this.off("touchmove", this._onTouchMove);
-		(this as any)._onTouchMove = undefined;
+		this.scroller!.removeEventListener("touchmove", this._onTouchMove!, { passive: true } as EventListenerOptions);
+		this.off("touchmove", this._onTouchMove!);
+		this._onTouchMove = undefined;
 
-		this.scroller.removeEventListener("touchend", this._onTouchEnd, { passive: true } as EventListenerOptions);
-		this.off("touchend", this._onTouchEnd);
-		(this as any)._onTouchEnd = undefined;
+		this.scroller!.removeEventListener("touchend", this._onTouchEnd!, { passive: true } as EventListenerOptions);
+		this.off("touchend", this._onTouchEnd!);
+		this._onTouchEnd = undefined;
 
-		this.manager.off(EVENTS.MANAGERS.ADDED, this._afterDisplayed);
-		(this as any)._afterDisplayed = undefined;
+		this.manager.off(EVENTS.MANAGERS.ADDED, this._afterDisplayed!);
+		this._afterDisplayed = undefined;
 	}
 
 	afterDisplayed(view: { contents: Contents }): void {
@@ -223,13 +224,13 @@ class Snap implements IEventEmitter {
 
 	onTouchMove(e: TouchEvent): void {
 		const { screenX, screenY } = e.touches[0]!;
-		const deltaY = Math.abs(screenY - this.endTouchY);
+		const deltaY = Math.abs(screenY - this.endTouchY!);
 
 		this.touchCanceler = true;
 
 
 		if (!this.fullsize && deltaY < 10) {
-			this.element.scrollLeft -= screenX - this.endTouchX;
+			this.element.scrollLeft -= screenX - this.endTouchX!;
 		}
 
 		this.endTouchX = screenX;
@@ -252,19 +253,19 @@ class Snap implements IEventEmitter {
 			this.snap();
 		}
 
-		(this as any).startTouchX = undefined;
-		(this as any).startTouchY = undefined;
-		(this as any).startTime = undefined;
-		(this as any).endTouchX = undefined;
-		(this as any).endTouchY = undefined;
-		(this as any).endTime = undefined;
+		this.startTouchX = undefined;
+		this.startTouchY = undefined;
+		this.startTime = undefined;
+		this.endTouchX = undefined;
+		this.endTouchY = undefined;
+		this.endTime = undefined;
 	}
 
 	wasSwiped(): number {
 		const snapWidth = this.layout.pageWidth * this.layout.divisor;
-		const distance = (this.endTouchX - this.startTouchX);
+		const distance = (this.endTouchX! - this.startTouchX!);
 		const absolute = Math.abs(distance);
-		const time = this.endTime - this.startTime;
+		const time = this.endTime! - this.startTime!;
 		const velocity = (distance / time);
 		const minVelocity = this.settings.minVelocity;
 
@@ -364,7 +365,7 @@ class Snap implements IEventEmitter {
 
 		this.removeListeners();
 
-		(this as any).scroller = undefined;
+		this.scroller = undefined;
 	}
 }
 

@@ -9,11 +9,11 @@ import type { ThemeEntry } from "./types";
  * @param {Rendition} rendition
  */
 class Themes {
-	rendition: Rendition;
-	_themes: Record<string, ThemeEntry>;
-	_overrides: Record<string, { value: string; priority: boolean }>;
-	_current: string;
-	_injected: string[];
+	rendition: Rendition | undefined;
+	_themes: Record<string, ThemeEntry> | undefined;
+	_overrides: Record<string, { value: string; priority: boolean }> | undefined;
+	_current: string | undefined;
+	_injected: string[] | undefined;
 
 	constructor(rendition: Rendition) {
 		this.rendition = rendition;
@@ -27,8 +27,8 @@ class Themes {
 		this._overrides = {};
 		this._current = "default";
 		this._injected = [];
-		this.rendition.hooks.content.register((contents: any) => this.inject(contents));
-		this.rendition.hooks.content.register((contents: any) => this.overrides(contents));
+		this.rendition.hooks.content.register((contents: Contents) => this.inject(contents));
+		this.rendition.hooks.content.register((contents: Contents) => this.overrides(contents));
 
 	}
 
@@ -97,7 +97,7 @@ class Themes {
 	 * @param {string} css 
 	 */
 	registerCss (name: string, css: string): void {
-		this._themes[name] = { "serialized" : css };
+		this._themes![name] = { "serialized" : css };
 		if ((this._injected as unknown as Record<string, boolean>)[name] || name == "default") {
 			this.update(name);
 		}
@@ -110,7 +110,7 @@ class Themes {
 	 */
 	registerUrl (name: string, input: string): void {
 		const url = new Url(input);
-		this._themes[name] = { "url": url.toString() };
+		this._themes![name] = { "url": url.toString() };
 		if ((this._injected as unknown as Record<string, boolean>)[name] || name == "default") {
 			this.update(name);
 		}
@@ -122,7 +122,7 @@ class Themes {
 	 * @param {object} rules
 	 */
 	registerRules (name: string, rules: Record<string, Record<string, string>>): void {
-		this._themes[name] = { "rules": rules };
+		this._themes![name] = { "rules": rules };
 		// TODO: serialize css rules
 		if ((this._injected as unknown as Record<string, boolean>)[name] || name == "default") {
 			this.update(name);
@@ -139,9 +139,9 @@ class Themes {
 		this._current = name;
 		this.update(name);
 
-		const contents = this.rendition.getContents();
+		const contents = this.rendition!.getContents();
 		contents.forEach( (content: Contents) => {
-			content.removeClass(prev);
+			content.removeClass(prev!);
 			content.addClass(name);
 		});
 	}
@@ -151,7 +151,7 @@ class Themes {
 	 * @param {string} name
 	 */
 	update (name: string): void {
-		const contents = this.rendition.getContents();
+		const contents = this.rendition!.getContents();
 		contents.forEach( (content: Contents) => {
 			this.add(name, content);
 		});
@@ -172,12 +172,12 @@ class Themes {
 				if((theme.rules && Object.keys(theme.rules).length > 0) || (theme.url && links.indexOf(theme.url) === -1) || (theme.serialized)) {
 					this.add(name, contents);
 				}
-				this._injected.push(name);
+				this._injected!.push(name);
 			}
 		}
 
 		if(this._current != "default") {
-			contents.addClass(this._current);
+			contents.addClass(this._current!);
 		}
 	}
 
@@ -187,7 +187,7 @@ class Themes {
 	 * @param {Contents} contents
 	 */
 	add (name: string, contents: Contents): void {
-		const theme = this._themes[name];
+		const theme = this._themes![name];
 
 		if (!theme || !contents) {
 			return;
@@ -211,22 +211,22 @@ class Themes {
 	 * @param {boolean} priority
 	 */
 	override (name: string, value: string, priority?: boolean): void {
-		const contents = this.rendition.getContents();
+		const contents = this.rendition!.getContents();
 
-		this._overrides[name] = {
+		this._overrides![name] = {
 			value: value,
 			priority: priority === true
 		};
 
 		contents.forEach( (content: Contents) => {
-			content.css(name, this._overrides[name]!.value, this._overrides[name]!.priority);
+			content.css(name, this._overrides![name]!.value, this._overrides![name]!.priority);
 		});
 	}
 
 	removeOverride (name: string): void {
-		const contents = this.rendition.getContents();
+		const contents = this.rendition!.getContents();
 
-		delete this._overrides[name];
+		delete this._overrides![name];
 
 		contents.forEach( (content: Contents) => {
 			content.css(name);
@@ -264,11 +264,11 @@ class Themes {
 	}
 
 	destroy(): void {
-		(this as any).rendition = undefined;
-		(this as any)._themes = undefined;
-		(this as any)._overrides = undefined;
-		(this as any)._current = undefined;
-		(this as any)._injected = undefined;
+		this.rendition = undefined;
+		this._themes = undefined;
+		this._overrides = undefined;
+		this._current = undefined;
+		this._injected = undefined;
 	}
 
 }

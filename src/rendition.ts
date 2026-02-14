@@ -119,18 +119,18 @@ class Rendition implements IEventEmitter {
 		this.hooks.render = new Hook(this);
 		this.hooks.show = new Hook(this);
 
-		this.hooks.content.register((contents: any) => this.handleLinks(contents));
-		this.hooks.content.register((contents: any) => this.passEvents(contents));
-		this.hooks.content.register((contents: any) => this.adjustImages(contents));
+		this.hooks.content.register((contents: Contents) => this.handleLinks(contents));
+		this.hooks.content.register((contents: Contents) => this.passEvents(contents));
+		this.hooks.content.register((contents: Contents) => this.adjustImages(contents));
 
-		this.book!.spine!.hooks.content.register((doc: any, section: any) => this.injectIdentifier(doc, section));
+		this.book!.spine!.hooks!.content.register((doc: Document, section: Section) => this.injectIdentifier(doc, section));
 
 		if (this.settings.stylesheet) {
-			this.book!.spine!.hooks.content.register((doc: any, section: any) => this.injectStylesheet(doc, section));
+			this.book!.spine!.hooks!.content.register((doc: Document, section: Section) => this.injectStylesheet(doc, section));
 		}
 
 		if (this.settings.script) {
-			this.book!.spine!.hooks.content.register((doc: any, section: any) => this.injectScript(doc, section));
+			this.book!.spine!.hooks!.content.register((doc: Document, section: Section) => this.injectScript(doc, section));
 		}
 
 		/**
@@ -244,10 +244,10 @@ class Rendition implements IEventEmitter {
 	 * @return {Promise} rendering has started
 	 */
 	start(): void {
-		if (!this.settings.layout && (this.book!.package!.metadata.layout === "pre-paginated" || this.book!.displayOptions!.fixedLayout === "true")) {
+		if (!this.settings.layout && (this.book!.package!.metadata!.layout === "pre-paginated" || this.book!.displayOptions!.fixedLayout === "true")) {
 			this.settings.layout = "pre-paginated";
 		}
-		switch(this.book!.package!.metadata.spread) {
+		switch(this.book!.package!.metadata!.spread) {
 			case "none":
 				this.settings.spread = "none";
 				break;
@@ -268,24 +268,24 @@ class Rendition implements IEventEmitter {
 			});
 		}
 
-		this.direction(this.book!.package!.metadata.direction || this.settings.defaultDirection);
+		this.direction(this.book!.package!.metadata!.direction || this.settings.defaultDirection);
 
 		// Parse metadata to get layout props
-		this.settings.globalLayoutProperties = this.determineLayoutProperties(this.book!.package!.metadata);
+		this.settings.globalLayoutProperties = this.determineLayoutProperties(this.book!.package!.metadata!);
 
 		this.flow(this.settings.globalLayoutProperties.flow);
 
 		this.layout(this.settings.globalLayoutProperties);
 
 		// Listen for displayed views
-		this.manager.on(EVENTS.MANAGERS.ADDED, (view: any) => this.afterDisplayed(view));
-		this.manager.on(EVENTS.MANAGERS.REMOVED, (view: any) => this.afterRemoved(view));
+		this.manager.on(EVENTS.MANAGERS.ADDED, (view: IframeView) => this.afterDisplayed(view));
+		this.manager.on(EVENTS.MANAGERS.REMOVED, (view: IframeView) => this.afterRemoved(view));
 
 		// Listen for resizing
-		this.manager.on(EVENTS.MANAGERS.RESIZED, (size: any, epubcfi?: string) => this.onResized(size, epubcfi));
+		this.manager.on(EVENTS.MANAGERS.RESIZED, (size: SizeObject, epubcfi?: string) => this.onResized(size, epubcfi));
 
 		// Listen for rotation
-		this.manager.on(EVENTS.MANAGERS.ORIENTATION_CHANGE, (orientation: any) => this.onOrientationChange(orientation));
+		this.manager.on(EVENTS.MANAGERS.ORIENTATION_CHANGE, (orientation: string) => this.onOrientationChange(orientation));
 
 		// Listen for scroll changes
 		this.manager.on(EVENTS.MANAGERS.SCROLLED, () => this.reportLocation());
@@ -1091,7 +1091,7 @@ class Rendition implements IEventEmitter {
 	 * @private
 	 */
 	injectIdentifier(doc: Document, _section: Section): void {
-		const ident = this.book!.packaging!.metadata.identifier;
+		const ident = this.book!.packaging!.metadata!.identifier;
 		const meta = doc.createElement("meta");
 		meta.setAttribute("name", "dc.relation.ispartof");
 		if (ident) {

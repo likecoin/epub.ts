@@ -28,12 +28,12 @@ class IframeView implements IEventEmitter {
 	marks: Record<string, { element: HTMLAnchorElement; range: Range; listeners: (Function | undefined)[] }>;
 	iframe: HTMLIFrameElement | undefined;
 	resizing!: boolean;
-	_width!: number;
-	_height!: number;
-	_textWidth!: number;
-	_textHeight!: number;
-	_contentWidth!: number;
-	_contentHeight!: number;
+	_width: number | undefined;
+	_height: number | undefined;
+	_textWidth: number | undefined;
+	_textHeight: number | undefined;
+	_contentWidth: number | undefined;
+	_contentHeight: number | undefined;
 	_needsReframe!: boolean;
 	_expanding!: boolean;
 	elementBounds!: { width: number; height: number };
@@ -54,6 +54,7 @@ class IframeView implements IEventEmitter {
 	declare on: IEventEmitter["on"];
 	declare off: IEventEmitter["off"];
 	declare emit: IEventEmitter["emit"];
+	declare __listeners: IEventEmitter["__listeners"];
 
 	constructor(section: Section, options?: ViewSettings) {
 		this.settings = extend({
@@ -72,7 +73,7 @@ class IframeView implements IEventEmitter {
 
 		this.id = "epubjs-view-" + uuid();
 		this.section = section;
-		this.index = section.index;
+		this.index = section.index!;
 
 		this.element = this.container(this.settings.axis);
 
@@ -264,10 +265,10 @@ class IframeView implements IEventEmitter {
 			this.iframe.style.height = "0";
 			this._width = 0;
 			this._height = 0;
-			(this as any)._textWidth = undefined;
-			(this as any)._contentWidth = undefined;
-			(this as any)._textHeight = undefined;
-			(this as any)._contentHeight = undefined;
+			this._textWidth = undefined;
+			this._contentWidth = undefined;
+			this._textHeight = undefined;
+			this._contentHeight = undefined;
 		}
 		this._needsReframe = true;
 	}
@@ -462,15 +463,7 @@ class IframeView implements IEventEmitter {
 			}
 
 			this.document.open();
-			// For Cordova windows platform
-			if((window as any).MSApp && (window as any).MSApp.execUnsafeLocalFunction) {
-				const outerThis = this;
-				(window as any).MSApp.execUnsafeLocalFunction(function () {
-					outerThis.document.write(contents);
-				});
-			} else {
-				this.document.write(contents);
-			}
+			this.document.write(contents);
 			this.document.close();
 
 		}
@@ -616,11 +609,11 @@ class IframeView implements IEventEmitter {
 	}
 
 	width(): number {
-		return this._width;
+		return this._width!;
 	}
 
 	height(): number {
-		return this._height;
+		return this._height!;
 	}
 
 	position(): DOMRect {
@@ -900,13 +893,13 @@ class IframeView implements IEventEmitter {
 			this.iframe = undefined;
 			this.contents = undefined;
 
-			(this as any)._textWidth = null;
-			(this as any)._textHeight = null;
-			(this as any)._width = null;
-			(this as any)._height = null;
+			this._textWidth = undefined;
+			this._textHeight = undefined;
+			this._width = undefined;
+			this._height = undefined;
 		}
 
-		(this as any).__listeners = {};
+		this.__listeners = {};
 	}
 }
 

@@ -17,7 +17,7 @@ import Store from "./store";
 import DisplayOptions from "./displayoptions";
 import type JSZip from "jszip";
 import { EPUBJS_VERSION, EVENTS } from "./utils/constants";
-import type { IEventEmitter, BookOptions, RenditionOptions, RequestFunction, PackagingManifestObject, PackagingMetadataObject } from "./types";
+import type { IEventEmitter, BookOptions, RenditionOptions, RequestFunction, PackagingManifestObject, PackagingMetadataObject, PackagingObject } from "./types";
 import type Section from "./section";
 
 interface BookLoadingState {
@@ -358,7 +358,7 @@ class Book implements IEventEmitter {
 		return this.load(url)
 			.then((xml) => {
 				this.container = new Container(xml);
-				return this.resolve(this.container.packagePath);
+				return this.resolve(this.container.packagePath!);
 			});
 	}
 
@@ -510,7 +510,7 @@ class Book implements IEventEmitter {
 	unpack(packaging: Packaging): void {
 		this.package = packaging; //TODO: deprecated this
 
-		if (this.packaging!.metadata.layout === "") {
+		if (this.packaging!.metadata!.layout === "") {
 			// rendition:layout not set - check display options if book is pre-paginated
 			this.load(this.url!.resolve(IBOOKS_DISPLAY_OPTIONS_PATH)).then((xml) => {
 				this.displayOptions = new DisplayOptions(xml);
@@ -524,9 +524,9 @@ class Book implements IEventEmitter {
 			this.loading!.displayOptions.resolve(this.displayOptions);
 		}
 
-		this.spine!.unpack(this.packaging!, (path: string, absolute?: boolean): string => this.resolve(path, absolute), (path: string): string => this.canonical(path));
+		this.spine!.unpack(this.packaging! as unknown as PackagingObject & { baseUrl?: string; basePath?: string }, (path: string, absolute?: boolean): string => this.resolve(path, absolute), (path: string): string => this.canonical(path));
 
-		this.resources = new Resources(this.packaging!.manifest, {
+		this.resources = new Resources(this.packaging!.manifest!, {
 			archive: this.archive,
 			resolver: (path: string, absolute?: boolean): string => this.resolve(path, absolute),
 			request: (path: string, type?: string): Promise<any> => this.request(path, type),
@@ -700,14 +700,14 @@ class Book implements IEventEmitter {
 				// Remove url to use relative resolving for hrefs
 				this.url = new Url("/", "");
 				// Add hook to replace resources in contents
-				this.spine!.hooks.serialize.register(substituteResources);
+				this.spine!.hooks!.serialize.register(substituteResources);
 			});
 
 			this.storage!.on("online", () => {
 				// Restore original url
 				this.url = originalUrl;
 				// Remove hook
-				this.spine!.hooks.serialize.deregister(substituteResources);
+				this.spine!.hooks!.serialize.deregister(substituteResources);
 			});
 
 		});
@@ -739,7 +739,7 @@ class Book implements IEventEmitter {
 	 * @return {Promise} completed loading urls
 	 */
 	replacements(): Promise<void> {
-		this.spine!.hooks.serialize.register((output: string, section: Section) => {
+		this.spine!.hooks!.serialize.register((output: string, section: Section) => {
 			section.output = this.resources!.substitute(output, section.url);
 		});
 
@@ -775,7 +775,7 @@ class Book implements IEventEmitter {
 	 * @return {string} key
 	 */
 	key(identifier?: string): string {
-		const ident = identifier || this.packaging!.metadata.identifier || this.url!.filename;
+		const ident = identifier || this.packaging!.metadata!.identifier || this.url!.filename;
 		return `epubjs:${EPUBJS_VERSION}:${ident}`;
 	}
 

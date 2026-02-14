@@ -22,15 +22,15 @@ class Resources {
 		archive: Archive;
 		resolver: (href: string, absolute?: boolean) => string;
 		request: RequestFunction;
-	};
-	manifest!: PackagingManifestObject;
-	resources!: PackagingManifestItem[];
-	replacementUrls!: string[];
-	html!: PackagingManifestItem[];
-	assets!: PackagingManifestItem[];
-	css!: PackagingManifestItem[];
-	urls!: string[];
-	cssUrls!: string[];
+	} | undefined;
+	manifest: PackagingManifestObject | undefined;
+	resources: PackagingManifestItem[] | undefined;
+	replacementUrls: string[] | undefined;
+	html: PackagingManifestItem[] | undefined;
+	assets: PackagingManifestItem[] | undefined;
+	css: PackagingManifestItem[] | undefined;
+	urls: string[] | undefined;
+	cssUrls: string[] | undefined;
 
 	constructor(manifest: PackagingManifestObject, options?: { replacements?: string; archive?: Archive; resolver?: (href: string, absolute?: boolean) => string; request?: RequestFunction }) {
 		this.settings = {
@@ -74,7 +74,7 @@ class Resources {
 	split(): void {
 
 		// HTML
-		this.html = this.resources.
+		this.html = this.resources!.
 			filter(function (item){
 				if (item.type === "application/xhtml+xml" ||
 						item.type === "text/html") {
@@ -84,7 +84,7 @@ class Resources {
 			});
 
 		// Exclude HTML
-		this.assets = this.resources.
+		this.assets = this.resources!.
 			filter(function (item){
 				if (item.type !== "application/xhtml+xml" &&
 						item.type !== "text/html") {
@@ -94,7 +94,7 @@ class Resources {
 			});
 
 		// Only CSS
-		this.css = this.resources.
+		this.css = this.resources!.
 			filter(function (item){
 				if (item.type === "text/css") {
 					return true;
@@ -110,13 +110,13 @@ class Resources {
 	splitUrls(): void {
 
 		// All Assets Urls
-		this.urls = this.assets.
+		this.urls = this.assets!.
 			map((item: PackagingManifestItem): string => {
 				return item.href;
 			});
 
 		// Css Urls
-		this.cssUrls = this.css.map(function(item) {
+		this.cssUrls = this.css!.map(function(item) {
 			return item.href;
 		});
 
@@ -131,11 +131,11 @@ class Resources {
 		const parsedUrl = new Url(url);
 		const mimeType = mime.lookup(parsedUrl.filename);
 
-		if (this.settings.archive) {
-			return this.settings.archive.createUrl(url, {"base64": (this.settings.replacements === "base64")});
+		if (this.settings!.archive) {
+			return this.settings!.archive.createUrl(url, {"base64": (this.settings!.replacements === "base64")});
 		} else {
-			if (this.settings.replacements === "base64") {
-				return this.settings.request(url, "blob")
+			if (this.settings!.replacements === "base64") {
+				return this.settings!.request(url, "blob")
 					.then((blob: Blob) => {
 						return blob2base64(blob);
 					})
@@ -143,7 +143,7 @@ class Resources {
 						return createBase64Url(base64 as string, mimeType)!;
 					});
 			} else {
-				return this.settings.request(url, "blob").then((blob: Blob) => {
+				return this.settings!.request(url, "blob").then((blob: Blob) => {
 					return createBlobUrl(blob, mimeType);
 				})
 			}
@@ -155,14 +155,14 @@ class Resources {
 	 * @return {Promise}         returns replacement urls
 	 */
 	replacements(): Promise<string[]> {
-		if (this.settings.replacements === "none") {
+		if (this.settings!.replacements === "none") {
 			return new Promise((resolve: (value: string[]) => void) => {
-				resolve(this.urls);
+				resolve(this.urls!);
 			});
 		}
 
-		const replacements = this.urls.map( (url) => {
-				const absolute = this.settings.resolver(url);
+		const replacements = this.urls!.map( (url) => {
+				const absolute = this.settings!.resolver(url);
 
 				return this.createUrl(absolute).
 					catch((_err: Error): string | null => {
@@ -190,13 +190,13 @@ class Resources {
 	 */
 	replaceCss(_archive?: Archive, _resolver?: (href: string, absolute?: boolean) => string): Promise<(string | void)[]> {
 		const replaced: Promise<string | void>[] = [];
-		this.cssUrls.forEach((href: string) => {
+		this.cssUrls!.forEach((href: string) => {
 			const replacement = this.createCssFile(href)
 				.then((replacementUrl) => {
 					// switch the url in the replacementUrls
-					const indexInUrls = this.urls.indexOf(href);
+					const indexInUrls = this.urls!.indexOf(href);
 					if (replacementUrl && indexInUrls > -1) {
-						this.replacementUrls[indexInUrls] = replacementUrl;
+						this.replacementUrls![indexInUrls] = replacementUrl;
 					}
 				})
 
@@ -221,20 +221,20 @@ class Resources {
 			});
 		}
 
-		const absolute = this.settings.resolver(href);
+		const absolute = this.settings!.resolver(href);
 
 		// Get the text of the css file from the archive
 		let textResponse;
 
-		if (this.settings.archive) {
-			textResponse = this.settings.archive.getText(absolute);
+		if (this.settings!.archive) {
+			textResponse = this.settings!.archive.getText(absolute);
 		} else {
-			textResponse = this.settings.request(absolute, "text");
+			textResponse = this.settings!.request(absolute, "text");
 		}
 
 		// Get asset links relative to css file
-		const relUrls = this.urls.map( (assetHref) => {
-			const resolved = this.settings.resolver(assetHref);
+		const relUrls = this.urls!.map( (assetHref) => {
+			const resolved = this.settings!.resolver(assetHref);
 			const relative = new Path(absolute).relative(resolved);
 
 			return relative;
@@ -249,10 +249,10 @@ class Resources {
 
 		return textResponse.then( (text: string) => {
 			// Replacements in the css text
-			text = substitute(text, relUrls, this.replacementUrls);
+			text = substitute(text, relUrls, this.replacementUrls!);
 
 			// Get the new url
-			if (this.settings.replacements === "base64") {
+			if (this.settings!.replacements === "base64") {
 				newUrl = createBase64Url(text, "text/css");
 			} else {
 				newUrl = createBlobUrl(text, "text/css");
@@ -275,10 +275,10 @@ class Resources {
 	 * @return {string[]} array with relative Urls
 	 */
 	relativeTo(absolute: string, resolver?: (href: string, absolute?: boolean) => string): string[] {
-		resolver = resolver || this.settings.resolver;
+		resolver = resolver || this.settings!.resolver;
 
 		// Get Urls relative to current sections
-		return this.urls.
+		return this.urls!.
 			map((href: string): string => {
 				const resolved = resolver(href);
 				const relative = new Path(absolute).relative(resolved);
@@ -292,13 +292,13 @@ class Resources {
 	 * @return {string} url
 	 */
 	get(path: string): Promise<string> | undefined {
-		const indexInUrls = this.urls.indexOf(path);
+		const indexInUrls = this.urls!.indexOf(path);
 		if (indexInUrls === -1) {
 			return;
 		}
-		if (this.replacementUrls.length) {
+		if (this.replacementUrls!.length) {
 			return new Promise((resolve: (value: string) => void, _reject: (reason?: any) => void) => {
-				resolve(this.replacementUrls[indexInUrls]!);
+				resolve(this.replacementUrls![indexInUrls]!);
 			});
 		} else {
 			return this.createUrl(path);
@@ -317,22 +317,22 @@ class Resources {
 		if (url) {
 			relUrls = this.relativeTo(url);
 		} else {
-			relUrls = this.urls;
+			relUrls = this.urls!;
 		}
-		return substitute(content, relUrls, this.replacementUrls);
+		return substitute(content, relUrls, this.replacementUrls!);
 	}
 
 	destroy(): void {
-		(this as any).settings = undefined;
-		(this as any).manifest = undefined;
-		(this as any).resources = undefined;
-		(this as any).replacementUrls = undefined;
-		(this as any).html = undefined;
-		(this as any).assets = undefined;
-		(this as any).css = undefined;
+		this.settings = undefined;
+		this.manifest = undefined;
+		this.resources = undefined;
+		this.replacementUrls = undefined;
+		this.html = undefined;
+		this.assets = undefined;
+		this.css = undefined;
 
-		(this as any).urls = undefined;
-		(this as any).cssUrls = undefined;
+		this.urls = undefined;
+		this.cssUrls = undefined;
 	}
 }
 

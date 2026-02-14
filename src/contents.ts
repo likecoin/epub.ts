@@ -27,6 +27,7 @@ class Contents implements IEventEmitter {
 	declare on: (type: string, fn: (...args: any[]) => void) => this;
 	declare off: (type: string, fn?: (...args: any[]) => void) => this;
 	declare emit: (type: string, ...args: any[]) => void;
+	declare __listeners: IEventEmitter["__listeners"];
 
 	epubcfi: EpubCFI;
 	document: Document;
@@ -283,7 +284,7 @@ class Contents implements IEventEmitter {
 			content.style.removeProperty(property);
 		}
 
-		return (this.window.getComputedStyle(content) as Record<string, any>)[property];
+		return this.window.getComputedStyle(content).getPropertyValue(property);
 	}
 
 	/**
@@ -758,8 +759,8 @@ class Contents implements IEventEmitter {
 			$stylesheet.type = "text/css";
 			$stylesheet.rel = "stylesheet";
 			$stylesheet.href = src;
-			$stylesheet.onload = ($stylesheet as any).onreadystatechange = function(this: any): void {
-				if ( !ready && (!this.readyState || this.readyState == "complete") ) {
+			$stylesheet.onload = (): void => {
+				if (!ready) {
 					ready = true;
 					// Let apply
 					setTimeout(() => {
@@ -879,10 +880,10 @@ class Contents implements IEventEmitter {
 			$script.type = "text/javascript";
 			$script.async = true;
 			$script.src = src;
-			$script.onload = ($script as any).onreadystatechange = function(this: any): void {
-				if ( !ready && (!this.readyState || this.readyState == "complete") ) {
+			$script.onload = (): void => {
+				if (!ready) {
 					ready = true;
-					setTimeout(function(){
+					setTimeout(() => {
 						resolve(true);
 					}, 1);
 				}
@@ -1194,7 +1195,7 @@ class Contents implements IEventEmitter {
 		this.css("background-size", viewportWidth * scale + "px " + viewportHeight * scale + "px");
 
 		this.css("background-color", "transparent");
-		if (section && section.properties.includes("page-spread-left")) {
+		if (section && section.properties!.includes("page-spread-left")) {
 			// set margin since scale is weird
 			const marginLeft = width - (viewportWidth * scale);
 			this.css("margin-left", marginLeft + "px");
@@ -1235,10 +1236,10 @@ class Contents implements IEventEmitter {
 		const WRITING_MODE = prefixed("writing-mode");
 
 		if (mode && this.documentElement) {
-			(this.documentElement.style as Record<string, any>)[WRITING_MODE] = mode;
+			(this.documentElement.style as unknown as Record<string, string>)[WRITING_MODE] = mode;
 		}
 
-		return (this.window.getComputedStyle(this.documentElement) as Record<string, any>)[WRITING_MODE] || "";
+		return (this.window.getComputedStyle(this.documentElement) as unknown as Record<string, string>)[WRITING_MODE] || "";
 	}
 
 	/**
@@ -1291,7 +1292,7 @@ class Contents implements IEventEmitter {
 
 	destroy(): void {
 		this.removeListeners();
-		(this as any).__listeners = {};
+		this.__listeners = {};
 	}
 }
 

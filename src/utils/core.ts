@@ -244,18 +244,18 @@ export function indexOfSorted(item: any, array: any[], compareFunction?: (a: any
 export function bounds(el: Element): { width: number; height: number } {
 
 	const style = window.getComputedStyle(el);
-	const widthProps = ["width", "paddingRight", "paddingLeft", "marginRight", "marginLeft", "borderRightWidth", "borderLeftWidth"];
-	const heightProps = ["height", "paddingTop", "paddingBottom", "marginTop", "marginBottom", "borderTopWidth", "borderBottomWidth"];
+	const widthProps = ["width", "padding-right", "padding-left", "margin-right", "margin-left", "border-right-width", "border-left-width"];
+	const heightProps = ["height", "padding-top", "padding-bottom", "margin-top", "margin-bottom", "border-top-width", "border-bottom-width"];
 
 	let width = 0;
 	let height = 0;
 
 	widthProps.forEach(function(prop){
-		width += parseFloat((style as any)[prop]) || 0;
+		width += parseFloat(style.getPropertyValue(prop)) || 0;
 	});
 
 	heightProps.forEach(function(prop){
-		height += parseFloat((style as any)[prop]) || 0;
+		height += parseFloat(style.getPropertyValue(prop)) || 0;
 	});
 
 	return {
@@ -275,18 +275,18 @@ export function bounds(el: Element): { width: number; height: number } {
 export function borders(el: Element): { width: number; height: number } {
 
 	const style = window.getComputedStyle(el);
-	const widthProps = ["paddingRight", "paddingLeft", "marginRight", "marginLeft", "borderRightWidth", "borderLeftWidth"];
-	const heightProps = ["paddingTop", "paddingBottom", "marginTop", "marginBottom", "borderTopWidth", "borderBottomWidth"];
+	const widthProps = ["padding-right", "padding-left", "margin-right", "margin-left", "border-right-width", "border-left-width"];
+	const heightProps = ["padding-top", "padding-bottom", "margin-top", "margin-bottom", "border-top-width", "border-bottom-width"];
 
 	let width = 0;
 	let height = 0;
 
 	widthProps.forEach(function(prop){
-		width += parseFloat((style as any)[prop]) || 0;
+		width += parseFloat(style.getPropertyValue(prop)) || 0;
 	});
 
 	heightProps.forEach(function(prop){
-		height += parseFloat((style as any)[prop]) || 0;
+		height += parseFloat(style.getPropertyValue(prop)) || 0;
 	});
 
 	return {

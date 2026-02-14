@@ -26,7 +26,7 @@ class DefaultViewManager implements IEventEmitter {
 	container!: HTMLElement;
 	views!: Views;
 	_bounds!: { left: number; right: number; top: number; bottom: number; width: number; height: number };
-	_stageSize!: SizeObject;
+	_stageSize: SizeObject | undefined;
 	overflow!: string;
 	layout!: Layout;
 	mapping!: Mapping;
@@ -37,8 +37,8 @@ class DefaultViewManager implements IEventEmitter {
 	ignore!: boolean;
 	writingMode!: string;
 	_hasScrolled!: boolean;
-	_onScroll!: (...args: any[]) => void;
-	_onUnload!: (e: Event) => void;
+	_onScroll: ((...args: any[]) => void) | undefined;
+	_onUnload: ((e: Event) => void) | undefined;
 	orientationTimeout: ReturnType<typeof setTimeout> | undefined;
 	resizeTimeout!: ReturnType<typeof setTimeout>;
 	afterScrolled!: ReturnType<typeof setTimeout>;
@@ -47,6 +47,7 @@ class DefaultViewManager implements IEventEmitter {
 	declare on: IEventEmitter["on"];
 	declare off: IEventEmitter["off"];
 	declare emit: IEventEmitter["emit"];
+	declare __listeners: IEventEmitter["__listeners"];
 
 	constructor(options: ManagerOptions) {
 
@@ -181,11 +182,11 @@ class DefaultViewManager implements IEventEmitter {
 			scroller = window;
 		}
 
-		scroller.removeEventListener("scroll", this._onScroll);
-		(this as any)._onScroll = undefined;
+		scroller.removeEventListener("scroll", this._onScroll!);
+		this._onScroll = undefined;
 
-		window.removeEventListener("unload", this._onUnload);
-		(this as any)._onUnload = undefined;
+		window.removeEventListener("unload", this._onUnload!);
+		this._onUnload = undefined;
 	}
 
 	destroy(): void {
@@ -201,7 +202,7 @@ class DefaultViewManager implements IEventEmitter {
 
 		this.rendered = false;
 
-		(this as any).__listeners = {};
+		this.__listeners = {};
 	}
 
 	onOrientationChange(_e?: Event): void {
@@ -242,7 +243,7 @@ class DefaultViewManager implements IEventEmitter {
 		if (this.orientationTimeout &&
 				this.winBounds.width === this.winBounds.height) {
 			// reset the stage size for next resize
-			(this as any)._stageSize = undefined;
+			this._stageSize = undefined;
 			return;
 		}
 
@@ -284,8 +285,8 @@ class DefaultViewManager implements IEventEmitter {
 				// First page (cover) should stand alone for pre-paginated books
 				return undefined;
 			}
-			next = section.next();
-			if (next && !next.properties.includes("page-spread-left")) {
+			next = section.next?.();
+			if (next && !next.properties!.includes("page-spread-left")) {
 				return action.call(this, next);
 			}
 		}
@@ -330,7 +331,7 @@ class DefaultViewManager implements IEventEmitter {
 		this.clear();
 
 		let forceRight = false;
-		if (this.layout.name === "pre-paginated" && this.layout.divisor === 2 && section.properties.includes("page-spread-right")) {
+		if (this.layout.name === "pre-paginated" && this.layout.divisor === 2 && section.properties!.includes("page-spread-right")) {
 			forceRight = true;
 		}
 
@@ -502,7 +503,7 @@ class DefaultViewManager implements IEventEmitter {
 			if(left <= this.container.scrollWidth) {
 				this.scrollBy(this.layout.delta, 0, true);
 			} else {
-				next = this.views.last()!.section.next();
+				next = this.views.last()!.section.next?.();
 			}
 		} else if (this.isPaginated && this.settings.axis === "horizontal" && dir === "rtl") {
 
@@ -514,7 +515,7 @@ class DefaultViewManager implements IEventEmitter {
 				if (left > 0) {
 					this.scrollBy(this.layout.delta, 0, true);
 				} else {
-					next = this.views.last()!.section.next();
+					next = this.views.last()!.section.next?.();
 				}
 			} else {
 				left = this.container.scrollLeft + ( this.layout.delta * -1 );
@@ -522,7 +523,7 @@ class DefaultViewManager implements IEventEmitter {
 				if (left > this.container.scrollWidth * -1){
 					this.scrollBy(this.layout.delta, 0, true);
 				} else {
-					next = this.views.last()!.section.next();
+					next = this.views.last()!.section.next?.();
 				}
 			}
 
@@ -535,11 +536,11 @@ class DefaultViewManager implements IEventEmitter {
 			if(!reachedBottom) {
 				this.scrollBy(0, this.layout.height, true);
 			} else {
-				next = this.views.last()!.section.next();
+				next = this.views.last()!.section.next?.();
 			}
 
 		} else {
-			next = this.views.last()!.section.next();
+			next = this.views.last()!.section.next?.();
 		}
 
 		if(next) {
@@ -548,7 +549,7 @@ class DefaultViewManager implements IEventEmitter {
 			this.updateLayout();
 
 			let forceRight = false;
-			if (this.layout.name === "pre-paginated" && this.layout.divisor === 2 && next.properties.includes("page-spread-right")) {
+			if (this.layout.name === "pre-paginated" && this.layout.divisor === 2 && next.properties!.includes("page-spread-right")) {
 				forceRight = true;
 			}
 
@@ -591,7 +592,7 @@ class DefaultViewManager implements IEventEmitter {
 			if(left > 0) {
 				this.scrollBy(-this.layout.delta, 0, true);
 			} else {
-				prev = this.views.first()!.section.prev();
+				prev = this.views.first()!.section.prev?.();
 			}
 
 		} else if (this.isPaginated && this.settings.axis === "horizontal" && dir === "rtl") {
@@ -604,7 +605,7 @@ class DefaultViewManager implements IEventEmitter {
 				if (left < this.container.scrollWidth) {
 					this.scrollBy(-this.layout.delta, 0, true);
 				} else {
-					prev = this.views.first()!.section.prev();
+					prev = this.views.first()!.section.prev?.();
 				}
 			}
 			else{
@@ -613,7 +614,7 @@ class DefaultViewManager implements IEventEmitter {
 				if (left < 0) {
 					this.scrollBy(-this.layout.delta, 0, true);
 				} else {
-					prev = this.views.first()!.section.prev();
+					prev = this.views.first()!.section.prev?.();
 				}
 			}
 
@@ -626,12 +627,12 @@ class DefaultViewManager implements IEventEmitter {
 			if(top > 0) {
 				this.scrollBy(0, -(this.layout.height), true);
 			} else {
-				prev = this.views.first()!.section.prev();
+				prev = this.views.first()!.section.prev?.();
 			}
 
 		} else {
 
-			prev = this.views.first()!.section.prev();
+			prev = this.views.first()!.section.prev?.();
 
 		}
 
@@ -641,14 +642,14 @@ class DefaultViewManager implements IEventEmitter {
 			this.updateLayout();
 
 			let forceRight = false;
-			if (this.layout.name === "pre-paginated" && this.layout.divisor === 2 && typeof prev.prev() !== "object") {
+			if (this.layout.name === "pre-paginated" && this.layout.divisor === 2 && typeof prev.prev?.() !== "object") {
 				forceRight = true;
 			}
 
 			return this.prepend(prev, forceRight)
 				.then(() => {
 					if (this.layout.name === "pre-paginated" && this.layout.divisor > 1) {
-						const left = prev.prev();
+						const left = prev.prev?.();
 						if (left) {
 							return this.prepend(left);
 						}
@@ -722,7 +723,8 @@ class DefaultViewManager implements IEventEmitter {
 		}
 
 		const sections = visible.map((view) => {
-			const {index, href} = view.section;
+			const index = view.section.index!;
+			const href = view.section.href!;
 			const position = view.position();
 			const width = view.width();
 			const height = view.height();
@@ -761,7 +763,7 @@ class DefaultViewManager implements IEventEmitter {
 				pages.push(pg);
 			}
 
-			const mapping = this.mapping.page(view.contents!, view.section.cfiBase, startPos, endPos);
+			const mapping = this.mapping.page(view.contents!, view.section.cfiBase!, startPos, endPos);
 
 			return {
 				index,
@@ -787,7 +789,8 @@ class DefaultViewManager implements IEventEmitter {
 		}
 
 		const sections = visible.map((view) => {
-			const {index, href} = view.section;
+			const index = view.section.index!;
+			const href = view.section.href!;
 			let offset;
 			const position = view.position();
 			const width = view.width();
@@ -811,7 +814,7 @@ class DefaultViewManager implements IEventEmitter {
 
 			used += pageWidth;
 
-			const mapping = this.mapping.page(view.contents!, view.section.cfiBase, start, end);
+			const mapping = this.mapping.page(view.contents!, view.section.cfiBase!, start, end);
 
 			const totalPages = this.layout.count(width).pages;
 			let startPage = Math.floor(start / this.layout.pageWidth);

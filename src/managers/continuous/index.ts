@@ -17,7 +17,7 @@ function debounce(func: Function, wait: number): (...args: any[]) => void {
 }
 
 class ContinuousViewManager extends DefaultViewManager {
-	snapper!: Snap;
+	snapper: Snap | undefined;
 	tick!: typeof requestAnimationFrame;
 	scrollDeltaVert!: number;
 	scrollDeltaHorz!: number;
@@ -305,7 +305,7 @@ class ContinuousViewManager extends DefaultViewManager {
 
 		const prepend = (): void => {
 			const first = this.views.first();
-			const prev = first && first.section.prev();
+			const prev = first && first.section.prev?.();
 
 			if(prev) {
 				newViews.push(this.prepend(prev));
@@ -314,7 +314,7 @@ class ContinuousViewManager extends DefaultViewManager {
 
 		const append = (): void => {
 			const last = this.views.last();
-			const next = last && last.section.next();
+			const next = last && last.section.next?.();
 
 			if(next) {
 				newViews.push(this.append(next));
@@ -477,11 +477,11 @@ class ContinuousViewManager extends DefaultViewManager {
 			scroller = window;
 		}
 
-		scroller.removeEventListener("scroll", this._onScroll);
-		(this as any)._onScroll = undefined;
+		scroller.removeEventListener("scroll", this._onScroll!);
+		this._onScroll = undefined;
 
-		window.removeEventListener("unload", this._onUnload);
-		(this as any)._onUnload = undefined;
+		window.removeEventListener("unload", this._onUnload!);
+		this._onUnload = undefined;
 	}
 
 	onScroll(): void {
@@ -602,7 +602,7 @@ class ContinuousViewManager extends DefaultViewManager {
 	updateFlow(flow: string): void {
 		if (this.rendered && this.snapper) {
 			this.snapper.destroy();
-			(this as any).snapper = undefined;
+			this.snapper = undefined;
 		}
 
 		super.updateFlow(flow, "scroll");

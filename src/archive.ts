@@ -9,7 +9,7 @@ import JSZip from "jszip";
  * @class
  */
 class Archive {
-	zip: JSZip;
+	zip: JSZip | undefined;
 	urlCache: Record<string, string>;
 
 	constructor() {
@@ -40,7 +40,7 @@ class Archive {
 	 * @return {Promise} zipfile
 	 */
 	open(input: ArrayBuffer | string | Blob, isBase64?: boolean): Promise<JSZip> {
-		return this.zip.loadAsync(input, {"base64": isBase64});
+		return this.zip!.loadAsync(input, {"base64": isBase64});
 	}
 
 	/**
@@ -52,7 +52,7 @@ class Archive {
 	openUrl(zipUrl: string, isBase64?: boolean): Promise<JSZip> {
 		return request(zipUrl, "binary")
 			.then((data: ArrayBuffer) => {
-				return this.zip.loadAsync(data, {"base64": isBase64});
+				return this.zip!.loadAsync(data, {"base64": isBase64});
 			});
 	}
 
@@ -131,7 +131,7 @@ class Archive {
 	 */
 	getBlob(url: string, mimeType?: string): Promise<Blob> | undefined {
 		const decodededUrl = window.decodeURIComponent(url.substr(1)); // Remove first slash
-		const entry = this.zip.file(decodededUrl);
+		const entry = this.zip!.file(decodededUrl);
 
 		if(entry) {
 			mimeType = mimeType || mime.lookup(entry.name);
@@ -150,7 +150,7 @@ class Archive {
 	 */
 	getText(url: string, _encoding?: string): Promise<string> | undefined {
 		const decodededUrl = window.decodeURIComponent(url.substr(1)); // Remove first slash
-		const entry = this.zip.file(decodededUrl);
+		const entry = this.zip!.file(decodededUrl);
 
 		if(entry) {
 			return entry.async("string").then(function(text: string) {
@@ -168,7 +168,7 @@ class Archive {
 	 */
 	getBase64(url: string, mimeType?: string): Promise<string> | undefined {
 		const decodededUrl = window.decodeURIComponent(url.substr(1)); // Remove first slash
-		const entry = this.zip.file(decodededUrl);
+		const entry = this.zip!.file(decodededUrl);
 
 		if(entry) {
 			mimeType = mimeType || mime.lookup(entry.name);
@@ -252,7 +252,7 @@ class Archive {
 		for (const fromCache in this.urlCache) {
 			_URL.revokeObjectURL(fromCache);
 		}
-		(this as any).zip = undefined;
+		this.zip = undefined;
 		this.urlCache = {};
 	}
 }

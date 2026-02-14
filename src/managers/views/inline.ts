@@ -20,12 +20,12 @@ class InlineView implements IEventEmitter {
 	fixedHeight: number;
 	epubcfi: any;
 	layout: any;
-	frame!: HTMLDivElement;
+	frame: HTMLDivElement | undefined;
 	resizing!: boolean;
-	_width!: number;
-	_height!: number;
-	_textWidth!: number;
-	_textHeight!: number;
+	_width: number | undefined;
+	_height: number | undefined;
+	_textWidth: number | undefined;
+	_textHeight: number | undefined;
 	_needsReframe!: boolean;
 	_expanding!: boolean;
 	elementBounds: any;
@@ -273,11 +273,11 @@ class InlineView implements IEventEmitter {
 	}
 
 	contentWidth(_min?: number): number {
-		return this.frame.scrollWidth;
+		return this.frame!.scrollWidth;
 	}
 
 	contentHeight(_min?: number): number {
-		return this.frame.scrollHeight;
+		return this.frame!.scrollHeight;
 	}
 
 
@@ -335,12 +335,12 @@ class InlineView implements IEventEmitter {
 				}
 			}.bind(this));
 		*/
-		this.frame.innerHTML = body!.innerHTML;
+		this.frame!.innerHTML = body!.innerHTML;
 
-		this.document = this.frame.ownerDocument;
+		this.document = this.frame!.ownerDocument;
 		this.window = this.document.defaultView!;
 
-		this.contents = new Contents(this.document, this.frame);
+		this.contents = new Contents(this.document, this.frame!);
 
 		this.rendering = false;
 
@@ -407,7 +407,7 @@ class InlineView implements IEventEmitter {
 	hide(): void {
 		// this.frame.style.display = "none";
 		this.element.style.visibility = "hidden";
-		this.frame.style.visibility = "hidden";
+		this.frame!.style.visibility = "hidden";
 
 		this.stopExpanding = true;
 		this.emit(EVENTS.VIEWS.HIDDEN, this);
@@ -418,7 +418,7 @@ class InlineView implements IEventEmitter {
 	}
 
 	locationOf(target: any): { left: number; top: number } {
-		const parentPos = this.frame.getBoundingClientRect();
+		const parentPos = this.frame!.getBoundingClientRect();
 		const targetPos = this.contents.locationOf(target, this.settings.ignoreClass);
 
 		return {
@@ -450,14 +450,14 @@ class InlineView implements IEventEmitter {
 			this.removeListeners();
 
 			this.stopExpanding = true;
-			this.element.removeChild(this.frame);
+			this.element.removeChild(this.frame!);
 			this.displayed = false;
-			(this as any).frame = undefined;
+			this.frame = undefined;
 
-			(this as any)._textWidth = undefined;
-			(this as any)._textHeight = undefined;
-			(this as any)._width = undefined;
-			(this as any)._height = undefined;
+			this._textWidth = undefined;
+			this._textHeight = undefined;
+			this._width = undefined;
+			this._height = undefined;
 		}
 		// this.element.style.height = "0px";
 		// this.element.style.width = "0px";

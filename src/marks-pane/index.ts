@@ -12,15 +12,17 @@ function svgCreate(name: string): SVGElement {
 // -- Mouse event proxying --
 
 function proxyMouse(target: HTMLElement | HTMLIFrameElement, tracked: Mark[]): void {
-	function dispatch(e: any): void {
+	function dispatch(e: MouseEvent | TouchEvent): void {
 		for (let i = tracked.length - 1; i >= 0; i--) {
 			const t = tracked[i]!;
-			let x = e.clientX;
-			let y = e.clientY;
+			let x: number, y: number;
 
-			if (e.touches && e.touches.length) {
-				x = e.touches[0].clientX;
-				y = e.touches[0].clientY;
+			if ("touches" in e && e.touches.length) {
+				x = e.touches[0]!.clientX;
+				y = e.touches[0]!.clientY;
+			} else {
+				x = (e as MouseEvent).clientX;
+				y = (e as MouseEvent).clientY;
 			}
 
 			if (!hitTest(t, target, x, y)) {
@@ -44,21 +46,22 @@ function proxyMouse(target: HTMLElement | HTMLIFrameElement, tracked: Mark[]): v
 	}
 
 	for (const ev of ["mouseup", "mousedown", "click", "touchstart"]) {
-		eventTarget!.addEventListener(ev, (e) => dispatch(e), false);
+		eventTarget!.addEventListener(ev, (e) => dispatch(e as MouseEvent | TouchEvent), false);
 	}
 }
 
-function cloneEvent(e: any): MouseEvent {
-	const opts = Object.assign({}, e, { bubbles: false });
+function cloneEvent(e: MouseEvent | TouchEvent): MouseEvent {
+	const opts = Object.assign({}, e, { bubbles: false }) as MouseEventInit;
 	try {
 		return new MouseEvent(e.type, opts);
 	} catch (_err) {
+		const me = e as MouseEvent;
 		const copy = document.createEvent("MouseEvents");
-		copy.initMouseEvent(e.type, false, opts.cancelable, opts.view,
-			opts.detail, opts.screenX, opts.screenY,
-			opts.clientX, opts.clientY, opts.ctrlKey,
-			opts.altKey, opts.shiftKey, opts.metaKey,
-			opts.button, opts.relatedTarget);
+		copy.initMouseEvent(e.type, false, me.cancelable, me.view!,
+			me.detail, me.screenX, me.screenY,
+			me.clientX, me.clientY, me.ctrlKey,
+			me.altKey, me.shiftKey, me.metaKey,
+			me.button, me.relatedTarget);
 		return copy;
 	}
 }
@@ -102,7 +105,7 @@ function coords(el: Element, container: Element): { top: number; left: number; h
 	};
 }
 
-function setCoords(el: any, c: { top: number; left: number; height: number; width: number }): void {
+function setCoords(el: SVGElement | HTMLElement, c: { top: number; left: number; height: number; width: number }): void {
 	el.style.setProperty("top", `${c.top}px`, "important");
 	el.style.setProperty("left", `${c.left}px`, "important");
 	el.style.setProperty("height", `${c.height}px`, "important");
@@ -204,9 +207,9 @@ export class Mark {
 
 	getClientRects(): DOMRect[] {
 		const rects: DOMRect[] = [];
-		let el = this.element!.firstChild as any;
+		let el: ChildNode | null = this.element!.firstChild;
 		while (el) {
-			rects.push(el.getBoundingClientRect());
+			rects.push((el as Element).getBoundingClientRect());
 			el = el.nextSibling;
 		}
 		return rects;
@@ -276,10 +279,10 @@ export class Highlight extends Mark {
 		for (let i = 0, len = filtered.length; i < len; i++) {
 			const r = filtered[i]!;
 			const el = svgCreate("rect");
-			el.setAttribute("x", (r.left - offset.left + container.left) as any);
-			el.setAttribute("y", (r.top - offset.top + container.top) as any);
-			el.setAttribute("height", r.height as any);
-			el.setAttribute("width", r.width as any);
+			el.setAttribute("x", String(r.left - offset.left + container.left));
+			el.setAttribute("y", String(r.top - offset.top + container.top));
+			el.setAttribute("height", String(r.height));
+			el.setAttribute("width", String(r.width));
 			docFrag.appendChild(el);
 		}
 
@@ -306,19 +309,19 @@ export class Underline extends Highlight {
 			const r = filtered[i]!;
 
 			const rect = svgCreate("rect");
-			rect.setAttribute("x", (r.left - offset.left + container.left) as any);
-			rect.setAttribute("y", (r.top - offset.top + container.top) as any);
-			rect.setAttribute("height", r.height as any);
-			rect.setAttribute("width", r.width as any);
+			rect.setAttribute("x", String(r.left - offset.left + container.left));
+			rect.setAttribute("y", String(r.top - offset.top + container.top));
+			rect.setAttribute("height", String(r.height));
+			rect.setAttribute("width", String(r.width));
 			rect.setAttribute("fill", "none");
 
 			const line = svgCreate("line");
-			line.setAttribute("x1", (r.left - offset.left + container.left) as any);
-			line.setAttribute("x2", (r.left - offset.left + container.left + r.width) as any);
-			line.setAttribute("y1", (r.top - offset.top + container.top + r.height - 1) as any);
-			line.setAttribute("y2", (r.top - offset.top + container.top + r.height - 1) as any);
+			line.setAttribute("x1", String(r.left - offset.left + container.left));
+			line.setAttribute("x2", String(r.left - offset.left + container.left + r.width));
+			line.setAttribute("y1", String(r.top - offset.top + container.top + r.height - 1));
+			line.setAttribute("y2", String(r.top - offset.top + container.top + r.height - 1));
 
-			line.setAttribute("stroke-width", 1 as any);
+			line.setAttribute("stroke-width", "1");
 			line.setAttribute("stroke", "black");
 			line.setAttribute("stroke-linecap", "square");
 

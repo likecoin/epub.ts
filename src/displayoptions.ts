@@ -6,10 +6,10 @@ import {qs, qsa } from "./utils/core";
  * @param {document} displayOptionsDocument XML
  */
 class DisplayOptions {
-	interactive: string;
-	fixedLayout: string;
-	openToSpread: string;
-	orientationLock: string;
+	interactive: string | undefined;
+	fixedLayout: string | undefined;
+	openToSpread: string | undefined;
+	orientationLock: string | undefined;
 
 	constructor(displayOptionsDocument?: Document) {
 		this.interactive = "";
@@ -45,7 +45,7 @@ class DisplayOptions {
 				value = el.childNodes[0]!.nodeValue ?? "";
 			}
 
-			switch ((el.attributes as any).name.value) {
+			switch (el.getAttribute("name") ?? "") {
 			    case "interactive":
 			        this.interactive = value;
 			        break;
@@ -65,10 +65,10 @@ class DisplayOptions {
 	}
 
 	destroy(): void {
-		(this as any).interactive = undefined;
-		(this as any).fixedLayout = undefined;
-		(this as any).openToSpread = undefined;
-		(this as any).orientationLock = undefined;
+		this.interactive = undefined;
+		this.fixedLayout = undefined;
+		this.openToSpread = undefined;
+		this.orientationLock = undefined;
 	}
 }
 

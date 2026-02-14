@@ -14,17 +14,17 @@ import type { SpineItem, GlobalLayout, SearchResult, RequestFunction } from "./t
  * @param {object} hooks hooks for serialize and content
  */
 class Section {
-	idref: string;
-	linear: boolean;
-	properties: string[];
-	index: number;
-	href: string;
-	url: string;
+	idref: string | undefined;
+	linear: boolean | undefined;
+	properties: string[] | undefined;
+	index: number | undefined;
+	href: string | undefined;
+	url: string | undefined;
 	canonical: string;
-	next: () => Section | undefined;
-	prev: () => Section | undefined;
-	cfiBase: string;
-	hooks: { serialize: Hook; content: Hook };
+	next: (() => Section | undefined) | undefined;
+	prev: (() => Section | undefined) | undefined;
+	cfiBase: string | undefined;
+	hooks: { serialize: Hook; content: Hook } | undefined;
 	document: Document | undefined;
 	contents: Element | undefined;
 	output: string | undefined;
@@ -47,8 +47,8 @@ class Section {
 			this.hooks = hooks;
 		} else {
 			this.hooks = {} as any;
-			this.hooks.serialize = new Hook(this);
-			this.hooks.content = new Hook(this);
+			this.hooks!.serialize = new Hook(this);
+			this.hooks!.content = new Hook(this);
 		}
 
 		this.document = undefined;
@@ -69,14 +69,14 @@ class Section {
 		if(this.contents) {
 			loading.resolve(this.contents);
 		} else {
-			request(this.url)
+			request(this.url!)
 				.then((xml: Document) => {
 					// var directory = new Url(this.url).directory;
 
 					this.document = xml;
 					this.contents = xml.documentElement;
 
-					return this.hooks.content.trigger(this.document, this);
+					return this.hooks!.content.trigger(this.document, this);
 				})
 				.then(() => {
 					loading.resolve(this.contents);
@@ -94,7 +94,7 @@ class Section {
 	 * @private
 	 */
 	base(): void {
-		return replaceBase(this.document!, this);
+		return replaceBase(this.document!, this as unknown as { url: string });
 	}
 
 	/**
@@ -112,7 +112,7 @@ class Section {
 				return this.output;
 			}).
 			then(() => {
-				return this.hooks.serialize.trigger(this.output, this);
+				return this.hooks!.serialize.trigger(this.output, this);
 			}).
 			then(() => {
 				rendering.resolve(this.output);
@@ -261,7 +261,7 @@ class Section {
 		};
 
 		//-- Get the chapter's display type
-		this.properties.forEach(function(prop){
+		this.properties!.forEach(function(prop){
 			const rendition = prop.replace("rendition:", "");
 			const split = rendition.indexOf("-");
 			let property, value;
@@ -305,20 +305,20 @@ class Section {
 
 	destroy(): void {
 		this.unload();
-		this.hooks.serialize.clear();
-		this.hooks.content.clear();
+		this.hooks!.serialize.clear();
+		this.hooks!.content.clear();
 
-		(this as any).hooks = undefined;
-		(this as any).idref = undefined;
-		(this as any).linear = undefined;
-		(this as any).properties = undefined;
-		(this as any).index = undefined;
-		(this as any).href = undefined;
-		(this as any).url = undefined;
-		(this as any).next = undefined;
-		(this as any).prev = undefined;
+		this.hooks = undefined;
+		this.idref = undefined;
+		this.linear = undefined;
+		this.properties = undefined;
+		this.index = undefined;
+		this.href = undefined;
+		this.url = undefined;
+		this.next = undefined;
+		this.prev = undefined;
 
-		(this as any).cfiBase = undefined;
+		this.cfiBase = undefined;
 	}
 }
 
