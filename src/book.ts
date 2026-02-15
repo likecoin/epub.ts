@@ -669,7 +669,9 @@ class Book implements IEventEmitter {
 	 */
 	store(name: string | boolean): Store {
 		// Use "blobUrl" or "base64" for replacements
-		const replacementsSetting = this.settings.replacements && this.settings.replacements !== "none";
+		const replacementsSetting = this.settings.replacements && this.settings.replacements !== "none"
+			? this.settings.replacements
+			: undefined;
 		// Save original url
 		const originalUrl = this.url;
 		// Save original request method
@@ -689,7 +691,7 @@ class Book implements IEventEmitter {
 			};
 
 			// Set to use replacements
-			this.resources!.settings!.replacements = (replacementsSetting || "blobUrl") as string;
+			this.resources!.settings!.replacements = replacementsSetting || "blobUrl";
 			// Create replacement urls
 			this.resources!.replacements().
 				then(() => {
