@@ -312,3 +312,11 @@ export interface ParsedPath {
 	ext: string;
 	name: string;
 }
+
+// ===== Window Augmentation =====
+declare global {
+	interface Window {
+		webkitURL?: typeof URL;
+		mozURL?: typeof URL;
+	}
+}
