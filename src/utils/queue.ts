@@ -1,5 +1,11 @@
 import {defer, requestAnimationFrame} from "./core";
 
+interface QueueItem {
+	task?: (...args: unknown[]) => unknown;
+	args: unknown[];
+	deferred?: defer;
+	promise: Promise<unknown>;
+}
 
 /**
  * Queue for handling tasks one at a time
@@ -7,14 +13,14 @@ import {defer, requestAnimationFrame} from "./core";
  * @param {scope} context what this will resolve to in the tasks
  */
 class Queue {
-	_q: any[];
-	context: any;
-	tick: any;
-	running: any;
+	_q: QueueItem[];
+	context: object | undefined;
+	tick: ((cb: FrameRequestCallback) => number) | false;
+	running: boolean | Promise<void> | undefined;
 	paused: boolean;
-	defered: any;
+	defered: defer | undefined;
 
-	constructor(context: any){
+	constructor(context?: object){
 		this._q = [];
 		this.context = context;
 		this.tick = requestAnimationFrame;
@@ -26,9 +32,11 @@ class Queue {
 	 * Add an item to the queue
 	 * @return {Promise}
 	 */
-	enqueue(..._args: any[]): Promise<any> {
+	enqueue<R>(promise: Promise<R>): Promise<R>;
+	enqueue<A extends unknown[], R>(task: (...args: A) => R, ...args: A): Promise<Awaited<R>>;
+	enqueue(..._args: unknown[]): Promise<unknown> {
 		let deferred, promise;
-		let queued;
+		let queued: QueueItem;
 		const [task, ...args] = _args;
 
 		// Handle single args without context
@@ -45,7 +53,7 @@ class Queue {
 			promise = deferred.promise;
 
 			queued = {
-				"task" : task,
+				"task" : task as (...args: unknown[]) => unknown,
 				"args"     : args,
 				//"context"  : context,
 				"deferred" : deferred,
@@ -55,7 +63,8 @@ class Queue {
 		} else {
 			// Task is a promise
 			queued = {
-				"promise" : task
+				"args": [],
+				"promise" : task as Promise<unknown>
 			};
 
 		}
@@ -76,41 +85,37 @@ class Queue {
 	 * Run one item
 	 * @return {Promise}
 	 */
-	dequeue(): any {
-		let inwait: any, task, result;
+	dequeue(): Promise<unknown> | undefined {
+		let inwait: QueueItem, task, result;
 
 		if(this._q.length && !this.paused) {
-			inwait = this._q.shift();
+			inwait = this._q.shift()!;
 			task = inwait.task;
 			if(task){
 				// console.log(task)
 
 				result = task.call(this.context, ...inwait.args);
 
-				if(result && typeof result["then"] === "function") {
+				if(result && typeof (result as Promise<unknown>)["then"] === "function") {
 					// Task is a function that returns a promise
-					return result.then((...args: any[]) => {
-						inwait.deferred.resolve(...args);
-					}, (...args: any[]) => {
-						inwait.deferred.reject(...args);
+					return (result as Promise<unknown>).then((...args: unknown[]) => {
+						inwait.deferred!.resolve(...args);
+					}, (...args: unknown[]) => {
+						inwait.deferred!.reject(...args);
 					});
 				} else {
 					// Task resolves immediately
-					inwait.deferred.resolve(result);
+					inwait.deferred!.resolve(result);
 					return inwait.promise;
 				}
 
-
-
-			} else if(inwait.promise) {
+			} else {
 				// Task is a promise
 				return inwait.promise;
 			}
 
 		} else {
-			inwait = new defer();
-			inwait.resolve();
-			return inwait.promise;
+			return Promise.resolve();
 		}
 
 	}
@@ -126,57 +131,60 @@ class Queue {
 	 * Run all tasks sequentially, at convince
 	 * @return {Promise}
 	 */
-	run(): Promise<any> {
+	run(): Promise<void> {
 
 		if(!this.running){
 			this.running = true;
 			this.defered = new defer();
 		}
 
-		this.tick(() => {
+		if (this.tick) {
+			this.tick(() => {
 
-			if(this._q.length) {
+				if(this._q.length) {
 
-				this.dequeue()
-					.then(() => {
-						this.run();
-					});
+					this.dequeue()
+						?.then(() => {
+							this.run();
+						});
 
-			} else {
-				this.defered.resolve();
-				this.running = undefined;
-			}
+				} else {
+					this.defered!.resolve();
+					this.running = undefined;
+				}
 
-		});
+			});
+		}
 
 		// Unpause
 		if(this.paused == true) {
 			this.paused = false;
 		}
 
-		return this.defered.promise;
+		return this.defered!.promise;
 	}
 
 	/**
 	 * Flush all, as quickly as possible
 	 * @return {Promise}
 	 */
-	flush(): any {
+	flush(): Promise<void> | undefined {
 
 		if(this.running){
-			return this.running;
+			return this.running as Promise<void>;
 		}
 
 		if(this._q.length) {
 			this.running = this.dequeue()
-				.then(() => {
+				?.then(() => {
 					this.running = undefined;
 					return this.flush();
-				});
+				}) as Promise<void>;
 
-			return this.running;
+			return this.running as Promise<void>;
 		}
 
+		return undefined;
 	}
 
 	/**
@@ -222,12 +230,12 @@ class Queue {
  * @return {function} task
  */
 class Task {
-	constructor(task: Function, args: any[], context: any){
+	constructor(task: (...args: unknown[]) => void, args: unknown[], context?: object){
 
-		return function(this: unknown, ...toApply: any[]): Promise<any> {
+		return function(this: unknown, ...toApply: unknown[]): Promise<unknown> {
 
 			return new Promise( (resolve, reject) => {
-				const callback = function(value: any, err: any): void {
+				const callback = function(value: unknown, err: unknown): void {
 					if (!value && err) {
 						reject(err);
 					} else {

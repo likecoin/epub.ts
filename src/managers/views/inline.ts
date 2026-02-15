@@ -3,12 +3,14 @@ import {extend, borders, uuid, isNumber, bounds, defer, qs, parse} from "../../u
 import EpubCFI from "../../epubcfi";
 import Contents from "../../contents";
 import { EVENTS } from "../../utils/constants";
-import type { IEventEmitter, ViewSettings } from "../../types";
+import type Section from "../../section";
+import type Layout from "../../layout";
+import type { IEventEmitter, ViewSettings, RequestFunction, SizeObject, ReframeBounds } from "../../types";
 
 class InlineView implements IEventEmitter {
-	settings: any;
+	settings: ViewSettings & { layout: Layout };
 	id: string;
-	section: any;
+	section: Section;
 	index: number;
 	element: HTMLElement;
 	added: boolean;
@@ -18,8 +20,8 @@ class InlineView implements IEventEmitter {
 	height: number;
 	fixedWidth: number;
 	fixedHeight: number;
-	epubcfi: any;
-	layout: any;
+	epubcfi: EpubCFI;
+	layout: Layout;
 	frame: HTMLDivElement | undefined;
 	resizing!: boolean;
 	_width: number | undefined;
@@ -28,13 +30,13 @@ class InlineView implements IEventEmitter {
 	_textHeight: number | undefined;
 	_needsReframe!: boolean;
 	_expanding!: boolean;
-	elementBounds: any;
-	prevBounds: any;
+	elementBounds: SizeObject | undefined;
+	prevBounds: SizeObject | undefined;
 	lockedWidth!: number;
 	lockedHeight!: number;
 	document!: Document;
 	window!: Window;
-	contents: any;
+	contents: Contents | undefined;
 	rendering!: boolean;
 	stopExpanding!: boolean;
 
@@ -42,7 +44,7 @@ class InlineView implements IEventEmitter {
 	declare off: IEventEmitter["off"];
 	declare emit: IEventEmitter["emit"];
 
-	constructor(section: any, options?: ViewSettings) {
+	constructor(section: Section, options?: ViewSettings) {
 		this.settings = extend({
 			ignoreClass : "",
 			axis: "vertical",
@@ -50,11 +52,11 @@ class InlineView implements IEventEmitter {
 			height: 0,
 			layout: undefined,
 			globalLayoutProperties: {},
-		}, options || {});
+		}, options || {}) as ViewSettings & { layout: Layout };
 
 		this.id = "epubjs-view:" + uuid();
 		this.section = section;
-		this.index = section.index;
+		this.index = section.index!;
 
 		this.element = this.container(this.settings.axis);
 
@@ -62,8 +64,8 @@ class InlineView implements IEventEmitter {
 		this.displayed = false;
 		this.rendered = false;
 
-		this.width  = this.settings.width;
-		this.height = this.settings.height;
+		this.width  = this.settings.width!;
+		this.height = this.settings.height!;
 
 		this.fixedWidth  = 0;
 		this.fixedHeight = 0;
@@ -142,7 +144,7 @@ class InlineView implements IEventEmitter {
 		return this.frame;
 	}
 
-	render(request: any, show?: boolean): Promise<any> {
+	render(request: RequestFunction, show?: boolean): Promise<void> {
 
 		// view.onLayout = this.layout.format.bind(this.layout);
 		this.create();
@@ -152,7 +154,7 @@ class InlineView implements IEventEmitter {
 
 		// Render Chain
 		return this.section.render(request)
-			.then((contents: any) => {
+			.then((contents: string) => {
 				return this.load(contents);
 			})
 			// .then(function(doc){
@@ -171,7 +173,7 @@ class InlineView implements IEventEmitter {
 			.then(() => {
 
 				// apply the layout function to the contents
-				this.settings.layout.format(this.contents);
+				this.settings.layout.format(this.contents!);
 
 				// Expand the iframe to the full size of the content
 				// this.expand();
@@ -189,7 +191,7 @@ class InlineView implements IEventEmitter {
 				this.emit(EVENTS.VIEWS.RENDERED, this.section);
 
 			})
-			.catch((e: any) => {
+			.catch((e: unknown) => {
 				this.emit(EVENTS.VIEWS.LOAD_ERROR, e);
 			});
 
@@ -197,8 +199,8 @@ class InlineView implements IEventEmitter {
 
 	// Determine locks base on settings
 	size(_width?: number, _height?: number): void {
-		const width = _width || this.settings.width;
-		const height = _height || this.settings.height;
+		const width = _width || this.settings.width!;
+		const height = _height || this.settings.height!;
 
 		if(this.layout.name === "pre-paginated") {
 			// TODO: check if these are different than the size set in chapter
@@ -281,29 +283,29 @@ class InlineView implements IEventEmitter {
 	}
 
 
-	resize(width: any, height: any): void {
+	resize(width: number | false, height: number | false): void {
 
 		if(!this.frame) return;
 
 		if(isNumber(width)){
 			this.frame.style.width = width + "px";
-			this._width = width;
+			this._width = width as number;
 		}
 
 		if(isNumber(height)){
 			this.frame.style.height = height + "px";
-			this._height = height;
+			this._height = height as number;
 		}
 
 		this.prevBounds = this.elementBounds;
 
 		this.elementBounds = bounds(this.element);
 
-		const size = {
+		const size: ReframeBounds = {
 			width: this.elementBounds.width,
 			height: this.elementBounds.height,
-			widthDelta: this.elementBounds.width - this.prevBounds.width,
-			heightDelta: this.elementBounds.height - this.prevBounds.height,
+			widthDelta: this.elementBounds.width - this.prevBounds!.width,
+			heightDelta: this.elementBounds.height - this.prevBounds!.height,
 		};
 
 		this.onResize(this, size);
@@ -313,7 +315,7 @@ class InlineView implements IEventEmitter {
 	}
 
 
-	load(contents: string): Promise<any> {
+	load(contents: string): Promise<Contents> {
 		const loading = new defer();
 		const loaded = loading.promise;
 		const doc = parse(contents, "text/html");
@@ -350,7 +352,7 @@ class InlineView implements IEventEmitter {
 		return loaded;
 	}
 
-	setLayout(layout: any): void {
+	setLayout(layout: Layout): void {
 		this.layout = layout;
 	}
 
@@ -365,11 +367,11 @@ class InlineView implements IEventEmitter {
 		//TODO: Add content listeners for expanding
 	}
 
-	removeListeners(_layoutFunc?: any): void {
+	removeListeners(): void {
 		//TODO: remove content listeners for expanding
 	}
 
-	display(request: any): Promise<any> {
+	display(request: RequestFunction): Promise<InlineView> {
 		const displayed = new defer();
 
 		if (!this.displayed) {
@@ -417,9 +419,9 @@ class InlineView implements IEventEmitter {
 		return this.element.getBoundingClientRect();
 	}
 
-	locationOf(target: any): { left: number; top: number } {
+	locationOf(target: string): { left: number; top: number } {
 		const parentPos = this.frame!.getBoundingClientRect();
-		const targetPos = this.contents.locationOf(target, this.settings.ignoreClass);
+		const targetPos = this.contents!.locationOf(target, this.settings.ignoreClass);
 
 		return {
 			"left": window.scrollX + parentPos.left + targetPos.left,
@@ -427,15 +429,15 @@ class InlineView implements IEventEmitter {
 		};
 	}
 
-	onDisplayed(_view: any): void {
+	onDisplayed(_view: InlineView): void {
 		// Stub, override with a custom functions
 	}
 
-	onResize(_view: any, _e?: any): void {
+	onResize(_view: InlineView, _e?: ReframeBounds): void {
 		// Stub, override with a custom functions
 	}
 
-	bounds(): any {
+	bounds(): SizeObject {
 		if(!this.elementBounds) {
 			this.elementBounds = bounds(this.element);
 		}

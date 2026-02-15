@@ -6,8 +6,8 @@ import EventEmitter from "./utils/event-emitter";
 import type { IEventEmitter, RequestFunction } from "./types";
 
 interface SimpleStorage {
-	getItem(key: string): Promise<any>;
-	setItem(key: string, value: any): Promise<any>;
+	getItem(key: string): Promise<Uint8Array | null>;
+	setItem(key: string, value: Uint8Array): Promise<Uint8Array>;
 }
 
 function openIDB(name: string): Promise<IDBDatabase> {
@@ -25,7 +25,7 @@ function createStorage(name: string): SimpleStorage {
 	const dbPromise = openIDB(name);
 
 	return {
-		getItem(key: string): Promise<any> {
+		getItem(key: string): Promise<Uint8Array | null> {
 			return dbPromise.then((db) => new Promise((resolve, reject) => {
 				const tx = db.transaction("data", "readonly");
 				const req = tx.objectStore("data").get(key);
@@ -33,7 +33,7 @@ function createStorage(name: string): SimpleStorage {
 				req.onerror = (): void => reject(req.error);
 			}));
 		},
-		setItem(key: string, value: any): Promise<any> {
+		setItem(key: string, value: Uint8Array): Promise<Uint8Array> {
 			return dbPromise.then((db) => new Promise((resolve, reject) => {
 				const tx = db.transaction("data", "readwrite");
 				const req = tx.objectStore("data").put(value, key);
@@ -43,6 +43,8 @@ function createStorage(name: string): SimpleStorage {
 		}
 	};
 }
+
+const _URL = window.URL || window.webkitURL || window.mozURL;
 
 /**
  * Handles saving and requesting files from local storage
@@ -133,16 +135,16 @@ class Store implements IEventEmitter {
 	 * @param  {boolean} [force] force resaving resources
 	 * @return {Promise<object>} store objects
 	 */
-	add(resources: { resources: Array<{ href: string }> }, force?: boolean): Promise<any[]> {
+	add(resources: { resources: Array<{ href: string }> }, force?: boolean): Promise<(Uint8Array | null)[]> {
 		const mapped = resources.resources.map((item: { href: string }) => {
 			const { href } = item;
 			const url = this.resolver(href);
 			const encodedUrl = window.encodeURIComponent(url);
 
-			return this.storage.getItem(encodedUrl).then((item: any) => {
+			return this.storage.getItem(encodedUrl).then((item) => {
 				if (!item || force) {
 					return this.requester(url, "binary")
-						.then((data: any) => {
+						.then((data: Uint8Array) => {
 							return this.storage.setItem(encodedUrl, data);
 						});
 				} else {
@@ -161,12 +163,12 @@ class Store implements IEventEmitter {
 	 * @param  {object} [headers]
 	 * @return {Promise<Blob>}
 	 */
-	put(url: string, withCredentials?: boolean, headers?: Record<string, string>): Promise<any> {
+	put(url: string, withCredentials?: boolean, headers?: Record<string, string>): Promise<Uint8Array | null> {
 		const encodedUrl = window.encodeURIComponent(url);
 
-		return this.storage.getItem(encodedUrl).then((result: any) => {
+		return this.storage.getItem(encodedUrl).then((result) => {
 			if (!result) {
-				return this.requester(url, "binary", withCredentials, headers).then((data: any) => {
+				return this.requester(url, "binary", withCredentials, headers).then((data: Uint8Array) => {
 					return this.storage.setItem(encodedUrl, data);
 				});
 			}
@@ -182,10 +184,10 @@ class Store implements IEventEmitter {
 	 * @param  {object} [headers]
 	 * @return {Promise<Blob | string | JSON | Document | XMLDocument>}
 	 */
-	request(url: string, type?: string, withCredentials?: boolean, headers?: Record<string, string>): Promise<any> {
+	request(url: string, type?: string, withCredentials?: boolean, headers?: Record<string, string>): Promise<unknown> {
 		if (this.online) {
 			// From network
-			return this.requester(url, type, withCredentials, headers).then((data: any) => {
+			return this.requester(url, type, withCredentials, headers).then((data: unknown) => {
 				// save to store if not present
 				this.put(url);
 				return data;
@@ -203,7 +205,7 @@ class Store implements IEventEmitter {
 	 * @param  {string} [type] specify the type of the returned result
 	 * @return {Promise<Blob | string | JSON | Document | XMLDocument>}
 	 */
-	retrieve(url: string, type?: string): Promise<any> {
+	retrieve(url: string, type?: string): Promise<unknown> {
 		let response;
 		const path = new Path(url);
 
@@ -238,27 +240,27 @@ class Store implements IEventEmitter {
 	/**
 	 * Handle the response from request
 	 * @private
-	 * @param  {any} response
+	 * @param  {string | Blob} response
 	 * @param  {string} [type]
-	 * @return {any} the parsed result
+	 * @return {string | Document | Blob | object} the parsed result
 	 */
-	handleResponse(response: any, type?: string): any {
+	handleResponse(response: string | Blob, type?: string): string | Document | Blob | object {
 		let r;
 
 		if(type == "json") {
-			r = JSON.parse(response);
+			r = JSON.parse(response as string);
 		}
 		else
 		if(isXml(type!)) {
-			r = parse(response, "text/xml");
+			r = parse(response as string, "text/xml");
 		}
 		else
 		if(type == "xhtml") {
-			r = parse(response, "application/xhtml+xml");
+			r = parse(response as string, "application/xhtml+xml");
 		}
 		else
 		if(type == "html" || type == "htm") {
-			r = parse(response, "text/html");
+			r = parse(response as string, "text/html");
 		 } else {
 			 r = response;
 		 }
@@ -275,12 +277,12 @@ class Store implements IEventEmitter {
 	getBlob(url: string, mimeType?: string): Promise<Blob | undefined> {
 		const encodedUrl = window.encodeURIComponent(url);
 
-		return this.storage.getItem(encodedUrl).then(function(uint8array: any) {
+		return this.storage.getItem(encodedUrl).then(function(uint8array) {
 			if(!uint8array) return;
 
 			mimeType = mimeType || mime.lookup(url);
 
-			return new Blob([uint8array], {type : mimeType});
+			return new Blob([uint8array as BlobPart], {type : mimeType});
 		});
 
 	}
@@ -296,13 +298,13 @@ class Store implements IEventEmitter {
 
 		mimeType = mimeType || mime.lookup(url);
 
-		return this.storage.getItem(encodedUrl).then(function(uint8array: any) {
+		return this.storage.getItem(encodedUrl).then(function(uint8array) {
 			const deferred = new defer();
 			const reader = new FileReader();
 
 			if(!uint8array) return;
 
-			const blob = new Blob([uint8array], {type : mimeType});
+			const blob = new Blob([uint8array as BlobPart], {type : mimeType});
 
 			reader.addEventListener("loadend", () => {
 				deferred.resolve(reader.result);
@@ -325,13 +327,13 @@ class Store implements IEventEmitter {
 
 		mimeType = mimeType || mime.lookup(url);
 
-		return this.storage.getItem(encodedUrl).then((uint8array: any) => {
+		return this.storage.getItem(encodedUrl).then((uint8array) => {
 			const deferred = new defer();
 			const reader = new FileReader();
 
 			if(!uint8array) return;
 
-			const blob = new Blob([uint8array], {type : mimeType});
+			const blob = new Blob([uint8array as BlobPart], {type : mimeType});
 
 			reader.addEventListener("loadend", () => {
 				deferred.resolve(reader.result);
@@ -350,7 +352,6 @@ class Store implements IEventEmitter {
 	 */
 	createUrl(url: string, options?: { base64?: boolean }): Promise<string> {
 		const deferred = new defer();
-		const _URL = window.URL || (window as any).webkitURL || (window as any).mozURL;
 		let tempUrl;
 		let response;
 		const useBase64 = options && options.base64;
@@ -407,13 +408,11 @@ class Store implements IEventEmitter {
 	 * @param  {string} url url of the item in the store
 	 */
 	revokeUrl(url: string): void {
-		const _URL = window.URL || (window as any).webkitURL || (window as any).mozURL;
 		const fromCache = this.urlCache[url];
 		if(fromCache) _URL.revokeObjectURL(fromCache);
 	}
 
 	destroy(): void {
-		const _URL = window.URL || (window as any).webkitURL || (window as any).mozURL;
 		for (const fromCache in this.urlCache) {
 			_URL.revokeObjectURL(fromCache);
 		}
