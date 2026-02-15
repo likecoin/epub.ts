@@ -12,7 +12,7 @@ const ELEMENT_NODE = 1;
 const TEXT_NODE = 3;
 const _COMMENT_NODE = 8;
 const _DOCUMENT_NODE = 9;
-const _URL = typeof URL != "undefined" ? URL : window.URL;
+const _URL = typeof URL != "undefined" ? URL : (typeof window != "undefined" ? window.URL : undefined!);
 
 /**
  * Generates a UUID
@@ -479,11 +479,11 @@ export function parse(markup: string, mime: string): Document {
  * @returns {element} element
  * @memberof Core
  */
-export function qs(el: Document | Element, sel: string): Element | undefined {
+export function qs(el: Document | Element, sel: string): Element | null {
 	if (!el) {
 		throw new Error("No Element Provided");
 	}
-	return el.querySelector(sel) ?? undefined;
+	return el.querySelector(sel);
 }
 
 /**

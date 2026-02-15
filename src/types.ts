@@ -39,6 +39,7 @@ export interface PackagingMetadataObject {
 	media_active_class: string;
 	spread: string;
 	direction: string;
+	minSpreadWidth?: number;
 }
 
 export interface PackagingSpineItem {

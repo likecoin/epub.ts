@@ -462,7 +462,7 @@ class Book implements IEventEmitter {
 	 * @param  {string} input
 	 * @return {string}  binary | directory | epub | opf
 	 */
-	determineType(input: string | ArrayBuffer | Blob): string {
+	determineType(input: string | ArrayBuffer | Blob): string | undefined {
 		let extension;
 
 		if (this.settings.encoding === "base64") {
@@ -498,7 +498,7 @@ class Book implements IEventEmitter {
 			return INPUT_TYPE.MANIFEST;
 		}
 
-		return INPUT_TYPE.BINARY;
+		return undefined;
 	}
 
 

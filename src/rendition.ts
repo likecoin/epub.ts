@@ -595,7 +595,7 @@ class Rendition implements IEventEmitter {
 		const orientation = this.settings.orientation || metadata.orientation || "auto";
 		const flow = this.settings.flow || metadata.flow || "auto";
 		const viewport = metadata.viewport || "";
-		const minSpreadWidth = this.settings.minSpreadWidth || 800;
+		const minSpreadWidth = this.settings.minSpreadWidth || metadata.minSpreadWidth || 800;
 		const direction = this.settings.direction || metadata.direction || "ltr";
 
 		if ((this.settings.width === 0 || (this.settings.width as number) > 0) &&

@@ -284,7 +284,7 @@ class Contents implements IEventEmitter {
 			content.style.removeProperty(property);
 		}
 
-		return this.window.getComputedStyle(content).getPropertyValue(property);
+		return (this.window.getComputedStyle(content) as any)[property];
 	}
 
 	/**
