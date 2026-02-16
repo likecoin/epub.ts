@@ -65,4 +65,4 @@ See [PROJECT_STATUS.md](./PROJECT_STATUS.md) for conversion progress.
 - `@xmldom/xmldom` replaced with native DOMParser
 - Only 1 runtime dependency: `jszip`
 - Security: CSS injection and dangerous URL schemes fixed
-- Remaining: Node.js support, improve test coverage, reduce ~136 remaining `any` types
+- Remaining: Node.js parsing-only entry point, improve test coverage, reduce ~21 remaining `any` types

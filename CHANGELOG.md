@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.4.5 (2026-02-17)
+
+### Bug fixes
+
+- Guard `window` reference in `store.ts` at module scope for Node.js/SSR compatibility — the library can now be imported in Node.js without crashing
+
+### Type safety
+
+- Replace ~61 `any` types with proper types across 21 files (~21 remain, intentionally kept)
+- Replace ~33 `Function` types with proper signatures across 6 files (0 remaining in code)
+- Reduce ~95 non-null assertions via definite assignment across 4 files
+
 ## 0.4.4 (2026-02-16)
 
 ### Bug fixes

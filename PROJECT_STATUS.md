@@ -29,7 +29,7 @@
 - [x] Replace `localforage` with native IndexedDB wrapper
 - [x] Replace `@xmldom/xmldom` with browser-native DOMParser
 - [x] Add `"sideEffects": false` to package.json (enables better tree-shaking for consumers)
-- [ ] Node.js support (parsing-only entry point)
+- [x] Node.js import support (guard `window` at module scope; parsing-only entry point still planned)
 - [ ] Improve test coverage (currently 14% — 6 test files for 42 source files)
 - [x] Reduce remaining `any` types (~82 → 21; 61 removed across 21 files, 21 intentionally kept: 14 event emitter pattern, 7 annotations.ts user data)
 - [x] Replace `Function` types with proper signatures (~33 removed across 6 files; 0 remaining in code, 3 in JSDoc comments)
@@ -96,7 +96,7 @@ All formats are single-file bundles. `preserveModules` was considered for ESM bu
 
 ## Known Limitations
 
-- **No Node.js support** — requires a DOM environment; parsing-only entry point planned
+- **Limited Node.js support** — can be imported without crashing; full parsing-only entry point planned
 - **Single-file ESM bundle** — `Book` imports nearly everything, so `preserveModules` wouldn't help much
 - **21 `any` types remain** — intentionally kept: 14 in event emitter callback signatures (requires generic typed-emitter refactor), 7 in `annotations.ts` (public API `Record<string, any>` for user data)
 - **0 `Function` types in code** — all 33 replaced with `HookCallback`, `ViewManagerConstructor`, `ViewConstructor`, `EventListener`, or typed function signatures
@@ -106,7 +106,7 @@ All formats are single-file bundles. `preserveModules` was considered for ESM bu
 ## Priority Next Steps
 
 ### High Priority
-1. Node.js support (parsing-only entry point, no rendering)
+1. Node.js parsing-only entry point (no rendering)
 2. Improve test coverage — untested: Rendition, Contents, Spine, Navigation, Packaging, Archive, all view managers
 3. Type the Queue class — core infrastructure is nearly untyped (15 `any` occurrences)
 
