@@ -44,7 +44,7 @@ function createStorage(name: string): SimpleStorage {
 	};
 }
 
-const _URL = window.URL || window.webkitURL || window.mozURL;
+const _URL = typeof window != "undefined" ? (window.URL || window.webkitURL || window.mozURL) : undefined;
 
 /**
  * Handles saving and requesting files from local storage
@@ -381,7 +381,7 @@ class Store implements IEventEmitter {
 			if (response) {
 				response.then((blob: Blob | undefined) => {
 
-					tempUrl = blob ? _URL.createObjectURL(blob) : undefined;
+					tempUrl = blob ? _URL!.createObjectURL(blob) : undefined;
 					this.urlCache[url] = tempUrl!;
 					deferred.resolve(tempUrl!);
 
@@ -407,12 +407,12 @@ class Store implements IEventEmitter {
 	 */
 	revokeUrl(url: string): void {
 		const fromCache = this.urlCache[url];
-		if(fromCache) _URL.revokeObjectURL(fromCache);
+		if(fromCache) _URL!.revokeObjectURL(fromCache);
 	}
 
 	destroy(): void {
 		for (const fromCache in this.urlCache) {
-			_URL.revokeObjectURL(fromCache);
+			_URL!.revokeObjectURL(fromCache);
 		}
 		this.urlCache = {};
 		this.removeListeners();
