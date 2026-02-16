@@ -5,9 +5,11 @@
  * @param {any} context scope of this
  * @example this.content = new EPUBJS.Hook(this);
  */
+export type HookCallback = (...args: any[]) => void | Promise<void>;
+
 class Hook {
 	context: object | undefined;
-	hooks: Function[];
+	hooks: HookCallback[];
 
 	constructor(context?: object){
 		this.context = context || this;
@@ -18,7 +20,7 @@ class Hook {
 	 * Adds a function to be run before a hook completes
 	 * @example this.content.register(function(){...});
 	 */
-	register(...args: (Function | Function[])[]): void {
+	register(...args: (HookCallback | HookCallback[])[]): void {
 		for(let i = 0; i < args.length; ++i) {
 			const arg = args[i]!;
 			if (typeof arg === "function") {
@@ -36,7 +38,7 @@ class Hook {
 	 * Removes a function
 	 * @example this.content.deregister(function(){...});
 	 */
-	deregister(func: Function): void {
+	deregister(func: HookCallback): void {
 		let hook;
 		for (let i = 0; i < this.hooks.length; i++) {
 			hook = this.hooks[i];
@@ -76,11 +78,11 @@ class Hook {
 	}
 
 	// Adds a function to be run before a hook completes
-	list(): Function[] {
+	list(): HookCallback[] {
 		return this.hooks;
 	}
 
-	clear(): Function[] {
+	clear(): HookCallback[] {
 		return this.hooks = [];
 	}
 }

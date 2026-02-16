@@ -277,7 +277,7 @@ class DefaultViewManager implements IEventEmitter {
 		return new this.View(section, extend(this.viewSettings as ViewSettings, { forceRight }) );
 	}
 
-	handleNextPrePaginated(forceRight: boolean, section: Section, action: Function): Promise<IframeView> | undefined {
+	handleNextPrePaginated(forceRight: boolean, section: Section, action: (section: Section) => Promise<IframeView>): Promise<IframeView> | undefined {
 		let next;
 
 		if (this.layout.name === "pre-paginated" && this.layout.divisor > 1) {

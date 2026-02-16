@@ -23,9 +23,9 @@ class IframeView implements IEventEmitter {
 	epubcfi: EpubCFI;
 	layout: Layout;
 	pane: Pane | undefined;
-	highlights: Record<string, { mark: Mark; element: SVGElement | null; listeners: (Function | undefined)[] }>;
-	underlines: Record<string, { mark: Mark; element: SVGElement | null; listeners: (Function | undefined)[] }>;
-	marks: Record<string, { element: HTMLAnchorElement; range: Range; listeners: (Function | undefined)[] }>;
+	highlights: Record<string, { mark: Mark; element: SVGElement | null; listeners: (EventListener | undefined)[] }>;
+	underlines: Record<string, { mark: Mark; element: SVGElement | null; listeners: (EventListener | undefined)[] }>;
+	marks: Record<string, { element: HTMLAnchorElement; range: Range; listeners: (EventListener | undefined)[] }>;
 	iframe: HTMLIFrameElement | undefined;
 	resizing!: boolean;
 	_width: number | undefined;
@@ -544,7 +544,7 @@ class IframeView implements IEventEmitter {
 		//TODO: Add content listeners for expanding
 	}
 
-	removeListeners(_layoutFunc?: Function): void {
+	removeListeners(): void {
 		if (this.contents) {
 			this.contents.off(EVENTS.CONTENTS.EXPAND);
 			this.contents.off(EVENTS.CONTENTS.RESIZE);
@@ -647,14 +647,14 @@ class IframeView implements IEventEmitter {
 		return this.elementBounds;
 	}
 
-	highlight(cfiRange: string, data: Record<string, string> = {}, cb?: Function, className: string = "epubjs-hl", styles: Record<string, string> = {}): Mark | undefined {
+	highlight(cfiRange: string, data: Record<string, string> = {}, cb?: EventListener, className: string = "epubjs-hl", styles: Record<string, string> = {}): Mark | undefined {
 		if (!this.contents) {
 			return;
 		}
 		const attributes = Object.assign({"fill": "yellow", "fill-opacity": "0.3", "mix-blend-mode": "multiply"}, styles);
 		const range = this.contents.range(cfiRange);
 
-		const emitter = (): void => {
+		const emitter: EventListener = (_e: Event): void => {
 			this.emit(EVENTS.VIEWS.MARK_CLICKED, cfiRange, data);
 		};
 
@@ -677,23 +677,23 @@ class IframeView implements IEventEmitter {
 		this.highlights[cfiRange] = { "mark": h, "element": h.element, "listeners": [emitter, cb] };
 
 		h.element!.setAttribute("ref", className);
-		h.element!.addEventListener("click", emitter as EventListener);
-		h.element!.addEventListener("touchstart", emitter as EventListener);
+		h.element!.addEventListener("click", emitter);
+		h.element!.addEventListener("touchstart", emitter);
 
 		if (cb) {
-			h.element!.addEventListener("click", cb as EventListener);
-			h.element!.addEventListener("touchstart", cb as EventListener);
+			h.element!.addEventListener("click", cb);
+			h.element!.addEventListener("touchstart", cb);
 		}
 		return h;
 	}
 
-	underline(cfiRange: string, data: Record<string, string> = {}, cb?: Function, className: string = "epubjs-ul", styles: Record<string, string> = {}): Mark | undefined {
+	underline(cfiRange: string, data: Record<string, string> = {}, cb?: EventListener, className: string = "epubjs-ul", styles: Record<string, string> = {}): Mark | undefined {
 		if (!this.contents) {
 			return;
 		}
 		const attributes = Object.assign({"stroke": "black", "stroke-opacity": "0.3", "mix-blend-mode": "multiply"}, styles);
 		const range = this.contents.range(cfiRange);
-		const emitter = (): void => {
+		const emitter: EventListener = (_e: Event): void => {
 			this.emit(EVENTS.VIEWS.MARK_CLICKED, cfiRange, data);
 		};
 
@@ -716,17 +716,17 @@ class IframeView implements IEventEmitter {
 		this.underlines[cfiRange] = { "mark": h, "element": h.element, "listeners": [emitter, cb] };
 
 		h.element!.setAttribute("ref", className);
-		h.element!.addEventListener("click", emitter as EventListener);
-		h.element!.addEventListener("touchstart", emitter as EventListener);
+		h.element!.addEventListener("click", emitter);
+		h.element!.addEventListener("touchstart", emitter);
 
 		if (cb) {
-			h.element!.addEventListener("click", cb as EventListener);
-			h.element!.addEventListener("touchstart", cb as EventListener);
+			h.element!.addEventListener("click", cb);
+			h.element!.addEventListener("touchstart", cb);
 		}
 		return h;
 	}
 
-	mark(cfiRange: string, data: Record<string, string> = {}, cb?: Function): Node | { element: HTMLAnchorElement; range: Range; listeners: (Function | undefined)[] } | null | undefined {
+	mark(cfiRange: string, data: Record<string, string> = {}, cb?: EventListener): Node | { element: HTMLAnchorElement; range: Range; listeners: (EventListener | undefined)[] } | null | undefined {
 		if (!this.contents) {
 			return;
 		}
@@ -743,7 +743,7 @@ class IframeView implements IEventEmitter {
 		const container = range.commonAncestorContainer;
 		const parent = (container.nodeType === 1) ? container : container.parentNode;
 
-		const emitter = (_e: Event): void => {
+		const emitter: EventListener = (_e: Event): void => {
 			this.emit(EVENTS.VIEWS.MARK_CLICKED, cfiRange, data);
 		};
 
@@ -768,12 +768,12 @@ class IframeView implements IEventEmitter {
 		}
 
 		if (cb) {
-			mark.addEventListener("click", cb as EventListener);
-			mark.addEventListener("touchstart", cb as EventListener);
+			mark.addEventListener("click", cb);
+			mark.addEventListener("touchstart", cb);
 		}
 
-		mark.addEventListener("click", emitter as EventListener);
-		mark.addEventListener("touchstart", emitter as EventListener);
+		mark.addEventListener("click", emitter);
+		mark.addEventListener("touchstart", emitter);
 
 		this.placeMark(mark, range);
 
@@ -817,10 +817,10 @@ class IframeView implements IEventEmitter {
 			const item = this.highlights[cfiRange]!;
 
 			this.pane!.removeMark(item.mark);
-			item.listeners.forEach((l: Function | undefined) => {
+			item.listeners.forEach((l: EventListener | undefined) => {
 				if (l) {
-					item.element!.removeEventListener("click", l as EventListener);
-					item.element!.removeEventListener("touchstart", l as EventListener);
+					item.element!.removeEventListener("click", l);
+					item.element!.removeEventListener("touchstart", l);
 				};
 			});
 			delete this.highlights[cfiRange];
@@ -831,10 +831,10 @@ class IframeView implements IEventEmitter {
 		if (cfiRange in this.underlines) {
 			const item = this.underlines[cfiRange]!;
 			this.pane!.removeMark(item.mark);
-			item.listeners.forEach((l: Function | undefined) => {
+			item.listeners.forEach((l: EventListener | undefined) => {
 				if (l) {
-					item.element!.removeEventListener("click", l as EventListener);
-					item.element!.removeEventListener("touchstart", l as EventListener);
+					item.element!.removeEventListener("click", l);
+					item.element!.removeEventListener("touchstart", l);
 				};
 			});
 			delete this.underlines[cfiRange];
@@ -845,10 +845,10 @@ class IframeView implements IEventEmitter {
 		if (cfiRange in this.marks) {
 			const item = this.marks[cfiRange]!;
 			this.element.removeChild(item.element);
-			item.listeners.forEach((l: Function | undefined) => {
+			item.listeners.forEach((l: EventListener | undefined) => {
 				if (l) {
-					item.element.removeEventListener("click", l as EventListener);
-					item.element.removeEventListener("touchstart", l as EventListener);
+					item.element.removeEventListener("click", l);
+					item.element.removeEventListener("touchstart", l);
 				};
 			});
 			delete this.marks[cfiRange];

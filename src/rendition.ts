@@ -9,7 +9,7 @@ import Themes from "./themes";
 import type Contents from "./contents";
 import Annotations from "./annotations";
 import { EVENTS, DOM_EVENTS } from "./utils/constants";
-import type { IEventEmitter, RenditionOptions, Location, GlobalLayout, ViewLocation, SizeObject, PackagingMetadataObject, ManagerOptions, LayoutProps } from "./types";
+import type { IEventEmitter, RenditionOptions, Location, GlobalLayout, ViewLocation, SizeObject, PackagingMetadataObject, LayoutProps, ViewManagerConstructor, ViewConstructor } from "./types";
 import type Book from "./book";
 import type Section from "./section";
 
@@ -66,8 +66,8 @@ class Rendition implements IEventEmitter {
 	starting: defer<void>;
 	started: Promise<void>;
 	manager: DefaultViewManager | undefined;
-	ViewManager!: typeof DefaultViewManager | typeof ContinuousViewManager | Function;
-	View!: typeof IframeView | Function;
+	ViewManager!: ViewManagerConstructor;
+	View!: ViewConstructor;
 	_layout: Layout | undefined;
 	displaying: defer<Section | undefined> | undefined;
 
@@ -204,7 +204,7 @@ class Rendition implements IEventEmitter {
 	 * @param  {string|object} manager [description]
 	 * @return {method}
 	 */
-	requireManager(manager: string | Function | object): typeof DefaultViewManager | typeof ContinuousViewManager | Function {
+	requireManager(manager: string | ViewManagerConstructor | object): ViewManagerConstructor {
 		let viewManager;
 
 		// If manager is a string, try to load from imported managers
@@ -214,7 +214,7 @@ class Rendition implements IEventEmitter {
 			viewManager = ContinuousViewManager;
 		} else {
 			// otherwise, assume we were passed a class function
-			viewManager = manager as Function;
+			viewManager = manager as ViewManagerConstructor;
 		}
 
 		return viewManager;
@@ -225,7 +225,7 @@ class Rendition implements IEventEmitter {
 	 * @param  {string|object} view
 	 * @return {view}
 	 */
-	requireView(view: string | Function | object): typeof IframeView | Function {
+	requireView(view: string | ViewConstructor | object): ViewConstructor {
 		let View;
 
 		// If view is a string, try to load from imported views,
@@ -233,7 +233,7 @@ class Rendition implements IEventEmitter {
 			View = IframeView;
 		} else {
 			// otherwise, assume we were passed a class function
-			View = view as Function;
+			View = view as ViewConstructor;
 		}
 
 		return View;
@@ -260,12 +260,12 @@ class Rendition implements IEventEmitter {
 			this.ViewManager = this.requireManager(this.settings.manager!);
 			this.View = this.requireView(this.settings.view!);
 
-			this.manager = new (this.ViewManager as new (options: ManagerOptions) => DefaultViewManager)({
+			this.manager = new this.ViewManager({
 				view: this.View,
 				queue: this.q,
 				request: this.book!.load.bind(this.book),
 				settings: this.settings
-			});
+			}) as DefaultViewManager;
 		}
 
 		this.direction(this.book!.package!.metadata!.direction || this.settings.defaultDirection);

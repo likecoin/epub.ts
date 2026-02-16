@@ -31,7 +31,8 @@
 - [x] Add `"sideEffects": false` to package.json (enables better tree-shaking for consumers)
 - [ ] Node.js support (parsing-only entry point)
 - [ ] Improve test coverage (currently 14% — 6 test files for 42 source files)
-- [ ] Reduce remaining `any` types (~64 across 22 files, concentrated in continuous/index.ts, snap.ts, contents.ts, locations.ts)
+- [x] Reduce remaining `any` types (~82 → 21; 61 removed across 21 files, 21 intentionally kept: 14 event emitter pattern, 7 annotations.ts user data)
+- [x] Replace `Function` types with proper signatures (~33 removed across 6 files; 0 remaining in code, 3 in JSDoc comments)
 
 ---
 
@@ -97,7 +98,8 @@ All formats are single-file bundles. `preserveModules` was considered for ESM bu
 
 - **No Node.js support** — requires a DOM environment; parsing-only entry point planned
 - **Single-file ESM bundle** — `Book` imports nearly everything, so `preserveModules` wouldn't help much
-- **~64 `any` types remain** — concentrated in `continuous/index.ts` (13), `snap.ts` (10), `contents.ts` (6), `locations.ts` (6)
+- **21 `any` types remain** — intentionally kept: 14 in event emitter callback signatures (requires generic typed-emitter refactor), 7 in `annotations.ts` (public API `Record<string, any>` for user data)
+- **0 `Function` types in code** — all 33 replaced with `HookCallback`, `ViewManagerConstructor`, `ViewConstructor`, `EventListener`, or typed function signatures
 
 ---
 

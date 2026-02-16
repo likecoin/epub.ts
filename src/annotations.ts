@@ -7,12 +7,12 @@ import type IframeView from "./managers/views/iframe";
 
 interface AnnotationView {
 	index: number;
-	highlight: Function;
-	underline: Function;
-	mark: Function;
-	unhighlight: Function;
-	ununderline: Function;
-	unmark: Function;
+	highlight: (cfiRange: string, data?: Record<string, string>, cb?: EventListener, className?: string, styles?: Record<string, string>) => object | undefined;
+	underline: (cfiRange: string, data?: Record<string, string>, cb?: EventListener, className?: string, styles?: Record<string, string>) => object | undefined;
+	mark: (cfiRange: string, data?: Record<string, string>, cb?: EventListener) => object | null | undefined;
+	unhighlight: (cfiRange: string) => void;
+	ununderline: (cfiRange: string) => void;
+	unmark: (cfiRange: string) => void;
 }
 
 /**
@@ -50,7 +50,7 @@ class Annotations {
 	 * @param {object} styles CSS styles to assign to annotation
 	 * @returns {Annotation} annotation
 	 */
-	add (type: string, cfiRange: string, data?: Record<string, any>, cb?: Function, className?: string, styles?: Record<string, string>): Annotation {
+	add (type: string, cfiRange: string, data?: Record<string, any>, cb?: EventListener, className?: string, styles?: Record<string, string>): Annotation {
 		const hash = encodeURI(cfiRange + type);
 		const cfi = new EpubCFI(cfiRange);
 		const sectionIndex = cfi.spinePos;
@@ -135,7 +135,7 @@ class Annotations {
 	 * @param {string} className CSS class to assign to annotation
 	 * @param {object} styles CSS styles to assign to annotation
 	 */
-	highlight (cfiRange: string, data?: Record<string, any>, cb?: Function, className?: string, styles?: Record<string, string>): Annotation {
+	highlight (cfiRange: string, data?: Record<string, any>, cb?: EventListener, className?: string, styles?: Record<string, string>): Annotation {
 		return this.add("highlight", cfiRange, data, cb, className, styles);
 	}
 
@@ -147,7 +147,7 @@ class Annotations {
 	 * @param {string} className CSS class to assign to annotation
 	 * @param {object} styles CSS styles to assign to annotation
 	 */
-	underline (cfiRange: string, data?: Record<string, any>, cb?: Function, className?: string, styles?: Record<string, string>): Annotation {
+	underline (cfiRange: string, data?: Record<string, any>, cb?: EventListener, className?: string, styles?: Record<string, string>): Annotation {
 		return this.add("underline", cfiRange, data, cb, className, styles);
 	}
 
@@ -157,7 +157,7 @@ class Annotations {
 	 * @param {object} data Data to assign to annotation
 	 * @param {function} cb Callback after annotation is clicked
 	 */
-	mark (cfiRange: string, data?: Record<string, any>, cb?: Function): Annotation {
+	mark (cfiRange: string, data?: Record<string, any>, cb?: EventListener): Annotation {
 		return this.add("mark", cfiRange, data, cb);
 	}
 
@@ -240,8 +240,8 @@ class Annotation implements IEventEmitter {
 	cfiRange: string;
 	data: Record<string, any>;
 	sectionIndex: number;
-	mark: object | undefined;
-	cb: Function;
+	mark: object | null | undefined;
+	cb: EventListener;
 	className: string;
 	styles: Record<string, string>;
 
@@ -257,7 +257,7 @@ class Annotation implements IEventEmitter {
 		cb,
 		className,
 		styles
-	}: { type: string; cfiRange: string; data?: Record<string, any>; sectionIndex?: number; cb?: Function; className?: string; styles?: Record<string, string> }) {
+	}: { type: string; cfiRange: string; data?: Record<string, any>; sectionIndex?: number; cb?: EventListener; className?: string; styles?: Record<string, string> }) {
 		this.type = type;
 		this.cfiRange = cfiRange;
 		this.data = data ?? {};
@@ -280,7 +280,7 @@ class Annotation implements IEventEmitter {
 	 * Add to a view
 	 * @param {View} view
 	 */
-	attach (view: AnnotationView): object | undefined {
+	attach (view: AnnotationView): object | null | undefined {
 		const {cfiRange, data, type, mark: _mark, cb, className, styles} = this;
 		let result;
 
@@ -301,23 +301,21 @@ class Annotation implements IEventEmitter {
 	 * Remove from a view
 	 * @param {View} view
 	 */
-	detach (view: AnnotationView): object | undefined {
+	detach (view: AnnotationView): void {
 		const {cfiRange, type} = this;
-		let result;
 
 		if (view) {
 			if (type === "highlight") {
-				result = view.unhighlight(cfiRange);
+				view.unhighlight(cfiRange);
 			} else if (type === "underline") {
-				result = view.ununderline(cfiRange);
+				view.ununderline(cfiRange);
 			} else if (type === "mark") {
-				result = view.unmark(cfiRange);
+				view.unmark(cfiRange);
 			}
 		}
 
 		this.mark = undefined;
-		this.emit(EVENTS.ANNOTATION.DETACH, result);
-		return result;
+		this.emit(EVENTS.ANNOTATION.DETACH, undefined);
 	}
 
 	/**

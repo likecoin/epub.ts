@@ -127,8 +127,8 @@ export interface RenditionOptions {
 	width?: number | string;
 	height?: number | string;
 	ignoreClass?: string;
-	manager?: string | Function | object;
-	view?: string | Function | object;
+	manager?: string | ViewManagerConstructor | object;
+	view?: string | ViewConstructor | object;
 	flow?: string;
 	layout?: string;
 	spread?: string | boolean;
@@ -232,6 +232,9 @@ export interface EpubCFIComponent {
 // ===== Function Types =====
 export type RequestFunction = (url: string, type?: string, withCredentials?: boolean, headers?: Record<string, string>) => Promise<unknown>;
 
+export type ViewManagerConstructor = new (options: ManagerOptions) => any;
+export type ViewConstructor = new (section: Section, options?: ViewSettings) => any;
+
 // ===== Bounds/Sizing =====
 export interface SizeObject { width: number; height: number; }
 export interface ReframeBounds extends SizeObject { widthDelta: number; heightDelta: number; }
@@ -270,7 +273,7 @@ export interface ManagerOptions extends ViewSettings {
 	hidden?: boolean;
 	fullsize?: boolean;
 	snap?: boolean | object;
-	view?: string | Function | object;
+	view?: string | ViewConstructor | object;
 	request?: RequestFunction;
 	size?: SizeObject;
 	rtlScrollType?: string;
