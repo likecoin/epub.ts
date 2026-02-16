@@ -50,6 +50,7 @@ class IframeView implements IEventEmitter {
 	writingMode!: string;
 	stopExpanding!: boolean;
 	axis!: string;
+	expanded?: boolean;
 
 	declare on: IEventEmitter["on"];
 	declare off: IEventEmitter["off"];
@@ -136,7 +137,7 @@ class IframeView implements IEventEmitter {
 		this.iframe.id = this.id;
 		this.iframe.scrolling = "no"; // Might need to be removed: breaks ios width calculations
 		this.iframe.style.overflow = "hidden";
-		(this.iframe as any).seamless = "seamless";
+		this.iframe.setAttribute("seamless", "seamless");
 		// Back up if seamless isn't supported
 		this.iframe.style.border = "none";
 
@@ -725,7 +726,7 @@ class IframeView implements IEventEmitter {
 		return h;
 	}
 
-	mark(cfiRange: string, data: Record<string, string> = {}, cb?: Function): any {
+	mark(cfiRange: string, data: Record<string, string> = {}, cb?: Function): Node | { element: HTMLAnchorElement; range: Range; listeners: (Function | undefined)[] } | null | undefined {
 		if (!this.contents) {
 			return;
 		}

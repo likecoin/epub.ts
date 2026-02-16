@@ -113,11 +113,11 @@ class Locations implements IEventEmitter {
 
 	parse(contents: Element, cfiBase: string, chars?: number): string[] {
 		const locations: string[] = [];
-		let range: any;
+		let range: ReturnType<Locations["createRange"]>;
 		const doc = contents.ownerDocument;
 		const body = qs(doc, "body");
 		let counter = 0;
-		let prev: any;
+		let prev: Text | undefined;
 		const _break = chars || this.break;
 		const parser = (node: Node): boolean => {
 			const len = (node as Text).length;
@@ -125,7 +125,7 @@ class Locations implements IEventEmitter {
 			let pos = 0;
 
 			if ((node.textContent ?? "").trim().length === 0) {
-				prev = node;
+				prev = node as Text;
 				return false; // continue
 			}
 
@@ -174,22 +174,22 @@ class Locations implements IEventEmitter {
 					range.endContainer = node;
 					range.endOffset = pos;
 					// cfi = section.cfiFromRange(range);
-					const cfi = new EpubCFI(range, cfiBase).toString();
+					const cfi = new EpubCFI(range as unknown as Range, cfiBase).toString();
 					locations.push(cfi);
 					counter = 0;
 				}
 			}
-			prev = node;
+			prev = node as Text;
 			return false;
 		};
 
 		sprint(body!, parser);
 
 		// Close remaining
-		if (range && range.startContainer && prev) {
+		if (range! && range.startContainer && prev) {
 			range.endContainer = prev;
 			range.endOffset = prev.length;
-			const cfi = new EpubCFI(range, cfiBase).toString();
+			const cfi = new EpubCFI(range as unknown as Range, cfiBase).toString();
 			locations.push(cfi);
 			counter = 0;
 		}
@@ -215,10 +215,10 @@ class Locations implements IEventEmitter {
 			if (section.linear) {
 				if (start) {
 					if (section.index! >= start.spinePos) {
-						this.q!.enqueue((s: Section, wc: number, st: any, c: number) => this.processWords(s, wc, st, c), section, wordCount!, start, count!);
+						this.q!.enqueue((s: Section, wc: number, st: EpubCFI | undefined, c: number) => this.processWords(s, wc, st, c), section, wordCount!, start, count!);
 					}
 				} else {
-					this.q!.enqueue((s: Section, wc: number, st: any, c: number) => this.processWords(s, wc, st, c), section, wordCount!, start, count!);
+					this.q!.enqueue((s: Section, wc: number, st: EpubCFI | undefined, c: number) => this.processWords(s, wc, st, c), section, wordCount!, start, count!);
 				}
 			}
 		});

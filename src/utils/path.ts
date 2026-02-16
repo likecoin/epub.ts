@@ -90,10 +90,6 @@ class Path {
 		return path.relative(this.directory, what);
 	}
 
-	splitPath(filename: string): string[] {
-		return (this as any).splitPathRe.exec(filename).slice(1);
-	}
-
 	/**
 	 * Return the path string
 	 * @returns {string} path

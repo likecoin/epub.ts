@@ -46,7 +46,7 @@ class Section {
 		if (hooks) {
 			this.hooks = hooks;
 		} else {
-			this.hooks = {} as any;
+			this.hooks = {} as { serialize: Hook; content: Hook };
 			this.hooks!.serialize = new Hook(this);
 			this.hooks!.content = new Hook(this);
 		}

@@ -37,7 +37,7 @@ class DefaultViewManager implements IEventEmitter {
 	ignore!: boolean;
 	writingMode!: string;
 	_hasScrolled!: boolean;
-	_onScroll: ((...args: any[]) => void) | undefined;
+	_onScroll: ((e?: Event) => void) | undefined;
 	_onUnload: ((e: Event) => void) | undefined;
 	orientationTimeout: ReturnType<typeof setTimeout> | undefined;
 	resizeTimeout!: ReturnType<typeof setTimeout>;
@@ -406,7 +406,7 @@ class DefaultViewManager implements IEventEmitter {
 		this.scrollTo(distX, distY, true);
 	}
 
-	add(section: Section, forceRight?: boolean): Promise<any> {
+	add(section: Section, forceRight?: boolean): Promise<IframeView> {
 		const view = this.createView(section, forceRight);
 
 		this.views.append(view);
@@ -426,7 +426,7 @@ class DefaultViewManager implements IEventEmitter {
 		return view.display(this.request);
 	}
 
-	append(section: Section, forceRight?: boolean): Promise<any> {
+	append(section: Section, forceRight?: boolean): Promise<IframeView> {
 		const view = this.createView(section, forceRight);
 		this.views.append(view);
 
@@ -444,7 +444,7 @@ class DefaultViewManager implements IEventEmitter {
 		return view.display(this.request);
 	}
 
-	prepend(section: Section, forceRight?: boolean): Promise<any> {
+	prepend(section: Section, forceRight?: boolean): Promise<IframeView> {
 		const view = this.createView(section, forceRight);
 
 		view.on(EVENTS.VIEWS.RESIZED, (bounds: ReframeBounds) => {

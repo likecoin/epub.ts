@@ -1,9 +1,9 @@
 import {uuid, isNumber, isElement, windowBounds, extend} from "../../utils/core";
 import type { StageOptions } from "../../types";
-function throttle(func: Function, wait: number): (...args: any[]) => void {
+function throttle(func: (...args: unknown[]) => void, wait: number): (...args: unknown[]) => void {
 	let timeout: ReturnType<typeof setTimeout> | null = null;
 	let previous = 0;
-	return function(this: unknown, ...args: any[]) {
+	return function(this: unknown, ...args: unknown[]) {
 		const now = Date.now();
 		const remaining = wait - (now - previous);
 		if (remaining <= 0 || remaining > wait) {

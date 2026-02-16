@@ -18,6 +18,7 @@ import DisplayOptions from "./displayoptions";
 import type JSZip from "jszip";
 import { EPUBJS_VERSION, EVENTS } from "./utils/constants";
 import type { IEventEmitter, BookOptions, RenditionOptions, RequestFunction, PackagingManifestObject, PackagingMetadataObject } from "./types";
+import type { WebPubManifest } from "./packaging";
 import type Section from "./section";
 
 interface BookLoadingState {
@@ -388,7 +389,7 @@ class Book implements IEventEmitter {
 		return this.load(url)
 			.then((json) => {
 				this.packaging = new Packaging();
-				this.packaging.load(json as Record<string, any>);
+				this.packaging.load(json as WebPubManifest);
 				return this.unpack(this.packaging);
 			});
 	}

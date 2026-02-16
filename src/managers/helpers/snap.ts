@@ -27,7 +27,7 @@ const EASING_EQUATIONS = {
 };
 
 class Snap implements IEventEmitter {
-	settings: { duration: number; minVelocity: number; minDistance: number; easing: (pos: number) => number; [key: string]: any };
+	settings: { duration: number; minVelocity: number; minDistance: number; easing: (pos: number) => number };
 	manager!: DefaultViewManager;
 	layout!: Layout;
 	fullsize!: boolean;
@@ -46,18 +46,18 @@ class Snap implements IEventEmitter {
 	endTouchX: number | undefined;
 	endTouchY: number | undefined;
 	endTime: number | undefined;
-	_onResize: ((...args: any[]) => void) | undefined;
-	_onScroll: ((...args: any[]) => void) | undefined;
-	_onTouchStart: ((...args: any[]) => void) | undefined;
-	_onTouchMove: ((...args: any[]) => void) | undefined;
-	_onTouchEnd: ((...args: any[]) => void) | undefined;
-	_afterDisplayed: ((...args: any[]) => void) | undefined;
+	_onResize: ((e?: Event) => void) | undefined;
+	_onScroll: ((e?: Event) => void) | undefined;
+	_onTouchStart: ((e: TouchEvent) => void) | undefined;
+	_onTouchMove: ((e: TouchEvent) => void) | undefined;
+	_onTouchEnd: ((e?: TouchEvent) => void) | undefined;
+	_afterDisplayed: ((view: { contents: Contents }) => void) | undefined;
 
 	declare on: IEventEmitter["on"];
 	declare off: IEventEmitter["off"];
 	declare emit: IEventEmitter["emit"];
 
-	constructor(manager: DefaultViewManager, options?: Record<string, any>) {
+	constructor(manager: DefaultViewManager, options?: Record<string, unknown>) {
 
 		this.settings = extend({
 			duration: 80,
@@ -86,7 +86,7 @@ class Snap implements IEventEmitter {
 		} else {
 			this.element = this.manager.stage.container;
 			this.scroller = this.element;
-			(this.element.style as any)["WebkitOverflowScrolling"] = "touch";
+			this.element.style.setProperty("-webkit-overflow-scrolling", "touch");
 		}
 
 		// this.overflow = this.manager.overflow;
@@ -121,7 +121,7 @@ class Snap implements IEventEmitter {
 	}
 
 	supportsTouch(): boolean {
-		if (("ontouchstart" in window) || (window as any).DocumentTouch && document instanceof (window as any).DocumentTouch) {
+		if (("ontouchstart" in window) || ("DocumentTouch" in window)) {
 			return true;
 		}
 
@@ -144,15 +144,15 @@ class Snap implements IEventEmitter {
 		this.scroller!.addEventListener("scroll", this._onScroll);
 
 		this._onTouchStart = this.onTouchStart.bind(this);
-		this.scroller!.addEventListener("touchstart", this._onTouchStart, { passive: true });
+		this.scroller!.addEventListener("touchstart", this._onTouchStart as EventListener, { passive: true });
 		this.on("touchstart", this._onTouchStart);
 
 		this._onTouchMove = this.onTouchMove.bind(this);
-		this.scroller!.addEventListener("touchmove", this._onTouchMove, { passive: true });
+		this.scroller!.addEventListener("touchmove", this._onTouchMove as EventListener, { passive: true });
 		this.on("touchmove", this._onTouchMove);
 
 		this._onTouchEnd = this.onTouchEnd.bind(this);
-		this.scroller!.addEventListener("touchend", this._onTouchEnd, { passive: true });
+		this.scroller!.addEventListener("touchend", this._onTouchEnd as EventListener, { passive: true });
 		this.on("touchend", this._onTouchEnd);
 
 		this._afterDisplayed = this.afterDisplayed.bind(this);
@@ -166,15 +166,15 @@ class Snap implements IEventEmitter {
 		this.scroller!.removeEventListener("scroll", this._onScroll!);
 		this._onScroll = undefined;
 
-		this.scroller!.removeEventListener("touchstart", this._onTouchStart!, { passive: true } as EventListenerOptions);
+		this.scroller!.removeEventListener("touchstart", this._onTouchStart! as EventListener, { passive: true } as EventListenerOptions);
 		this.off("touchstart", this._onTouchStart!);
 		this._onTouchStart = undefined;
 
-		this.scroller!.removeEventListener("touchmove", this._onTouchMove!, { passive: true } as EventListenerOptions);
+		this.scroller!.removeEventListener("touchmove", this._onTouchMove! as EventListener, { passive: true } as EventListenerOptions);
 		this.off("touchmove", this._onTouchMove!);
 		this._onTouchMove = undefined;
 
-		this.scroller!.removeEventListener("touchend", this._onTouchEnd!, { passive: true } as EventListenerOptions);
+		this.scroller!.removeEventListener("touchend", this._onTouchEnd! as EventListener, { passive: true } as EventListenerOptions);
 		this.off("touchend", this._onTouchEnd!);
 		this._onTouchEnd = undefined;
 

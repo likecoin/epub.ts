@@ -4,7 +4,7 @@
  */
 import type { ParsedPath } from "../types";
 
-function assertPath(path: any): void {
+function assertPath(path: unknown): void {
 	if (typeof path !== "string") {
 		throw new TypeError("Path must be a string. Received " + path);
 	}

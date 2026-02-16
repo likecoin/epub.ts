@@ -284,7 +284,7 @@ class Contents implements IEventEmitter {
 			content.style.removeProperty(property);
 		}
 
-		return (this.window.getComputedStyle(content) as any)[property];
+		return (this.window.getComputedStyle(content) as unknown as Record<string, string>)[property] ?? "";
 	}
 
 	/**
@@ -1251,7 +1251,7 @@ class Contents implements IEventEmitter {
 
 		if (style) {
 			this._layoutStyle = style;
-			(navigator as any).epubReadingSystem.layoutStyle = this._layoutStyle;
+			navigator.epubReadingSystem!.layoutStyle = this._layoutStyle;
 		}
 
 		return this._layoutStyle || "paginated";
@@ -1264,7 +1264,7 @@ class Contents implements IEventEmitter {
 	 * @private
 	 */
 	epubReadingSystem(name: string, version: string): void {
-		(navigator as any).epubReadingSystem = {
+		navigator.epubReadingSystem = {
 			name: name,
 			version: version,
 			layoutStyle: this.layoutStyle(),
@@ -1287,7 +1287,6 @@ class Contents implements IEventEmitter {
 				}
 			}
 		};
-		return (navigator as any).epubReadingSystem;
 	}
 
 	destroy(): void {

@@ -333,4 +333,16 @@ declare global {
 		webkitURL?: typeof URL;
 		mozURL?: typeof URL;
 	}
+	interface Navigator {
+		epubReadingSystem?: {
+			name: string;
+			version: string;
+			layoutStyle: string;
+			hasFeature: (feature: string) => boolean;
+		};
+	}
+	interface Document {
+		readonly xmlEncoding?: string;
+	}
+	var EPUBJS_VERSION: string;
 }

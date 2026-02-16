@@ -143,14 +143,15 @@ const mimeTypes = (function(): Record<string, string> {
 	let type, subtype, val, index; const mimeTypes: Record<string, string> = {};
 	for (type in table) {
 		if (table.hasOwnProperty(type)) {
-			for (subtype in (table as Record<string, any>)[type]) {
-				if ((table as Record<string, any>)[type].hasOwnProperty(subtype)) {
-					val = (table as Record<string, any>)[type][subtype];
+			const category = table[type as keyof typeof table];
+			for (subtype in category) {
+				if (category.hasOwnProperty(subtype)) {
+					val = (category as Record<string, string | string[]>)[subtype]!;
 					if (typeof val == "string") {
 						mimeTypes[val] = type + "/" + subtype;
 					} else {
 						for (index = 0; index < val.length; index++) {
-							mimeTypes[val[index]] = type + "/" + subtype;
+							mimeTypes[val[index]!] = type + "/" + subtype;
 						}
 					}
 				}
@@ -163,7 +164,7 @@ const mimeTypes = (function(): Record<string, string> {
 const defaultValue = "text/plain";//"application/octet-stream";
 
 function lookup(filename: string): string {
-	return filename && (mimeTypes as Record<string, string>)[filename.split(".").pop()!.toLowerCase()] || defaultValue;
+	return filename && mimeTypes[filename.split(".").pop()!.toLowerCase()] || defaultValue;
 };
 
 export default { lookup };

@@ -38,7 +38,7 @@ class Themes {
 	 * @example themes.register("light", { "body": { "color": "purple"}})
 	 * @example themes.register({ "light" : {...}, "dark" : {...}})
 	 */
-	register (...args: any[]): void {
+	register(...args: (string | Record<string, string | Record<string, Record<string, string>>>)[]): void {
 		if (args.length === 0) {
 			return;
 		}
@@ -49,10 +49,10 @@ class Themes {
 			return this.default(args[0]);
 		}
 		if (args.length === 2 && typeof(args[1]) === "string") {
-			return this.registerUrl(args[0], args[1]);
+			return this.registerUrl(args[0] as string, args[1]);
 		}
 		if (args.length === 2 && typeof(args[1]) === "object") {
-			return this.registerRules(args[0], args[1]);
+			return this.registerRules(args[0] as string, args[1] as unknown as Record<string, Record<string, string>>);
 		}
 	}
 

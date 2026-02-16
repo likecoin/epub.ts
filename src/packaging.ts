@@ -1,6 +1,14 @@
 import {qs, qsa, qsp, indexOfElementNode} from "./utils/core";
 import type { PackagingMetadataObject, PackagingSpineItem, PackagingManifestItem, PackagingManifestObject, PackagingObject, NavItem } from "./types";
 
+export interface WebPubManifest {
+	metadata: PackagingMetadataObject;
+	readingOrder?: PackagingSpineItem[];
+	spine?: PackagingSpineItem[];
+	resources: (PackagingManifestItem & { rel?: string[] })[];
+	toc: (NavItem & { title?: string })[];
+}
+
 /**
  * Open Packaging Format Parser
  */
@@ -330,20 +338,20 @@ class Packaging {
 	 * @param json - JSON manifest data
 	 * @return parsed package parts
 	 */
-	load(json: Record<string, any>): PackagingObject & { toc: NavItem[] } {
+	load(json: WebPubManifest): PackagingObject & { toc: NavItem[] } {
 		this.metadata = json.metadata;
 
 		const spine = json.readingOrder || json.spine;
-		this.spine = spine.map((item: PackagingSpineItem, index: number) =>{
+		this.spine = spine!.map((item: PackagingSpineItem, index: number) =>{
 			item.index = index;
 			item.linear = item.linear || "yes";
 			return item;
 		});
 
-		json.resources.forEach((item: PackagingManifestItem, index: number) => {
+		json.resources.forEach((item: PackagingManifestItem & { rel?: string[] }, index: number) => {
 			this.manifest![index] = item;
 
-			if ((item as any).rel && (item as any).rel[0] === "cover") {
+			if (item.rel && item.rel[0] === "cover") {
 				this.coverPath = item.href;
 			}
 		});

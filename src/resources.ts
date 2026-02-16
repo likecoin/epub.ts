@@ -297,7 +297,7 @@ class Resources {
 			return;
 		}
 		if (this.replacementUrls!.length) {
-			return new Promise((resolve: (value: string) => void, _reject: (reason?: any) => void) => {
+			return new Promise((resolve: (value: string) => void, _reject: (reason?: unknown) => void) => {
 				resolve(this.replacementUrls![indexInUrls]!);
 			});
 		} else {

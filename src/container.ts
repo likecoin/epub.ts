@@ -39,7 +39,7 @@ class Container {
 
 		this.packagePath = rootfile.getAttribute("full-path") ?? "";
 		this.directory = path.dirname(this.packagePath);
-		this.encoding = (containerDocument as any).xmlEncoding;
+		this.encoding = containerDocument.xmlEncoding;
 	}
 
 	destroy(): void {

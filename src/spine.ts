@@ -26,7 +26,7 @@ class Spine {
 		this.spineByHref = {};
 		this.spineById = {};
 
-		this.hooks = {} as any;
+		this.hooks = {} as { serialize: Hook; content: Hook };
 		this.hooks!.serialize = new Hook();
 		this.hooks!.content = new Hook();
 

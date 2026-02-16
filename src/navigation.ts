@@ -347,10 +347,11 @@ class Navigation {
 	 * @param  {object} json the items to be loaded
 	 * @return {Array} navItems
 	 */
-	load(json: any[]): NavItem[] {
+	load(json: NavItem[]): NavItem[] {
 		return json.map(item => {
-			item.label = item.title;
-			item.subitems = item.children ? this.load(item.children) : [];
+			const rec = item as unknown as Record<string, unknown>;
+			rec.label = rec.title;
+			rec.subitems = rec.children ? this.load(rec.children as NavItem[]) : [];
 			return item;
 		});
 	}

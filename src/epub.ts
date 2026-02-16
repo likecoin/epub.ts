@@ -21,7 +21,7 @@ function ePub(url?: string | ArrayBuffer | Blob | BookOptions, options?: BookOpt
 ePub.VERSION = EPUBJS_VERSION;
 
 if (typeof(global) !== "undefined") {
-	(globalThis as any).EPUBJS_VERSION = EPUBJS_VERSION;
+	globalThis.EPUBJS_VERSION = EPUBJS_VERSION;
 }
 
 ePub.Book = Book;

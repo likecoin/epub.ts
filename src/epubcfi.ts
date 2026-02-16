@@ -766,7 +766,7 @@ class EpubCFI {
 
 		if (anchor.nodeType === ELEMENT_NODE) {
 			children = (anchor.parentNode as Element).children;
-			map = this.normalizedMap(children as any, ELEMENT_NODE, ignoreClass);
+			map = this.normalizedMap(children as unknown as NodeListOf<ChildNode>, ELEMENT_NODE, ignoreClass);
 		} else {
 			children = anchor.parentNode!.childNodes;
 			// Inside an ignored node
