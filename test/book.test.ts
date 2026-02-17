@@ -67,4 +67,62 @@ describe("Book", () => {
 			expect(coverUrl).toBeNull();
 		});
 	});
+
+	describe("Sub-object parity (archived epub)", () => {
+		let book: Book;
+
+		beforeAll(async () => {
+			book = new Book(getFixtureUrl("/alice.epub"));
+			await book.opened;
+		});
+
+		it("should have correct packaging metadata title", () => {
+			expect(book.packaging.metadata.title).toBe("Alice's Adventures in Wonderland");
+		});
+
+		it("should have correct packaging metadata creator", () => {
+			expect(book.packaging.metadata.creator).toBe("Lewis Carroll");
+		});
+
+		it("should have correct packaging metadata language", () => {
+			expect(book.packaging.metadata.language).toBe("en-US");
+		});
+
+		it("should have correct packaging metadata identifier", () => {
+			expect(book.packaging.metadata.identifier).toBe(
+				"edu.nyu.itp.future-of-publishing.alice-in-wonderland"
+			);
+		});
+
+		it("should have correct packaging metadata rights", () => {
+			expect(book.packaging.metadata.rights).toBe("Public domain in the USA.");
+		});
+
+		it("should have 11 navigation toc entries", () => {
+			expect(book.navigation.toc.length).toBe(11);
+		});
+
+		it("should have correct navigation toc labels", () => {
+			const labels = book.navigation.toc.map(item => item.label);
+			expect(labels[0]).toBe("Title Page");
+			expect(labels[1]).toBe("Down The Rabbit-Hole");
+			expect(labels[10]).toBe("Alice's Evidence");
+		});
+
+		it("should have 13 spine items", () => {
+			expect(book.spine.length).toBe(13);
+		});
+
+		it("should have titlepage as first linear spine item", () => {
+			const first = book.spine.first();
+			expect(first).toBeDefined();
+			expect(first!.idref).toBe("titlepage");
+		});
+
+		it("should have chapter_010 as last linear spine item", () => {
+			const last = book.spine.last();
+			expect(last).toBeDefined();
+			expect(last!.idref).toBe("chapter_010");
+		});
+	});
 });

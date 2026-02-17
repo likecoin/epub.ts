@@ -12,3 +12,7 @@ export function getFixtureUrl(filepath: string): string {
 	}
 	return `http://127.0.0.1:${cachedPort}${filepath}`;
 }
+
+export function parseXML(xml: string, mime: DOMParserSupportedType = "application/xml"): Document {
+	return new DOMParser().parseFromString(xml, mime);
+}
