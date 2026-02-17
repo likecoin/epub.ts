@@ -65,7 +65,7 @@ class Rendition implements IEventEmitter {
 	location: Location | undefined;
 	starting: defer<void>;
 	started: Promise<void>;
-	manager: DefaultViewManager | undefined;
+	manager!: DefaultViewManager;
 	ViewManager!: ViewManagerConstructor;
 	View!: ViewConstructor;
 	_layout: Layout | undefined;
@@ -312,7 +312,7 @@ class Rendition implements IEventEmitter {
 		return this.q.enqueue(() => {
 
 			// Start rendering
-			this.manager!.render(element as HTMLElement, {
+			this.manager.render(element as HTMLElement, {
 				"width"  : this.settings.width as number,
 				"height" : this.settings.height as number
 			});
@@ -371,7 +371,7 @@ class Rendition implements IEventEmitter {
 			return displayed;
 		}
 
-		this.manager!.display(section, target as string)
+		this.manager.display(section, target as string)
 			.then(() => {
 				displaying.resolve(section);
 				this.displaying = undefined;
@@ -538,7 +538,7 @@ class Rendition implements IEventEmitter {
 	 * @param {object} offset
 	 */
 	moveTo(offset: { left: number; top: number }): void {
-		this.manager!.moveTo(offset);
+		this.manager.moveTo(offset);
 	}
 
 	/**
@@ -554,14 +554,14 @@ class Rendition implements IEventEmitter {
 		if (height) {
 			this.settings.height = height;
 		}
-		this.manager!.resize(width, height, epubcfi);
+		this.manager.resize(width, height, epubcfi);
 	}
 
 	/**
 	 * Clear all rendered views
 	 */
 	clear(): void {
-		this.manager!.clear();
+		this.manager.clear();
 	}
 
 	/**
@@ -569,7 +569,7 @@ class Rendition implements IEventEmitter {
 	 * @return {Promise}
 	 */
 	next(): Promise<void> {
-		return this.q.enqueue(() => this.manager!.next())
+		return this.q.enqueue(() => this.manager.next())
 			.then(() => this.reportLocation());
 	}
 
@@ -578,7 +578,7 @@ class Rendition implements IEventEmitter {
 	 * @return {Promise}
 	 */
 	prev(): Promise<void> {
-		return this.q.enqueue(() => this.manager!.prev())
+		return this.q.enqueue(() => this.manager.prev())
 			.then(() => this.reportLocation());
 	}
 
@@ -723,7 +723,7 @@ class Rendition implements IEventEmitter {
 	reportLocation(): Promise<void> {
 		return this.q.enqueue(() => {
 			requestAnimationFrame(() => {
-				const location = this.manager!.currentLocation() as ViewLocation[] | PromiseLike<ViewLocation[]>;
+				const location = this.manager.currentLocation() as ViewLocation[] | PromiseLike<ViewLocation[]>;
 				if (location && "then" in location && typeof location.then === "function") {
 					(location as PromiseLike<ViewLocation[]>).then((result: ViewLocation[]) => {
 						const located = this.located(result);
@@ -788,7 +788,7 @@ class Rendition implements IEventEmitter {
 	 * @return {displayedLocation | promise} location (may be a promise)
 	 */
 	currentLocation(): Location | undefined {
-		const location = this.manager!.currentLocation() as ViewLocation[] | PromiseLike<ViewLocation[]>;
+		const location = this.manager.currentLocation() as ViewLocation[] | PromiseLike<ViewLocation[]>;
 		if (location && "then" in location && typeof location.then === "function") {
 			(location as PromiseLike<ViewLocation[]>).then((result: ViewLocation[]) => {
 				const located = this.located(result);
@@ -847,8 +847,8 @@ class Rendition implements IEventEmitter {
 			located.end.percentage = this.book.locations.percentageFromLocation(locationEnd);
 		}
 
-		const pageStart = this.book.pageList!.pageFromCfi(start.mapping.start);
-		const pageEnd = this.book.pageList!.pageFromCfi(end.mapping.end);
+		const pageStart = this.book.pageList.pageFromCfi(start.mapping.start);
+		const pageEnd = this.book.pageList.pageFromCfi(end.mapping.end);
 
 		if (pageStart != -1) {
 			located.start.page = pageStart;
@@ -883,7 +883,7 @@ class Rendition implements IEventEmitter {
 			this.manager.off(EVENTS.MANAGERS.ORIENTATION_CHANGE);
 			this.manager.off(EVENTS.MANAGERS.SCROLLED);
 			this.manager.destroy();
-			this.manager = undefined;
+			this.manager = undefined!;
 		}
 
 		this.book = undefined!;
@@ -968,7 +968,7 @@ class Rendition implements IEventEmitter {
 	 */
 	getRange(cfi: string, ignoreClass?: string): Range | undefined {
 		const _cfi = new EpubCFI(cfi);
-		const found = this.manager!.visible().filter(function (view: IframeView) {
+		const found = this.manager.visible().filter(function (view: IframeView) {
 			if(_cfi.spinePos === view.index) return true;
 			return false;
 		});
@@ -1091,7 +1091,7 @@ class Rendition implements IEventEmitter {
 	 * @private
 	 */
 	injectIdentifier(doc: Document, _section: Section): void {
-		const ident = this.book.packaging!.metadata.identifier;
+		const ident = this.book.packaging.metadata.identifier;
 		const meta = doc.createElement("meta");
 		meta.setAttribute("name", "dc.relation.ispartof");
 		if (ident) {

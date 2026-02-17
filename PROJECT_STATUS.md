@@ -33,6 +33,7 @@
 - [ ] Improve test coverage (currently 14% — 6 test files for 42 source files)
 - [x] Reduce remaining `any` types (~82 → 21; 61 removed across 21 files, 21 intentionally kept: 14 event emitter pattern, 7 annotations.ts user data)
 - [x] Replace `Function` types with proper signatures (~33 removed across 6 files; 0 remaining in code, 3 in JSDoc comments)
+- [x] Reduce non-null assertions via definite assignment (~22 removed across `rendition.ts` and `book.ts`)
 
 ---
 
@@ -108,9 +109,7 @@ All formats are single-file bundles. `preserveModules` was considered for ESM bu
 ### High Priority
 1. Node.js parsing-only entry point (no rendering)
 2. Improve test coverage — untested: Rendition, Contents, Spine, Navigation, Packaging, Archive, all view managers
-3. Type the Queue class — core infrastructure is nearly untyped (15 `any` occurrences)
 
 ### Medium Priority
-4. Replace empty catch blocks with proper error propagation (~15 instances)
-5. Reduce non-null assertions in `rendition.ts` (72) and `book.ts` (49)
-6. Explore splitting `Book` dependency graph for better tree-shaking
+3. Replace empty catch blocks with proper error propagation (~15 instances)
+4. Explore splitting `Book` dependency graph for better tree-shaking

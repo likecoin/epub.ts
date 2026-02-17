@@ -85,17 +85,17 @@ class Book implements IEventEmitter {
 	request: RequestFunction;
 	spine!: Spine;
 	locations!: Locations;
-	navigation: Navigation | undefined;
-	pageList: PageList | undefined;
-	url: Url | undefined;
+	navigation!: Navigation;
+	pageList!: PageList;
+	url!: Url;
 	path: Path | undefined;
 	archived: boolean;
 	archive: Archive | undefined;
 	storage: Store | undefined;
-	resources: Resources | undefined;
+	resources!: Resources;
 	rendition: Rendition | undefined;
 	container: Container | undefined;
-	packaging: Packaging | undefined;
+	packaging!: Packaging;
 	displayOptions: DisplayOptions | undefined;
 	package: Packaging | undefined;
 	cover!: string;
@@ -202,20 +202,20 @@ class Book implements IEventEmitter {
 		 * @member {Navigation} navigation
 		 * @memberof Book
 		 */
-		this.navigation = undefined;
+		this.navigation = undefined!;
 
 		/**
 		 * @member {PageList} pagelist
 		 * @memberof Book
 		 */
-		this.pageList = undefined;
+		this.pageList = undefined!;
 
 		/**
 		 * @member {Url} url
 		 * @memberof Book
 		 * @private
 		 */
-		this.url = undefined;
+		this.url = undefined!;
 
 		/**
 		 * @member {Path} path
@@ -250,7 +250,7 @@ class Book implements IEventEmitter {
 		 * @memberof Book
 		 * @private
 		 */
-		this.resources = undefined;
+		this.resources = undefined!;
 
 		/**
 		 * @member {Rendition} rendition
@@ -271,7 +271,7 @@ class Book implements IEventEmitter {
 		 * @memberof Book
 		 * @private
 		 */
-		this.packaging = undefined;
+		this.packaging = undefined!;
 
 		/**
 		 * @member {DisplayOptions} displayOptions
@@ -511,9 +511,9 @@ class Book implements IEventEmitter {
 	unpack(packaging: Packaging): void {
 		this.package = packaging; //TODO: deprecated this
 
-		if (this.packaging!.metadata.layout === "") {
+		if (this.packaging.metadata.layout === "") {
 			// rendition:layout not set - check display options if book is pre-paginated
-			this.load(this.url!.resolve(IBOOKS_DISPLAY_OPTIONS_PATH)).then((xml) => {
+			this.load(this.url.resolve(IBOOKS_DISPLAY_OPTIONS_PATH)).then((xml) => {
 				this.displayOptions = new DisplayOptions(xml as Document);
 				this.loading.displayOptions.resolve(this.displayOptions);
 			}).catch((_err) => {
@@ -525,30 +525,30 @@ class Book implements IEventEmitter {
 			this.loading.displayOptions.resolve(this.displayOptions);
 		}
 
-		this.spine.unpack(this.packaging!, (path: string, absolute?: boolean): string => this.resolve(path, absolute), (path: string): string => this.canonical(path));
+		this.spine.unpack(this.packaging, (path: string, absolute?: boolean): string => this.resolve(path, absolute), (path: string): string => this.canonical(path));
 
-		this.resources = new Resources(this.packaging!.manifest, {
+		this.resources = new Resources(this.packaging.manifest, {
 			archive: this.archive,
 			resolver: (path: string, absolute?: boolean): string => this.resolve(path, absolute),
 			request: (path: string, type?: string): Promise<unknown> => this.request(path, type),
 			replacements: this.settings.replacements || (this.archived ? "blobUrl" : "base64")
 		});
 
-		this.loadNavigation(this.packaging!).then(() => {
+		this.loadNavigation(this.packaging).then(() => {
 			// this.toc = this.navigation.toc;
-			this.loading.navigation.resolve(this.navigation!);
+			this.loading.navigation.resolve(this.navigation);
 		});
 
-		if (this.packaging!.coverPath) {
-			this.cover = this.resolve(this.packaging!.coverPath);
+		if (this.packaging.coverPath) {
+			this.cover = this.resolve(this.packaging.coverPath);
 		}
 		// Resolve promises
-		this.loading.manifest.resolve(this.packaging!.manifest);
-		this.loading.metadata.resolve(this.packaging!.metadata);
+		this.loading.manifest.resolve(this.packaging.manifest);
+		this.loading.metadata.resolve(this.packaging.metadata);
 		this.loading.spine.resolve(this.spine);
 		this.loading.cover.resolve(this.cover);
-		this.loading.resources.resolve(this.resources!);
-		this.loading.pageList.resolve(this.pageList!);
+		this.loading.resources.resolve(this.resources);
+		this.loading.pageList.resolve(this.pageList);
 
 		this.isOpen = true;
 
@@ -688,15 +688,15 @@ class Book implements IEventEmitter {
 			}
 			// Substitute hook
 			const substituteResources = (output: string, section: Section): void => {
-				section.output = this.resources!.substitute(output, section.url);
+				section.output = this.resources.substitute(output, section.url);
 			};
 
 			// Set to use replacements
-			this.resources!.settings!.replacements = replacementsSetting || "blobUrl";
+			this.resources.settings!.replacements = replacementsSetting || "blobUrl";
 			// Create replacement urls
-			this.resources!.replacements().
+			this.resources.replacements().
 				then(() => {
-					return this.resources!.replaceCss();
+					return this.resources.replaceCss();
 				});
 
 			this.storage!.on("offline", () => {
@@ -743,12 +743,12 @@ class Book implements IEventEmitter {
 	 */
 	replacements(): Promise<void> {
 		this.spine.hooks.serialize.register((output: string, section: Section) => {
-			section.output = this.resources!.substitute(output, section.url);
+			section.output = this.resources.substitute(output, section.url);
 		});
 
-		return this.resources!.replacements().
+		return this.resources.replacements().
 			then(() => {
-				return this.resources!.replaceCss();
+				return this.resources.replaceCss();
 			}).then(() => {});
 	}
 
@@ -778,7 +778,7 @@ class Book implements IEventEmitter {
 	 * @return {string} key
 	 */
 	key(identifier?: string): string {
-		const ident = identifier || this.packaging!.metadata.identifier || this.url!.filename;
+		const ident = identifier || this.packaging.metadata.identifier || this.url.filename;
 		return `epubjs:${EPUBJS_VERSION}:${ident}`;
 	}
 
@@ -811,15 +811,15 @@ class Book implements IEventEmitter {
 
 		this.spine = undefined!;
 		this.locations = undefined!;
-		this.pageList = undefined;
+		this.pageList = undefined!;
 		this.archive = undefined;
-		this.resources = undefined;
+		this.resources = undefined!;
 		this.container = undefined;
-		this.packaging = undefined;
+		this.packaging = undefined!;
 		this.rendition = undefined;
 
-		this.navigation = undefined;
-		this.url = undefined;
+		this.navigation = undefined!;
+		this.url = undefined!;
 		this.path = undefined;
 		this.archived = false;
 	}
