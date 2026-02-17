@@ -30,7 +30,7 @@
 - [x] Replace `@xmldom/xmldom` with browser-native DOMParser
 - [x] Add `"sideEffects": false` to package.json (enables better tree-shaking for consumers)
 - [x] Node.js import support (guard `window` at module scope; parsing-only entry point still planned)
-- [ ] Improve test coverage (currently 14% — 6 test files for 42 source files)
+- [x] Improve test coverage (12 test files, 181 tests for 42 source files)
 - [x] Reduce remaining `any` types (~82 → 21; 61 removed across 21 files, 21 intentionally kept: 14 event emitter pattern, 7 annotations.ts user data)
 - [x] Replace `Function` types with proper signatures (~33 removed across 6 files; 0 remaining in code, 3 in JSDoc comments)
 - [x] Reduce non-null assertions via definite assignment (~22 removed across `rendition.ts` and `book.ts`)
@@ -73,10 +73,16 @@ All formats are single-file bundles. `preserveModules` was considered for ESM bu
 | epubcfi.test.ts | ✅ 27 passing | |
 | locations.test.ts | ✅ 1 passing | |
 | epub.test.ts | ✅ 2 passing | Unarchived + archived open |
-| book.test.ts | ✅ 8 passing | Unarchived, archived, ArrayBuffer, no-cover |
+| book.test.ts | ✅ 18 passing | Unarchived, archived, ArrayBuffer, no-cover, sub-object parity |
 | section.test.ts | ✅ 4 passing | find() + search(), including cross-node spans |
+| packaging.test.ts | ✅ 29 passing | Metadata, manifest, spine, paths, edge cases, EPUB2 fallbacks |
+| navigation.test.ts | ✅ 20 passing | Alice TOC, get(), NCX, nested nav, landmarks |
+| container.test.ts | ✅ 8 passing | Standard/nested/root paths, errors, destroy |
+| layout.test.ts | ✅ 26 passing | Constructor, flow, spread, calculate, count |
+| displayoptions.test.ts | ✅ 8 passing | Parse all fields, missing, empty, destroy |
+| spine.test.ts | ✅ 19 passing | Unpack, get, first/last, each, append/remove |
 
-**Total: 61 tests passing**
+**Total: 181 tests passing**
 
 ---
 
@@ -108,7 +114,7 @@ All formats are single-file bundles. `preserveModules` was considered for ESM bu
 
 ### High Priority
 1. Node.js parsing-only entry point (no rendering)
-2. Improve test coverage — untested: Rendition, Contents, Spine, Navigation, Packaging, Archive, all view managers
+2. Improve test coverage — untested: Rendition, Contents, Archive, PageList, all view managers
 
 ### Medium Priority
 3. Explore splitting `Book` dependency graph for better tree-shaking
