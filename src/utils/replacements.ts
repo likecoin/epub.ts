@@ -19,7 +19,7 @@ export function replaceBase(doc: Document, section: { url: string }): void {
 	}
 
 	// Fix for Safari crashing if the url doesn't have an origin
-	if (!absolute && window && window.location) {
+	if (!absolute && typeof window !== "undefined" && window.location) {
 		url = window.location.origin + url;
 	}
 

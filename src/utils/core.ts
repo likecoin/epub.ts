@@ -611,7 +611,12 @@ export class defer<T = unknown> {
  * @memberof Core
  */
 export function querySelectorByType(html: Document | Element, element: string, type: string): Element | undefined {
-	const query = html.querySelector(`${element}[*|type="${type}"]`);
+	let query: Element | null = null;
+	try {
+		query = html.querySelector(`${element}[*|type="${type}"]`);
+	} catch {
+		// Namespaced attribute selectors not supported (e.g. linkedom)
+	}
 	if (query) {
 		return query;
 	}

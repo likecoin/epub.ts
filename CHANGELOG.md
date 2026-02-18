@@ -2,9 +2,18 @@
 
 ## 0.4.5 (2026-02-17)
 
+### Features
+
+- Add Node.js parsing-only entry point (`@likecoin/epub-ts/node`) — parse EPUB metadata, spine, navigation, and section content without a browser; requires `linkedom` as an optional peer dependency
+- Add `./node` subpath export with ESM (`epub.node.js`) and CJS (`epub.node.cjs`) bundles
+
 ### Bug fixes
 
 - Guard `window` reference in `store.ts` at module scope for Node.js/SSR compatibility — the library can now be imported in Node.js without crashing
+- Guard `window` references in `archive.ts`, `url.ts`, and `replacements.ts` for Node.js compatibility
+- Replace `window.decodeURIComponent` with global `decodeURIComponent` in `archive.ts`
+- Fix `querySelectorByType` crash on environments without CSS namespace selector support (e.g. linkedom)
+- Add `getElementsByTagName` fallback in `Packaging.getElementText` for parsers without XML namespace support
 
 ### Type safety
 

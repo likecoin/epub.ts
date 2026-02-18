@@ -29,7 +29,8 @@
 - [x] Replace `localforage` with native IndexedDB wrapper
 - [x] Replace `@xmldom/xmldom` with browser-native DOMParser
 - [x] Add `"sideEffects": false` to package.json (enables better tree-shaking for consumers)
-- [x] Node.js import support (guard `window` at module scope; parsing-only entry point still planned)
+- [x] Node.js import support (guard `window` at module scope)
+- [x] Node.js parsing-only entry point (`@likecoin/epub-ts/node` with `linkedom` peer dep)
 - [x] Improve test coverage (12 test files, 181 tests for 42 source files)
 - [x] Reduce remaining `any` types (~82 → 21; 61 removed across 21 files, 21 intentionally kept: 14 event emitter pattern, 7 annotations.ts user data)
 - [x] Replace `Function` types with proper signatures (~33 removed across 6 files; 0 remaining in code, 3 in JSDoc comments)
@@ -44,6 +45,8 @@
 | ESM | `dist/epub.js` | ~343KB | Primary import for modern bundlers |
 | CJS | `dist/epub.cjs` | ~211KB | `require()` support |
 | UMD | `dist/epub.umd.js` | ~211KB | `<script>` tag / CDN usage |
+| Node ESM | `dist/epub.node.js` | ~233KB | `@likecoin/epub-ts/node` for Node.js |
+| Node CJS | `dist/epub.node.cjs` | ~150KB | `require("@likecoin/epub-ts/node")` |
 | Types | `dist/*.d.ts` | — | Generated from source via `vite-plugin-dts` |
 
 All formats are single-file bundles. `preserveModules` was considered for ESM but provides minimal benefit since `Book` imports nearly the entire dependency graph.
@@ -81,8 +84,9 @@ All formats are single-file bundles. `preserveModules` was considered for ESM bu
 | layout.test.ts | ✅ 26 passing | Constructor, flow, spread, calculate, count |
 | displayoptions.test.ts | ✅ 8 passing | Parse all fields, missing, empty, destroy |
 | spine.test.ts | ✅ 19 passing | Unpack, get, first/last, each, append/remove |
+| node.test.ts | ✅ 10 passing | Node.js entry point: open, metadata, spine, navigation, render |
 
-**Total: 181 tests passing**
+**Total: 191 tests passing**
 
 ---
 
@@ -103,7 +107,7 @@ All formats are single-file bundles. `preserveModules` was considered for ESM bu
 
 ## Known Limitations
 
-- **Limited Node.js support** — can be imported without crashing; full parsing-only entry point planned
+- **Node.js parsing-only support** — `@likecoin/epub-ts/node` entry point provides metadata, spine, navigation, and section rendering via `linkedom`; no browser rendering
 - **Single-file ESM bundle** — `Book` imports nearly everything, so `preserveModules` wouldn't help much
 - **21 `any` types remain** — intentionally kept: 14 in event emitter callback signatures (requires generic typed-emitter refactor), 7 in `annotations.ts` (public API `Record<string, any>` for user data)
 - **0 `Function` types in code** — all 33 replaced with `HookCallback`, `ViewManagerConstructor`, `ViewConstructor`, `EventListener`, or typed function signatures
@@ -113,7 +117,7 @@ All formats are single-file bundles. `preserveModules` was considered for ESM bu
 ## Priority Next Steps
 
 ### High Priority
-1. Node.js parsing-only entry point (no rendering)
+1. ~~Node.js parsing-only entry point (no rendering)~~ Done
 2. Improve test coverage — untested: Rendition, Contents, Archive, PageList, all view managers
 
 ### Medium Priority

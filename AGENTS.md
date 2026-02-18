@@ -53,6 +53,7 @@ All project rules and conventions are below. See also `README.md` for project ov
 | `src/rendition.ts` | Rendering engine |
 | `src/epubcfi.ts` | EPUB CFI parser |
 | `src/index.ts` | Public API exports |
+| `src/node.ts` | Node.js entry point (linkedom shims + parsing exports) |
 
 ## Status
 
@@ -65,4 +66,5 @@ See [PROJECT_STATUS.md](./PROJECT_STATUS.md) for conversion progress.
 - `@xmldom/xmldom` replaced with native DOMParser
 - Only 1 runtime dependency: `jszip`
 - Security: CSS injection and dangerous URL schemes fixed
-- Remaining: Node.js parsing-only entry point, improve test coverage, reduce ~21 remaining `any` types
+- Node.js parsing-only entry point: complete (`@likecoin/epub-ts/node` with `linkedom`)
+- Remaining: improve test coverage, reduce ~21 remaining `any` types

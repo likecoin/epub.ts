@@ -302,7 +302,12 @@ class Packaging {
 	 * @return {string} text
 	 */
 	getElementText(xml: Element, tag: string): string {
-		const found = xml.getElementsByTagNameNS("http://purl.org/dc/elements/1.1/", tag);
+		let found = xml.getElementsByTagNameNS("http://purl.org/dc/elements/1.1/", tag);
+
+		// Fallback for parsers without XML namespace support (e.g. linkedom)
+		if (!found || found.length === 0) {
+			found = xml.getElementsByTagName(`dc:${tag}`);
+		}
 
 		if(!found || found.length === 0) return "";
 

@@ -49,6 +49,30 @@ fileInput.addEventListener("change", async (event) => {
 });
 ```
 
+### Node.js (parsing only)
+
+Parse EPUB metadata, spine, navigation, and section content without a browser. Requires [`linkedom`](https://github.com/WebReflection/linkedom) as a peer dependency.
+
+```bash
+npm install linkedom
+```
+
+```typescript
+import { Book } from "@likecoin/epub-ts/node";
+import { readFileSync } from "node:fs";
+
+const data = readFileSync("book.epub");
+const arrayBuffer = data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength);
+const book = new Book(arrayBuffer);
+await book.opened;
+
+console.log(book.packaging.metadata.title);
+console.log(book.navigation.toc.map(item => item.label));
+
+const section = book.spine.first();
+const html = await section.render(book.archive.request.bind(book.archive));
+```
+
 ## Migration from epubjs
 
 Drop-in replacement. Change your import:
@@ -102,12 +126,11 @@ Key classes:
 
 ## Supported Environments
 
-| Environment | Notes |
-|-------------|-------|
-| Modern browsers | Chrome, Firefox, Safari, Edge (requires DOM) |
-| Vite / webpack | ESM or CJS imports |
-
-> **Note**: This library requires a DOM environment. Node.js support (parsing-only, no rendering) is planned but not yet available.
+| Environment | Import | Notes |
+|-------------|--------|-------|
+| Modern browsers | `@likecoin/epub-ts` | Chrome, Firefox, Safari, Edge |
+| Vite / webpack | `@likecoin/epub-ts` | ESM or CJS |
+| Node.js 18+ | `@likecoin/epub-ts/node` | Parsing only (no rendering); requires `linkedom` peer dep |
 
 ## What's Changed from epubjs
 
@@ -118,6 +141,7 @@ Key classes:
 - Replaced `event-emitter` with inline typed emitter
 - Replaced `localforage` with native IndexedDB wrapper
 - Replaced `@xmldom/xmldom` with native DOMParser/XMLSerializer
+- Added Node.js parsing-only entry point (`@likecoin/epub-ts/node`) with `linkedom`
 - Dropped IE8–IE11 support
 
 ## Development
