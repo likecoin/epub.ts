@@ -31,7 +31,7 @@
 - [x] Add `"sideEffects": false` to package.json (enables better tree-shaking for consumers)
 - [x] Node.js import support (guard `window` at module scope)
 - [x] Node.js parsing-only entry point (`@likecoin/epub-ts/node` with `linkedom` peer dep)
-- [x] Improve test coverage (12 test files, 181 tests for 42 source files)
+- [x] Improve test coverage (17 test files, 253 tests for 42 source files)
 - [x] Reduce remaining `any` types (~82 → 21; 61 removed across 21 files, 21 intentionally kept: 14 event emitter pattern, 7 annotations.ts user data)
 - [x] Replace `Function` types with proper signatures (~33 removed across 6 files; 0 remaining in code, 3 in JSDoc comments)
 - [x] Reduce non-null assertions via definite assignment (~22 removed across `rendition.ts` and `book.ts`)
@@ -85,8 +85,12 @@ All formats are single-file bundles. `preserveModules` was considered for ESM bu
 | displayoptions.test.ts | ✅ 8 passing | Parse all fields, missing, empty, destroy |
 | spine.test.ts | ✅ 19 passing | Unpack, get, first/last, each, append/remove |
 | node.test.ts | ✅ 10 passing | Node.js entry point: open, metadata, spine, navigation, render |
+| archive.test.ts | ✅ 22 passing | Constructor, getText, getBlob, getBase64, request, handleResponse, createUrl, destroy |
+| pagelist.test.ts | ✅ 17 passing | Nav HTML, NCX, CFI hrefs, process, pageFromCfi, cfiFromPage, percentages, destroy |
+| resources.test.ts | ✅ 10 passing | Constructor, split, splitUrls, relativeTo, get, substitute, destroy |
+| annotations.test.ts | ✅ 13 passing | Constructor, add/remove, convenience wrappers, each, Annotation class, update |
 
-**Total: 191 tests passing**
+**Total: 253 tests passing**
 
 ---
 
@@ -118,7 +122,7 @@ All formats are single-file bundles. `preserveModules` was considered for ESM bu
 
 ### High Priority
 1. ~~Node.js parsing-only entry point (no rendering)~~ Done
-2. Improve test coverage — untested: Rendition, Contents, Archive, PageList, all view managers
+2. Improve test coverage — untested: Rendition, Contents, all view managers
 
 ### Medium Priority
 3. Explore splitting `Book` dependency graph for better tree-shaking
