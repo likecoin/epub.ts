@@ -62,7 +62,8 @@ import { Book } from "@likecoin/epub-ts/node";
 import { readFileSync } from "node:fs";
 
 const data = readFileSync("book.epub");
-const book = new Book(data.buffer);
+const arrayBuffer = data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength);
+const book = new Book(arrayBuffer);
 await book.opened;
 
 console.log(book.packaging.metadata.title);

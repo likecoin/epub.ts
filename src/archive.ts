@@ -130,8 +130,8 @@ class Archive {
 	 * @return {Blob}
 	 */
 	getBlob(url: string, mimeType?: string): Promise<Blob> | undefined {
-		const decodededUrl = decodeURIComponent(url.substr(1)); // Remove first slash
-		const entry = this.zip!.file(decodededUrl);
+		const decodedUrl = decodeURIComponent(url.substr(1)); // Remove first slash
+		const entry = this.zip!.file(decodedUrl);
 
 		if(entry) {
 			mimeType = mimeType || mime.lookup(entry.name);
@@ -149,8 +149,8 @@ class Archive {
 	 * @return text content
 	 */
 	getText(url: string, _encoding?: string): Promise<string> | undefined {
-		const decodededUrl = decodeURIComponent(url.substr(1)); // Remove first slash
-		const entry = this.zip!.file(decodededUrl);
+		const decodedUrl = decodeURIComponent(url.substr(1)); // Remove first slash
+		const entry = this.zip!.file(decodedUrl);
 
 		if(entry) {
 			return entry.async("string").then(function(text: string) {
@@ -167,8 +167,8 @@ class Archive {
 	 * @return {string} base64 encoded
 	 */
 	getBase64(url: string, mimeType?: string): Promise<string> | undefined {
-		const decodededUrl = decodeURIComponent(url.substr(1)); // Remove first slash
-		const entry = this.zip!.file(decodededUrl);
+		const decodedUrl = decodeURIComponent(url.substr(1)); // Remove first slash
+		const entry = this.zip!.file(decodedUrl);
 
 		if(entry) {
 			mimeType = mimeType || mime.lookup(entry.name);

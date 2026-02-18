@@ -26,7 +26,7 @@ if (typeof globalThis.XMLSerializer === "undefined") {
 
 if (typeof globalThis.document === "undefined") {
 	const { document } = parseHTML("<!DOCTYPE html><html><head></head><body></body></html>");
-	(globalThis as any).document = document;
+	(globalThis as typeof globalThis & { document: Document }).document = document as Document;
 }
 
 export { default as Book } from "./book";
