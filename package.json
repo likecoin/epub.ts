@@ -27,7 +27,7 @@
       "require": "./dist/epub.node.cjs"
     }
   },
-  "sideEffects": false,
+  "sideEffects": ["dist/epub.node.js", "dist/epub.node.cjs"],
   "files": [
     "dist"
   ],
