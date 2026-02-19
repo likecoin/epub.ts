@@ -139,7 +139,7 @@ class Store implements IEventEmitter {
 		const mapped = resources.resources.map((item: { href: string }) => {
 			const { href } = item;
 			const url = this.resolver(href);
-			const encodedUrl = window.encodeURIComponent(url);
+			const encodedUrl = encodeURIComponent(url);
 
 			return this.storage.getItem(encodedUrl).then((item) => {
 				if (!item || force) {
@@ -164,7 +164,7 @@ class Store implements IEventEmitter {
 	 * @return {Promise<Blob>}
 	 */
 	put(url: string, withCredentials?: boolean, headers?: Record<string, string>): Promise<Uint8Array | null> {
-		const encodedUrl = window.encodeURIComponent(url);
+		const encodedUrl = encodeURIComponent(url);
 
 		return this.storage.getItem(encodedUrl).then((result) => {
 			if (!result) {
@@ -275,7 +275,7 @@ class Store implements IEventEmitter {
 	 * @return {Blob}
 	 */
 	getBlob(url: string, mimeType?: string): Promise<Blob | undefined> {
-		const encodedUrl = window.encodeURIComponent(url);
+		const encodedUrl = encodeURIComponent(url);
 
 		return this.storage.getItem(encodedUrl).then(function(uint8array) {
 			if(!uint8array) return;
@@ -294,7 +294,7 @@ class Store implements IEventEmitter {
 	 * @return {string}
 	 */
 	getText(url: string, mimeType?: string): Promise<string | undefined> {
-		const encodedUrl = window.encodeURIComponent(url);
+		const encodedUrl = encodeURIComponent(url);
 
 		mimeType = mimeType || mime.lookup(url);
 
@@ -323,7 +323,7 @@ class Store implements IEventEmitter {
 	 * @return {string} base64 encoded
 	 */
 	getBase64(url: string, mimeType?: string): Promise<string | undefined> {
-		const encodedUrl = window.encodeURIComponent(url);
+		const encodedUrl = encodeURIComponent(url);
 
 		mimeType = mimeType || mime.lookup(url);
 
