@@ -1,4 +1,4 @@
-# AGENTS.md
+# Agent Instructions
 
 All project rules and conventions are below. See also `README.md` for project overview and `PROJECT_STATUS.md` for volatile status.
 
@@ -57,14 +57,4 @@ All project rules and conventions are below. See also `README.md` for project ov
 
 ## Status
 
-See [PROJECT_STATUS.md](./PROJECT_STATUS.md) for conversion progress.
-
-### Current Stage: C (Improvements)
-- TypeScript strict mode: complete
-- ESLint: 0 errors, 0 warnings
-- `localforage` replaced with native IndexedDB
-- `@xmldom/xmldom` replaced with native DOMParser
-- Only 1 runtime dependency: `jszip`
-- Security: CSS injection and dangerous URL schemes fixed
-- Node.js parsing-only entry point: complete (`@likecoin/epub-ts/node` with `linkedom`)
-- Remaining: improve test coverage, reduce ~21 remaining `any` types
+See [PROJECT_STATUS.md](./PROJECT_STATUS.md) for current stage, test counts, dependency status, and remaining work.
