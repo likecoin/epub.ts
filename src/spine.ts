@@ -188,7 +188,7 @@ class Spine {
 	 * @param  {Section} section
 	 */
 	prepend(section: Section): number {
-		// var index = this.spineItems.unshift(section);
+		this.spineItems.unshift(section);
 		this.spineByHref[section.href!] = 0;
 		this.spineById[section.idref!] = 0;
 
