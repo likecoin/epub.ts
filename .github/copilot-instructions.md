@@ -56,7 +56,7 @@ npm run lint
 npm test
 ```
 - Runs all tests with Vitest
-- Should show **62 tests passing**
+- Should show **481 tests passing**
 - Time: ~5-10 seconds
 - Tests are in `test/` directory (core.test.ts, epubcfi.test.ts, etc.)
 - Use `npm run test:watch` for watch mode during development
@@ -173,15 +173,13 @@ Follow conventional commits:
 - Full TypeScript conversion with strict mode
 - ESLint with 0 errors, 0 warnings
 - GitHub Actions CI
-- 62 tests passing
+- 481 tests passing (28 test files)
 - Inline typed emitter (replaced event-emitter)
-- Reduced dependencies (removed core-js, lodash, path-webpack)
+- Reduced dependencies to 1 (`jszip`); removed core-js, lodash, path-webpack, localforage, @xmldom/xmldom
+- Node.js parsing-only entry point (`@likecoin/epub-ts/node` with `linkedom`)
 
 🔄 **Remaining work:**
-- Replace `localforage` with lighter IndexedDB wrapper
-- Replace `@xmldom/xmldom` with browser-native DOMParser
-- Add Node.js support (parsing-only entry point)
-- Improve test coverage
+- Improve test coverage for rendering modules (Rendition, Contents, Mapping, view managers)
 
 **Do not remove or break existing functionality** unless fixing a security vulnerability or unless explicitly asked to do so.
 
@@ -211,8 +209,8 @@ Follow conventional commits:
 
 ### Test Failures
 - Tests are in `test/` directory using Vitest with globals
-- 62 tests should pass
-- Tests cover: core utilities, EPUB CFI parsing, locations, book loading, sections
+- 481 tests should pass
+- Tests cover: core utilities, EPUB CFI parsing, locations, book loading, sections, archive, packaging, navigation, resources, annotations, and more
 
 ### Dependencies
 - Only add new dependencies if absolutely necessary

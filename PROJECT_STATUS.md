@@ -31,7 +31,7 @@
 - [x] Add `"sideEffects": false` to package.json (enables better tree-shaking for consumers)
 - [x] Node.js import support (guard `window` at module scope)
 - [x] Node.js parsing-only entry point (`@likecoin/epub-ts/node` with `linkedom` peer dep)
-- [x] Improve test coverage (28 test files, 471 tests for 42 source files)
+- [x] Improve test coverage (28 test files, 481 tests for 42 source files)
 - [x] Reduce remaining `any` types (~82 → 21; 61 removed across 21 files, 21 intentionally kept: 14 event emitter pattern, 7 annotations.ts user data)
 - [x] Replace `Function` types with proper signatures (~33 removed across 6 files; 0 remaining in code, 3 in JSDoc comments)
 - [x] Reduce non-null assertions via definite assignment (~22 removed across `rendition.ts` and `book.ts`)
@@ -85,14 +85,14 @@ All formats are single-file bundles. `preserveModules` was considered for ESM bu
 | displayoptions.test.ts | ✅ 8 passing | Parse all fields, missing, empty, destroy |
 | spine.test.ts | ✅ 19 passing | Unpack, get, first/last, each, append/remove |
 | node.test.ts | ✅ 10 passing | Node.js entry point: open, metadata, spine, navigation, render |
-| archive.test.ts | ✅ 22 passing | Constructor, getText, getBlob, getBase64, request, handleResponse, createUrl, destroy |
-| pagelist.test.ts | ✅ 17 passing | Nav HTML, NCX, CFI hrefs, process, pageFromCfi, cfiFromPage, percentages, destroy |
-| resources.test.ts | ✅ 10 passing | Constructor, split, splitUrls, relativeTo, get, substitute, destroy |
+| archive.test.ts | ✅ 24 passing | Constructor, openUrl, getText, getBlob, getBase64, request, handleResponse, createUrl (base64+blob), destroy |
+| pagelist.test.ts | ✅ 19 passing | Nav HTML, NCX, CFI hrefs, process, pageFromCfi (empty+populated), cfiFromPage, percentages, percentageFromCfi, destroy |
+| resources.test.ts | ✅ 14 passing | Constructor, split, splitUrls, relativeTo, get (missing+found), substitute (direct+relative), replacements, destroy |
 | annotations.test.ts | ✅ 13 passing | Constructor, add/remove, convenience wrappers, each, Annotation class, update |
 | path-utils.test.ts | ✅ 29 passing | resolve, relative, dirname, isAbsolute, parse — POSIX path edge cases |
 | mime.test.ts | ✅ 24 passing | EPUB types (xhtml, opf, ncx, epub), images, fonts, audio, video, case-insensitive |
 | hook.test.ts | ✅ 18 passing | register, deregister, trigger (sync/async/error), list, clear |
-| queue.test.ts | ✅ 22 passing | enqueue, dequeue (sync/async/context), flush, dump, clear, pause, stop, length |
+| queue.test.ts | ✅ 24 passing | enqueue, dequeue (sync/async/context), flush, dump, clear, pause, stop, length, Task class |
 | path.test.ts | ✅ 17 passing | Constructor, directory/filename/extension, resolve, relative, isAbsolute, URL stripping |
 | url.test.ts | ✅ 17 passing | Absolute/relative/base parsing, resolve, relative, path(), toString, hash/search |
 | event-emitter.test.ts | ✅ 14 passing | Mixin application, on/off/emit, chaining, listener isolation, snapshot during emit |
@@ -101,7 +101,7 @@ All formats are single-file bundles. `preserveModules` was considered for ESM bu
 | request.test.ts | ✅ 6 passing | Type inference (.opf/.xhtml/.ncx), binary, blob, 404 rejection |
 | themes.test.ts | ✅ 21 passing | register dispatch, registerUrl/Rules/Css, select, add, override/removeOverride, fontSize, font, destroy |
 
-**Total: 471 tests passing**
+**Total: 481 tests passing**
 
 ---
 
