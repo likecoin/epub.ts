@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
 import Queue from "../src/utils/queue";
+import { Task } from "../src/utils/queue";
 
 // In jsdom, requestAnimationFrame exists and would cause run() to auto-process.
 // We disable tick so enqueue() doesn't trigger async processing, then test
@@ -193,5 +194,24 @@ describe("Queue", () => {
 			expect(order).toEqual([1, 2]);
 			expect(q.length()).toBe(0);
 		});
+	});
+});
+
+describe("Task", () => {
+	it("should wrap a callback-style function into a promise", async () => {
+		const fn = function (_arg1: string, callback: (value: unknown, err: unknown) => void) {
+			callback("result", null);
+		};
+		const wrapped = new Task(fn, []) as unknown as (...args: unknown[]) => Promise<unknown>;
+		const result = await wrapped("hello");
+		expect(result).toBe("result");
+	});
+
+	it("should reject when callback receives an error", async () => {
+		const fn = function (callback: (value: unknown, err: unknown) => void) {
+			callback(null, new Error("fail"));
+		};
+		const wrapped = new Task(fn, []) as unknown as (...args: unknown[]) => Promise<unknown>;
+		await expect(wrapped()).rejects.toThrow("fail");
 	});
 });

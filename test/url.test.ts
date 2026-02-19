@@ -82,10 +82,9 @@ describe("Url", () => {
 	});
 
 	describe("relative()", () => {
-		it("should return path relative to the url directory", () => {
+		it("should compute path from argument back to url directory", () => {
 			const url = new Url("http://example.com/OPS/text/ch1.xhtml");
-			const result = url.relative("/OPS/images/cover.jpg");
-			expect(typeof result).toBe("string");
+			expect(url.relative("/OPS/images/cover.jpg")).toBe("../../text");
 		});
 	});
 

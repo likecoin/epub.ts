@@ -17,6 +17,15 @@ describe("Archive", () => {
 		});
 	});
 
+	describe("openUrl()", () => {
+		it("should load an epub from a URL", async () => {
+			const a = new Archive();
+			await a.openUrl(getFixtureUrl("/alice.epub"));
+			const text = await a.getText("/OPS/package.opf");
+			expect(text).toContain("Alice's Adventures in Wonderland");
+		});
+	});
+
 	describe("with alice.epub loaded", () => {
 		beforeAll(async () => {
 			archive = new Archive();
@@ -130,6 +139,12 @@ describe("Archive", () => {
 				const url1 = await archive.createUrl("/OPS/images/cover_th.jpg", { base64: true });
 				const url2 = await archive.createUrl("/OPS/images/cover_th.jpg", { base64: true });
 				expect(url1).toBe(url2);
+			});
+
+			it("should return a blob URL when base64 is false", async () => {
+				const url = await archive.createUrl("/OPS/toc.xhtml", { base64: false });
+				expect(url).toMatch(/^blob:/);
+				expect(archive.urlCache["/OPS/toc.xhtml"]).toBe(url);
 			});
 
 			it("should reject for missing file", async () => {

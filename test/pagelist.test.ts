@@ -151,6 +151,18 @@ describe("PageList", () => {
 			const pl = new PageList();
 			expect(pl.pageFromCfi("epubcfi(/6/4)")).toBe(-1);
 		});
+
+		it("should return page number for exact CFI match", () => {
+			const doc = makeNavHtml(`
+				<nav epub:type="page-list">
+					<ol>
+						<li><a href="ch1.html#epubcfi(/6/4!/4/2)">1</a></li>
+						<li><a href="ch2.html#epubcfi(/6/8!/4/2)">2</a></li>
+					</ol>
+				</nav>`);
+			const pl = new PageList(doc);
+			expect(pl.pageFromCfi("epubcfi(/6/8!/4/2)")).toBe(2);
+		});
 	});
 
 	describe("cfiFromPage()", () => {
@@ -201,6 +213,21 @@ describe("PageList", () => {
 		it("should calculate percentage with 3-decimal rounding", () => {
 			// (6 - 1) / 10 = 0.5
 			expect(pl.percentageFromPage(6)).toBe(0.5);
+		});
+	});
+
+	describe("percentageFromCfi()", () => {
+		it("should chain pageFromCfi and percentageFromPage", () => {
+			const doc = makeNavHtml(`
+				<nav epub:type="page-list">
+					<ol>
+						<li><a href="ch1.html#epubcfi(/6/4!/4/2)">1</a></li>
+						<li><a href="ch2.html#epubcfi(/6/8!/4/2)">11</a></li>
+					</ol>
+				</nav>`);
+			const pl = new PageList(doc);
+			// pageFromCfi("epubcfi(/6/4!/4/2)") → 1, percentageFromPage(1) → (1-1)/10 = 0
+			expect(pl.percentageFromCfi("epubcfi(/6/4!/4/2)")).toBe(0);
 		});
 	});
 

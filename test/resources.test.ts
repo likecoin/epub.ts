@@ -63,19 +63,28 @@ describe("Resources", () => {
 			const resolver = (href: string) => "/OPS/" + href;
 			const res = new Resources(manifest, { resolver });
 			const relatives = res.relativeTo("/OPS/chapters/ch1.xhtml");
-			expect(relatives.length).toBe(res.urls!.length);
-			relatives.forEach(rel => {
-				expect(rel).toBeDefined();
-				expect(typeof rel).toBe("string");
-			});
+			expect(relatives).toEqual(["../style.css", "../cover.jpg", "../font.woff"]);
+		});
+
+		it("should accept an explicit resolver argument", () => {
+			const res = createResources();
+			const resolver = (href: string) => "/content/" + href;
+			const relatives = res.relativeTo("/content/text/ch1.xhtml", resolver);
+			expect(relatives).toEqual(["../style.css", "../cover.jpg", "../font.woff"]);
 		});
 	});
 
 	describe("get()", () => {
-		const res = createResources();
-
 		it("should return undefined for path not in urls", () => {
+			const res = createResources();
 			expect(res.get("nonexistent.png")).toBeUndefined();
+		});
+
+		it("should return replacement URL when replacementUrls populated", async () => {
+			const res = createResources();
+			res.replacementUrls = res.urls!.map(u => "blob:" + u);
+			const result = await res.get("cover.jpg");
+			expect(result).toBe("blob:cover.jpg");
 		});
 	});
 
@@ -89,6 +98,24 @@ describe("Resources", () => {
 			expect(result).toContain("blob:cover.jpg");
 			expect(result).not.toContain('"style.css"');
 			expect(result).not.toContain('"cover.jpg"');
+		});
+
+		it("should use relativeTo when url argument is provided", () => {
+			const resolver = (href: string) => "/OPS/" + href;
+			const res = new Resources(manifest, { resolver });
+			res.replacementUrls = res.urls!.map(u => "blob:" + u);
+			const content = '<link href="../style.css"/><img src="../cover.jpg"/>';
+			const result = res.substitute(content, "/OPS/chapters/ch1.xhtml");
+			expect(result).toContain("blob:style.css");
+			expect(result).toContain("blob:cover.jpg");
+		});
+	});
+
+	describe("replacements()", () => {
+		it("should return urls as-is when mode is 'none'", async () => {
+			const res = new Resources(manifest, { replacements: "none" });
+			const result = await res.replacements();
+			expect(result).toEqual(["style.css", "cover.jpg", "font.woff"]);
 		});
 	});
 
