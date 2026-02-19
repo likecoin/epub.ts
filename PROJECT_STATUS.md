@@ -31,7 +31,7 @@
 - [x] Add `"sideEffects": false` to package.json (enables better tree-shaking for consumers)
 - [x] Node.js import support (guard `window` at module scope)
 - [x] Node.js parsing-only entry point (`@likecoin/epub-ts/node` with `linkedom` peer dep)
-- [x] Improve test coverage (17 test files, 253 tests for 42 source files)
+- [x] Improve test coverage (24 test files, 394 tests for 42 source files)
 - [x] Reduce remaining `any` types (~82 → 21; 61 removed across 21 files, 21 intentionally kept: 14 event emitter pattern, 7 annotations.ts user data)
 - [x] Replace `Function` types with proper signatures (~33 removed across 6 files; 0 remaining in code, 3 in JSDoc comments)
 - [x] Reduce non-null assertions via definite assignment (~22 removed across `rendition.ts` and `book.ts`)
@@ -89,8 +89,15 @@ All formats are single-file bundles. `preserveModules` was considered for ESM bu
 | pagelist.test.ts | ✅ 17 passing | Nav HTML, NCX, CFI hrefs, process, pageFromCfi, cfiFromPage, percentages, destroy |
 | resources.test.ts | ✅ 10 passing | Constructor, split, splitUrls, relativeTo, get, substitute, destroy |
 | annotations.test.ts | ✅ 13 passing | Constructor, add/remove, convenience wrappers, each, Annotation class, update |
+| path-utils.test.ts | ✅ 29 passing | resolve, relative, dirname, isAbsolute, parse — POSIX path edge cases |
+| mime.test.ts | ✅ 24 passing | EPUB types (xhtml, opf, ncx, epub), images, fonts, audio, video, case-insensitive |
+| hook.test.ts | ✅ 18 passing | register, deregister, trigger (sync/async/error), list, clear |
+| queue.test.ts | ✅ 22 passing | enqueue, dequeue (sync/async/context), flush, dump, clear, pause, stop, length |
+| path.test.ts | ✅ 17 passing | Constructor, directory/filename/extension, resolve, relative, isAbsolute, URL stripping |
+| url.test.ts | ✅ 17 passing | Absolute/relative/base parsing, resolve, relative, path(), toString, hash/search |
+| event-emitter.test.ts | ✅ 14 passing | Mixin application, on/off/emit, chaining, listener isolation, snapshot during emit |
 
-**Total: 253 tests passing**
+**Total: 394 tests passing**
 
 ---
 
@@ -122,7 +129,7 @@ All formats are single-file bundles. `preserveModules` was considered for ESM bu
 
 ### High Priority
 1. ~~Node.js parsing-only entry point (no rendering)~~ Done
-2. Improve test coverage — untested: Rendition, Contents, all view managers
+2. Improve test coverage — untested: Rendition, Contents, Store, all view managers
 
 ### Medium Priority
 3. Explore splitting `Book` dependency graph for better tree-shaking
