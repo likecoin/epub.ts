@@ -9,7 +9,19 @@ import type { IEventEmitter, ViewSettings, ReframeBounds, RequestFunction } from
 import type Section from "../../section";
 import type Layout from "../../layout";
 
-class IframeView implements IEventEmitter {
+export interface IframeViewEvents extends Record<string, any[]> {
+	"axis": [string];
+	"writingMode": [string];
+	"loaderror": [unknown];
+	"rendered": [Section];
+	"resized": [ReframeBounds];
+	"displayed": [IframeView];
+	"shown": [IframeView];
+	"hidden": [IframeView];
+	"markClicked": [string, object | undefined];
+}
+
+class IframeView implements IEventEmitter<IframeViewEvents> {
 	settings: ViewSettings;
 	id: string;
 	section: Section;
@@ -52,10 +64,10 @@ class IframeView implements IEventEmitter {
 	axis!: string;
 	expanded?: boolean;
 
-	declare on: IEventEmitter["on"];
-	declare off: IEventEmitter["off"];
-	declare emit: IEventEmitter["emit"];
-	declare __listeners: IEventEmitter["__listeners"];
+	declare on: IEventEmitter<IframeViewEvents>["on"];
+	declare off: IEventEmitter<IframeViewEvents>["off"];
+	declare emit: IEventEmitter<IframeViewEvents>["emit"];
+	declare __listeners: IEventEmitter<IframeViewEvents>["__listeners"];
 
 	constructor(section: Section, options?: ViewSettings) {
 		this.settings = extend({
@@ -500,7 +512,7 @@ class IframeView implements IEventEmitter {
 			}
 		});
 
-		this.contents.on(EVENTS.CONTENTS.RESIZE, (_e: Event) => {
+		this.contents.on(EVENTS.CONTENTS.RESIZE, (_e: { width: number; height: number }) => {
 			if(this.displayed && this.iframe) {
 				this.expand();
 				if (this.contents) {

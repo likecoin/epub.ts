@@ -13,10 +13,14 @@ import type Section from "./section";
  * @param {request} request
  * @param {number} [pause=100]
  */
-class Locations implements IEventEmitter {
-	declare on: (type: string, fn: (...args: any[]) => void) => this;
-	declare off: (type: string, fn?: (...args: any[]) => void) => this;
-	declare emit: (type: string, ...args: unknown[]) => void;
+export interface LocationsEvents extends Record<string, any[]> {
+	"changed": [{ percentage: number }];
+}
+
+class Locations implements IEventEmitter<LocationsEvents> {
+	declare on: IEventEmitter<LocationsEvents>["on"];
+	declare off: IEventEmitter<LocationsEvents>["off"];
+	declare emit: IEventEmitter<LocationsEvents>["emit"];
 
 	spine: Spine | undefined;
 	request: RequestFunction | undefined;

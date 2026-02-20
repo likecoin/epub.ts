@@ -235,7 +235,12 @@ class Annotations {
  * @param {object} styles CSS styles to assign to annotation
  * @returns {Annotation} annotation
  */
-class Annotation implements IEventEmitter {
+export interface AnnotationEvents extends Record<string, any[]> {
+	"attach": [object | null | undefined];
+	"detach": [];
+}
+
+class Annotation implements IEventEmitter<AnnotationEvents> {
 	type: string;
 	cfiRange: string;
 	data: Record<string, any>;
@@ -245,9 +250,9 @@ class Annotation implements IEventEmitter {
 	className: string;
 	styles: Record<string, string>;
 
-	declare on: IEventEmitter["on"];
-	declare off: IEventEmitter["off"];
-	declare emit: IEventEmitter["emit"];
+	declare on: IEventEmitter<AnnotationEvents>["on"];
+	declare off: IEventEmitter<AnnotationEvents>["off"];
+	declare emit: IEventEmitter<AnnotationEvents>["emit"];
 
 	constructor ({
 		type,
@@ -315,7 +320,7 @@ class Annotation implements IEventEmitter {
 		}
 
 		this.mark = undefined;
-		this.emit(EVENTS.ANNOTATION.DETACH, undefined);
+		this.emit(EVENTS.ANNOTATION.DETACH);
 	}
 
 	/**

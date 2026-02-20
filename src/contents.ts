@@ -23,11 +23,20 @@ const _TEXT_NODE = 3;
 	* @param {string} cfiBase Section component of CFIs
 	* @param {number} sectionIndex Index in Spine of Conntent's Section
 	*/
-class Contents implements IEventEmitter {
-	declare on: (type: string, fn: (...args: any[]) => void) => this;
-	declare off: (type: string, fn?: (...args: any[]) => void) => this;
-	declare emit: (type: string, ...args: unknown[]) => void;
-	declare __listeners: IEventEmitter["__listeners"];
+export interface ContentsEvents {
+	"expand": [];
+	"resize": [{ width: number; height: number }];
+	"selected": [string];
+	"selectedRange": [Range];
+	"linkClicked": [string];
+	[event: string]: any[];
+}
+
+class Contents implements IEventEmitter<ContentsEvents> {
+	declare on: IEventEmitter<ContentsEvents>["on"];
+	declare off: IEventEmitter<ContentsEvents>["off"];
+	declare emit: IEventEmitter<ContentsEvents>["emit"];
+	declare __listeners: IEventEmitter<ContentsEvents>["__listeners"];
 
 	epubcfi: EpubCFI;
 	document: Document;

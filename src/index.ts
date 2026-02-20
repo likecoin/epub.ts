@@ -40,3 +40,13 @@ export {
 	Mapping,
 };
 export * from "./types";
+export type { BookEvents } from "./book";
+export type { RenditionEvents } from "./rendition";
+export type { AnnotationEvents } from "./annotations";
+export type { LocationsEvents } from "./locations";
+export type { LayoutEvents } from "./layout";
+export type { ContentsEvents } from "./contents";
+export type { StoreEvents } from "./store";
+export type { DefaultManagerEvents } from "./managers/default/index";
+export type { IframeViewEvents } from "./managers/views/iframe";
+export type { InlineViewEvents } from "./managers/views/inline";

@@ -14,10 +14,14 @@ import type Section from "./section";
  * @param {number} [settings.minSpreadWidth=800]
  * @param {boolean} [settings.evenSpreads=false]
  */
-class Layout implements IEventEmitter {
-	declare on: (type: string, fn: (...args: any[]) => void) => this;
-	declare off: (type: string, fn?: (...args: any[]) => void) => this;
-	declare emit: (type: string, ...args: unknown[]) => void;
+export interface LayoutEvents extends Record<string, any[]> {
+	"updated": [LayoutProps, Partial<LayoutProps>];
+}
+
+class Layout implements IEventEmitter<LayoutEvents> {
+	declare on: IEventEmitter<LayoutEvents>["on"];
+	declare off: IEventEmitter<LayoutEvents>["off"];
+	declare emit: IEventEmitter<LayoutEvents>["emit"];
 
 	settings: LayoutSettings;
 	name: string;

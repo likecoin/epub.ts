@@ -12,7 +12,17 @@ import type Contents from "../../contents";
 import type IframeView from "../views/iframe";
 import type { IEventEmitter, ManagerOptions, ViewSettings, ViewLocation, RequestFunction, SizeObject, ReframeBounds, LayoutProps } from "../../types";
 
-class DefaultViewManager implements IEventEmitter {
+export interface DefaultManagerEvents extends Record<string, any[]> {
+	"resize": [Section];
+	"resized": [{ width: number; height: number }, string?];
+	"orientationchange": [number];
+	"added": [IframeView];
+	"scroll": [{ top: number; left: number }];
+	"scrolled": [{ top: number; left: number }];
+	"removed": [IframeView];
+}
+
+class DefaultViewManager implements IEventEmitter<DefaultManagerEvents> {
 	name: string;
 	optsSettings: ManagerOptions["settings"];
 	View: new (section: Section, options?: ViewSettings) => IframeView;
@@ -44,10 +54,10 @@ class DefaultViewManager implements IEventEmitter {
 	afterScrolled!: ReturnType<typeof setTimeout>;
 	winBounds!: { top: number; left: number; right: number; bottom: number; width: number; height: number };
 
-	declare on: IEventEmitter["on"];
-	declare off: IEventEmitter["off"];
-	declare emit: IEventEmitter["emit"];
-	declare __listeners: IEventEmitter["__listeners"];
+	declare on: IEventEmitter<DefaultManagerEvents>["on"];
+	declare off: IEventEmitter<DefaultManagerEvents>["off"];
+	declare emit: IEventEmitter<DefaultManagerEvents>["emit"];
+	declare __listeners: IEventEmitter<DefaultManagerEvents>["__listeners"];
 
 	constructor(options: ManagerOptions) {
 

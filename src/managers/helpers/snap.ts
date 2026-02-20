@@ -5,6 +5,7 @@ import type { IEventEmitter } from "../../types";
 import type DefaultViewManager from "../default/index";
 import type Contents from "../../contents";
 import type Layout from "../../layout";
+import type IframeView from "../views/iframe";
 
 // easing equations from https://github.com/danro/easing-js/blob/master/easing.js
 const PI_D2 = (Math.PI / 2);
@@ -26,7 +27,7 @@ const EASING_EQUATIONS = {
   	}
 };
 
-class Snap implements IEventEmitter {
+class Snap implements IEventEmitter<Record<string, any[]>> {
 	settings: { duration: number; minVelocity: number; minDistance: number; easing: (pos: number) => number };
 	manager!: DefaultViewManager;
 	layout!: Layout;
@@ -51,11 +52,11 @@ class Snap implements IEventEmitter {
 	_onTouchStart: ((e: TouchEvent) => void) | undefined;
 	_onTouchMove: ((e: TouchEvent) => void) | undefined;
 	_onTouchEnd: ((e?: TouchEvent) => void) | undefined;
-	_afterDisplayed: ((view: { contents: Contents }) => void) | undefined;
+	_afterDisplayed: ((view: IframeView) => void) | undefined;
 
-	declare on: IEventEmitter["on"];
-	declare off: IEventEmitter["off"];
-	declare emit: IEventEmitter["emit"];
+	declare on: IEventEmitter<Record<string, any[]>>["on"];
+	declare off: IEventEmitter<Record<string, any[]>>["off"];
+	declare emit: IEventEmitter<Record<string, any[]>>["emit"];
 
 	constructor(manager: DefaultViewManager, options?: Record<string, unknown>) {
 
@@ -182,10 +183,12 @@ class Snap implements IEventEmitter {
 		this._afterDisplayed = undefined;
 	}
 
-	afterDisplayed(view: { contents: Contents }): void {
+	afterDisplayed(view: IframeView): void {
 		const contents = view.contents;
+		if (!contents) return;
+		const c = contents;
 		["touchstart", "touchmove", "touchend"].forEach((e) => {
-			contents.on(e, (ev: TouchEvent) => this.triggerViewEvent(ev, contents));
+			c.on(e, (ev: TouchEvent) => this.triggerViewEvent(ev, c));
 		});
 	}
 

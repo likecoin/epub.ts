@@ -14,10 +14,12 @@ export interface Deferred<T = unknown> {
 }
 
 // ===== Event Emitter =====
-export interface IEventEmitter {
-	on(type: string, fn: (...args: any[]) => void): unknown;
-	off(type: string, fn?: (...args: any[]) => void): unknown;
-	emit(type: string, ...args: unknown[]): void;
+export type EventMap = Record<string, any[]>;
+
+export interface IEventEmitter<E extends EventMap = Record<string, any[]>> {
+	on<K extends keyof E & string>(type: K, fn: (...args: E[K]) => void): void;
+	off<K extends keyof E & string>(type: K, fn?: (...args: E[K]) => void): void;
+	emit<K extends keyof E & string>(type: K, ...args: E[K]): void;
 	__listeners?: Record<string, Array<(...args: any[]) => void>>;
 }
 

@@ -44,6 +44,22 @@ import ContinuousViewManager from "./managers/continuous/index";
  * @param {boolean} [options.allowScriptedContent=false] enable running scripts in content
  * @param {boolean} [options.allowPopups=false] enable opening popup in content
  */
+export interface RenditionEvents extends Record<string, any[]> {
+	"started": [];
+	"attached": [];
+	"displayed": [Section | undefined];
+	"displayerror": [Error];
+	"rendered": [Section, IframeView];
+	"removed": [Section, IframeView];
+	"resized": [{ width: number; height: number }, string?];
+	"orientationchange": [number];
+	"locationChanged": [{ index: number; href: string; start: string; end: string; percentage: number | undefined }];
+	"relocated": [Location];
+	"markClicked": [string, object | undefined, Contents];
+	"selected": [string, Contents];
+	"layout": [LayoutProps, Partial<LayoutProps>];
+}
+
 interface RenditionHooks {
 	display: Hook;
 	serialize: Hook;
@@ -54,7 +70,7 @@ interface RenditionHooks {
 	show: Hook;
 }
 
-class Rendition implements IEventEmitter {
+class Rendition implements IEventEmitter<RenditionEvents> {
 	settings: RenditionOptions;
 	book!: Book;
 	hooks: RenditionHooks;
@@ -71,9 +87,9 @@ class Rendition implements IEventEmitter {
 	_layout: Layout | undefined;
 	displaying: defer<Section | undefined> | undefined;
 
-	declare on: IEventEmitter["on"];
-	declare off: IEventEmitter["off"];
-	declare emit: IEventEmitter["emit"];
+	declare on: IEventEmitter<RenditionEvents>["on"];
+	declare off: IEventEmitter<RenditionEvents>["off"];
+	declare emit: IEventEmitter<RenditionEvents>["emit"];
 
 	constructor(book: Book, options?: RenditionOptions) {
 
@@ -285,7 +301,7 @@ class Rendition implements IEventEmitter {
 		this.manager.on(EVENTS.MANAGERS.RESIZED, (size: SizeObject, epubcfi?: string) => this.onResized(size, epubcfi));
 
 		// Listen for rotation
-		this.manager.on(EVENTS.MANAGERS.ORIENTATION_CHANGE, (orientation: string) => this.onOrientationChange(orientation));
+		this.manager.on(EVENTS.MANAGERS.ORIENTATION_CHANGE, (orientation: number) => this.onOrientationChange(orientation));
 
 		// Listen for scroll changes
 		this.manager.on(EVENTS.MANAGERS.SCROLLED, () => this.reportLocation());
@@ -449,7 +465,7 @@ class Rendition implements IEventEmitter {
 	 */
 	afterDisplayed(view: IframeView): void {
 
-		view.on(EVENTS.VIEWS.MARK_CLICKED, (cfiRange: string, data: object) => {
+		view.on(EVENTS.VIEWS.MARK_CLICKED, (cfiRange: string, data: object | undefined) => {
 			if (view.contents) {
 				this.triggerMarkEvent(cfiRange, data, view.contents);
 			}
@@ -522,11 +538,11 @@ class Rendition implements IEventEmitter {
 	 * Report orientation events and display the last seen location
 	 * @private
 	 */
-	onOrientationChange(orientation: string): void {
+	onOrientationChange(orientation: number): void {
 		/**
 		 * Emit that the rendition has been rotated
 		 * @event orientationchange
-		 * @param {string} orientation
+		 * @param {number} orientation
 		 * @memberof Rendition
 		 */
 		this.emit(EVENTS.RENDITION.ORIENTATION_CHANGE, orientation);
@@ -948,7 +964,7 @@ class Rendition implements IEventEmitter {
 	 * @private
 	 * @param  {EpubCFI} cfirange
 	 */
-	triggerMarkEvent(cfiRange: string, data: object, contents: Contents): void {
+	triggerMarkEvent(cfiRange: string, data: object | undefined, contents: Contents): void {
 		/**
 		 * Emit that a mark was clicked
 		 * @event markClicked

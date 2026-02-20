@@ -43,6 +43,10 @@ interface BookLoadedState {
 	displayOptions: Promise<DisplayOptions>;
 }
 
+export interface BookEvents extends Record<string, any[]> {
+	"openFailed": [Error];
+}
+
 const CONTAINER_PATH = "META-INF/container.xml";
 const IBOOKS_DISPLAY_OPTIONS_PATH = "META-INF/com.apple.ibooks.display-options.xml";
 
@@ -73,7 +77,7 @@ const INPUT_TYPE = {
  * @example new Book("/path/to/book.epub", {})
  * @example new Book({ replacements: "blobUrl" })
  */
-class Book implements IEventEmitter {
+class Book implements IEventEmitter<BookEvents> {
 	settings: BookOptions;
 	opening: defer<Book>;
 	opened!: Promise<Book>;
@@ -100,9 +104,9 @@ class Book implements IEventEmitter {
 	package: Packaging | undefined;
 	cover!: string;
 
-	declare on: IEventEmitter["on"];
-	declare off: IEventEmitter["off"];
-	declare emit: IEventEmitter["emit"];
+	declare on: IEventEmitter<BookEvents>["on"];
+	declare off: IEventEmitter<BookEvents>["off"];
+	declare emit: IEventEmitter<BookEvents>["emit"];
 
 	constructor(url?: string | ArrayBuffer | Blob | BookOptions, options?: BookOptions) {
 		// Allow passing just options to the Book

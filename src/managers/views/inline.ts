@@ -7,7 +7,16 @@ import type Section from "../../section";
 import type Layout from "../../layout";
 import type { IEventEmitter, ViewSettings, RequestFunction, SizeObject, ReframeBounds } from "../../types";
 
-class InlineView implements IEventEmitter {
+export interface InlineViewEvents extends Record<string, any[]> {
+	"loaderror": [unknown];
+	"rendered": [Section];
+	"resized": [{ width: number; height: number }];
+	"displayed": [InlineView];
+	"shown": [InlineView];
+	"hidden": [InlineView];
+}
+
+class InlineView implements IEventEmitter<InlineViewEvents> {
 	settings: ViewSettings & { layout: Layout };
 	id: string;
 	section: Section;
@@ -40,9 +49,9 @@ class InlineView implements IEventEmitter {
 	rendering!: boolean;
 	stopExpanding!: boolean;
 
-	declare on: IEventEmitter["on"];
-	declare off: IEventEmitter["off"];
-	declare emit: IEventEmitter["emit"];
+	declare on: IEventEmitter<InlineViewEvents>["on"];
+	declare off: IEventEmitter<InlineViewEvents>["off"];
+	declare emit: IEventEmitter<InlineViewEvents>["emit"];
 
 	constructor(section: Section, options?: ViewSettings) {
 		this.settings = extend({

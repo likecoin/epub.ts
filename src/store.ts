@@ -53,10 +53,15 @@ const _URL = typeof window != "undefined" ? (window.URL || window.webkitURL || w
  * @param {function} [requester]
  * @param {function} [resolver]
  */
-class Store implements IEventEmitter {
-	declare on: (type: string, fn: (...args: any[]) => void) => this;
-	declare off: (type: string, fn?: (...args: any[]) => void) => this;
-	declare emit: (type: string, ...args: unknown[]) => void;
+export interface StoreEvents extends Record<string, any[]> {
+	"online": [Store];
+	"offline": [Store];
+}
+
+class Store implements IEventEmitter<StoreEvents> {
+	declare on: IEventEmitter<StoreEvents>["on"];
+	declare off: IEventEmitter<StoreEvents>["off"];
+	declare emit: IEventEmitter<StoreEvents>["emit"];
 
 	urlCache: Record<string, string>;
 	storage!: SimpleStorage;
