@@ -1,15 +1,33 @@
 # Changelog
 
-## 0.4.5 (2026-02-17)
+## 0.4.6 (2026-02-20)
 
 ### Features
 
 - Add Node.js parsing-only entry point (`@likecoin/epub-ts/node`) — parse EPUB metadata, spine, navigation, and section content without a browser; requires `linkedom` as an optional peer dependency
 - Add `./node` subpath export with ESM (`epub.node.js`) and CJS (`epub.node.cjs`) bundles
+- Add typed event emitter generics: `IEventEmitter<E extends EventMap>` with per-class event map interfaces (`BookEvents`, `RenditionEvents`, `ContentsEvents`, `AnnotationEvents`, `LocationsEvents`, `LayoutEvents`, `StoreEvents`, `DefaultManagerEvents`, `IframeViewEvents`, `InlineViewEvents`) — all exported from the public API for consumer use
 
 ### Bug fixes
 
-- Guard `window` reference in `store.ts` at module scope for Node.js/SSR compatibility — the library can now be imported in Node.js without crashing
+- Restore `Spine.prepend()` unshift that was accidentally commented out during the 2016 epubjs eslint cleanup
+- Restore definite assignment assertions in `Resources` fields (regression from strict migration); fix `window.encodeURIComponent` → `encodeURIComponent` in `Store` for Node.js compatibility
+- Fix `book.opened` promise hanging forever when `open()` throws synchronously; use `console.error` instead of throwing in `hook.ts` trigger catch block
+
+### Type safety
+
+- Reduce ~22 non-null assertions via definite assignment in `rendition.ts` and `book.ts`
+- Type `orientationchange` event payload as `number` (matches `window.orientation` API); type `markClicked` data arg as `object | undefined`; type `loaderror` payload as `unknown`
+
+### Tests
+
+- Expand test coverage from 71 to 481 tests across 28 test files (17 new test files added covering Archive, PageList, Resources, Annotations, Packaging, Navigation, Container, Layout, DisplayOptions, Spine, utility layer, Replacements, Views, Request, and Themes)
+
+## 0.4.5 (2026-02-17)
+
+### Bug fixes
+
+- Guard `window` reference in `store.ts` at module scope for Node.js/SSR compatibility
 - Guard `window` references in `archive.ts`, `url.ts`, and `replacements.ts` for Node.js compatibility
 - Replace `window.decodeURIComponent` with global `decodeURIComponent` in `archive.ts`
 - Fix `querySelectorByType` crash on environments without CSS namespace selector support (e.g. linkedom)
@@ -17,7 +35,7 @@
 
 ### Type safety
 
-- Replace ~61 `any` types with proper types across 21 files (~21 remain, intentionally kept)
+- Replace ~61 `any` types with proper types across 21 files (~82 remain, intentionally kept)
 - Replace ~33 `Function` types with proper signatures across 6 files (0 remaining in code)
 - Reduce ~95 non-null assertions via definite assignment across 4 files
 

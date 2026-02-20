@@ -35,6 +35,7 @@
 - [x] Reduce remaining `any` types (~82 → 21; 61 removed across 21 files, 21 intentionally kept: 14 event emitter pattern, 7 annotations.ts user data)
 - [x] Replace `Function` types with proper signatures (~33 removed across 6 files; 0 remaining in code, 3 in JSDoc comments)
 - [x] Reduce non-null assertions via definite assignment (~22 removed across `rendition.ts` and `book.ts`)
+- [x] Add typed event emitter generics (`IEventEmitter<E>`) with per-class event maps exported from public API
 
 ---
 
@@ -124,7 +125,7 @@ All formats are single-file bundles. `preserveModules` was considered for ESM bu
 
 - **Node.js parsing-only support** — `@likecoin/epub-ts/node` entry point provides metadata, spine, navigation, and section rendering via `linkedom`; no browser rendering
 - **Single-file ESM bundle** — `Book` imports nearly everything, so `preserveModules` wouldn't help much
-- **21 `any` types remain** — intentionally kept: 14 in event emitter callback signatures (requires generic typed-emitter refactor), 7 in `annotations.ts` (public API `Record<string, any>` for user data)
+- **~14 `any` types remain** — intentionally kept: 7 in `annotations.ts` (public API `Record<string, any>` for user data), 7 in event emitter infrastructure (`EventMap`, mixin implementation)
 - **0 `Function` types in code** — all 33 replaced with `HookCallback`, `ViewManagerConstructor`, `ViewConstructor`, `EventListener`, or typed function signatures
 
 ---
