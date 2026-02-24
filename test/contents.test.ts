@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, afterEach, beforeAll } from "vitest";
 import Contents from "../src/contents";
+import { DOM_EVENTS } from "../src/utils/constants";
 
 beforeAll(() => {
 	if (!Range.prototype.getBoundingClientRect) {
@@ -9,6 +10,8 @@ beforeAll(() => {
 	}
 });
 
+const activeInstances: Contents[] = [];
+
 function createContents(bodyHtml?: string): { contents: Contents; container: HTMLElement } {
 	const container = document.createElement("div");
 	if (bodyHtml) {
@@ -16,13 +19,16 @@ function createContents(bodyHtml?: string): { contents: Contents; container: HTM
 	}
 	document.body.appendChild(container);
 	const contents = new Contents(document, container, "epubcfi(/6/2!)", 0);
+	activeInstances.push(contents);
 	return { contents, container };
 }
 
 describe("Contents", () => {
 
 	afterEach(() => {
-		// Clean up any appended elements
+		while (activeInstances.length) {
+			activeInstances.pop()!.destroy();
+		}
 		const containers = document.querySelectorAll("div");
 		containers.forEach(el => {
 			if (el.parentNode === document.body) {
@@ -44,6 +50,7 @@ describe("Contents", () => {
 			const container = document.createElement("div");
 			document.body.appendChild(container);
 			const contents = new Contents(document, container);
+			activeInstances.push(contents);
 			expect(contents.sectionIndex).toBe(0);
 			expect(contents.cfiBase).toBe("");
 		});
@@ -350,6 +357,172 @@ describe("Contents", () => {
 			const event = new MouseEvent("click", { bubbles: true });
 			contents.document.dispatchEvent(event);
 			expect(handler).toHaveBeenCalled();
+		});
+	});
+
+	describe("textWidth()", () => {
+		it("should return a number", () => {
+			const { contents } = createContents("<p>Hello world</p>");
+			const tw = contents.textWidth();
+			expect(typeof tw).toBe("number");
+		});
+	});
+
+	describe("textHeight()", () => {
+		it("should return a number", () => {
+			const { contents } = createContents("<p>Hello world</p>");
+			const th = contents.textHeight();
+			expect(typeof th).toBe("number");
+		});
+	});
+
+	describe("root()", () => {
+		it("should return documentElement", () => {
+			const { contents } = createContents();
+			expect(contents.root()).toBe(document.documentElement);
+		});
+	});
+
+	describe("expand()", () => {
+		it("should emit expand event", () => {
+			const { contents } = createContents();
+			const handler = vi.fn();
+			contents.on("expand", handler);
+			contents.expand();
+			expect(handler).toHaveBeenCalledTimes(1);
+		});
+	});
+
+	describe("resizeCheck()", () => {
+		it("should emit resize event when size changes", () => {
+			const { contents } = createContents();
+			contents._size = { width: 100, height: 200 };
+			const handler = vi.fn();
+			contents.on("resize", handler);
+			contents.resizeCheck();
+			expect(handler).toHaveBeenCalledTimes(1);
+			expect(handler).toHaveBeenCalledWith(expect.objectContaining({ width: expect.any(Number), height: expect.any(Number) }));
+		});
+
+		it("should not emit resize when size is unchanged", () => {
+			const { contents } = createContents();
+			// Set _size to current text dimensions so no change is detected
+			contents._size = { width: contents.textWidth(), height: contents.textHeight() };
+			const handler = vi.fn();
+			contents.on("resize", handler);
+			contents.resizeCheck();
+			expect(handler).not.toHaveBeenCalled();
+		});
+
+		it("should call onResize callback when size changes", () => {
+			const { contents } = createContents();
+			contents._size = { width: 999, height: 999 };
+			const callback = vi.fn();
+			contents.onResize = callback;
+			contents.resizeCheck();
+			expect(callback).toHaveBeenCalledTimes(1);
+		});
+	});
+
+	describe("locationOf()", () => {
+		it("should return {left, top} for an #id target", () => {
+			const { contents } = createContents('<p id="target">Hello</p>');
+			const pos = contents.locationOf("#target");
+			expect(pos).toHaveProperty("left");
+			expect(pos).toHaveProperty("top");
+			expect(typeof pos.left).toBe("number");
+			expect(typeof pos.top).toBe("number");
+		});
+
+		it("should return default {left: 0, top: 0} for missing id", () => {
+			const { contents } = createContents("<p>Hello</p>");
+			const pos = contents.locationOf("#nonexistent");
+			expect(pos).toEqual({ left: 0, top: 0 });
+		});
+
+		it("should return default for plain string without hash", () => {
+			const { contents } = createContents("<p>Hello</p>");
+			const pos = contents.locationOf("no-hash");
+			expect(pos).toEqual({ left: 0, top: 0 });
+		});
+	});
+
+	describe("size()", () => {
+		it("should set layoutStyle to scrolling", () => {
+			const { contents } = createContents();
+			contents.size(800, 600);
+			expect(contents.layoutStyle()).toBe("scrolling");
+		});
+
+		it("should set width and height", () => {
+			const { contents, container } = createContents();
+			contents.size(800, 600);
+			expect(container.style.width).toBe("800px");
+			expect(container.style.height).toBe("600px");
+		});
+	});
+
+	describe("columns()", () => {
+		it("should set layoutStyle to paginated", () => {
+			const { contents } = createContents();
+			contents.columns(800, 600, 400, 20);
+			expect(contents.layoutStyle()).toBe("paginated");
+		});
+
+		it("should set column CSS properties", () => {
+			const { contents, container } = createContents();
+			contents.columns(800, 600, 400, 20);
+			expect(container.style.columnWidth).toBe("400px");
+			expect(container.style.columnGap).toBe("20px");
+		});
+	});
+
+	describe("scaler()", () => {
+		it("should set transform and transform-origin CSS", () => {
+			const { contents, container } = createContents();
+			contents.scaler(2);
+			expect(container.style.transformOrigin).toBe("top left");
+			expect(container.style.transform).toBe("scale(2)");
+		});
+
+		it("should include translate when offsets are provided", () => {
+			const { contents, container } = createContents();
+			contents.scaler(1.5, 10, 20);
+			expect(container.style.transform).toContain("scale(1.5)");
+			expect(container.style.transform).toContain("translate(10px, 20px");
+		});
+	});
+
+	describe("epubReadingSystem()", () => {
+		it("should set navigator.epubReadingSystem", () => {
+			createContents();
+			expect(navigator.epubReadingSystem).toBeDefined();
+			expect(navigator.epubReadingSystem!.name).toBe("epub.js");
+		});
+
+		it("hasFeature() should return true for known features", () => {
+			createContents();
+			const ers = navigator.epubReadingSystem!;
+			expect(ers.hasFeature("dom-manipulation")).toBe(true);
+			expect(ers.hasFeature("layout-changes")).toBe(true);
+			expect(ers.hasFeature("touch-events")).toBe(true);
+			expect(ers.hasFeature("mouse-events")).toBe(true);
+			expect(ers.hasFeature("keyboard-events")).toBe(true);
+		});
+
+		it("hasFeature() should return false for unknown features", () => {
+			createContents();
+			const ers = navigator.epubReadingSystem!;
+			expect(ers.hasFeature("spine-scripting")).toBe(false);
+			expect(ers.hasFeature("unknown-feature")).toBe(false);
+		});
+	});
+
+	describe("listenedEvents", () => {
+		it("should return DOM_EVENTS array", () => {
+			expect(Contents.listenedEvents).toBe(DOM_EVENTS);
+			expect(Contents.listenedEvents).toContain("click");
+			expect(Contents.listenedEvents).toContain("keydown");
 		});
 	});
 

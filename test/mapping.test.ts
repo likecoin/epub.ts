@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeAll } from "vitest";
+import { describe, it, expect, vi, afterEach, beforeAll } from "vitest";
 import Mapping from "../src/mapping";
 import type { LayoutProps } from "../src/types";
 import type Contents from "../src/contents";
@@ -29,6 +29,16 @@ function createMockLayout(): LayoutProps {
 }
 
 describe("Mapping", () => {
+
+	afterEach(() => {
+		vi.restoreAllMocks();
+		const elements = document.body.querySelectorAll("div, p");
+		elements.forEach(el => {
+			if (el.parentNode === document.body) {
+				document.body.removeChild(el);
+			}
+		});
+	});
 
 	describe("constructor", () => {
 		it("should store layout, direction, horizontal, and dev", () => {
@@ -84,7 +94,6 @@ describe("Mapping", () => {
 			const mapping = new Mapping(createMockLayout());
 			const ranges = mapping.splitTextNodeIntoRanges(textNode);
 			expect(ranges.length).toBe(1);
-			document.body.removeChild(container);
 		});
 
 		it("should split text at spaces", () => {
@@ -95,7 +104,6 @@ describe("Mapping", () => {
 			const mapping = new Mapping(createMockLayout());
 			const ranges = mapping.splitTextNodeIntoRanges(textNode);
 			expect(ranges.length).toBeGreaterThan(1);
-			document.body.removeChild(container);
 		});
 
 		it("should return a single range for non-text nodes", () => {
@@ -105,7 +113,6 @@ describe("Mapping", () => {
 			const mapping = new Mapping(createMockLayout());
 			const ranges = mapping.splitTextNodeIntoRanges(el);
 			expect(ranges.length).toBe(1);
-			document.body.removeChild(el);
 		});
 
 		it("should use custom splitter", () => {
@@ -116,7 +123,6 @@ describe("Mapping", () => {
 			const mapping = new Mapping(createMockLayout());
 			const ranges = mapping.splitTextNodeIntoRanges(textNode, "-");
 			expect(ranges.length).toBeGreaterThan(1);
-			document.body.removeChild(container);
 		});
 	});
 
@@ -148,7 +154,6 @@ describe("Mapping", () => {
 			}
 			expect(startRange.collapsed).toBe(true);
 			expect(endRange.collapsed).toBe(true);
-			document.body.removeChild(p);
 		});
 	});
 
@@ -167,7 +172,6 @@ describe("Mapping", () => {
 			expect(result.length).toBe(2);
 			expect(spy).toHaveBeenCalledTimes(2);
 			expect(result[0]).toEqual({ start: "cfi1", end: "cfi2" });
-			spy.mockRestore();
 		});
 	});
 
@@ -205,7 +209,130 @@ describe("Mapping", () => {
 			const result = mapping.section(mockView);
 			expect(Array.isArray(result)).toBe(true);
 			expect(cfiSpy).toHaveBeenCalledWith("epubcfi(/6/2!)", mockPairs);
-			cfiSpy.mockRestore();
+		});
+
+		it("should return empty array when findRanges returns empty", () => {
+			const mapping = new Mapping(createMockLayout(), "ltr", "horizontal");
+			vi.spyOn(mapping, "findRanges" as any).mockReturnValue([]);
+			vi.spyOn(mapping, "rangeListToCfiList").mockReturnValue([]);
+
+			const mockView = {
+				section: { cfiBase: "epubcfi(/6/2!)" },
+			} as unknown as IframeView;
+
+			const result = mapping.section(mockView);
+			expect(result).toEqual([]);
+		});
+	});
+
+	describe("walk()", () => {
+		it("should collect text nodes from a multi-level DOM tree", () => {
+			const container = document.createElement("div");
+			container.innerHTML = "<p>Hello <span>world</span></p><p>Foo</p>";
+			document.body.appendChild(container);
+
+			const mapping = new Mapping(createMockLayout());
+			const collected: Node[] = [];
+			mapping.walk(container, (node) => {
+				collected.push(node);
+				return undefined;
+			});
+
+			expect(collected.length).toBeGreaterThanOrEqual(2);
+			expect(collected.every(n => n.nodeType === Node.TEXT_NODE)).toBe(true);
+		});
+
+		it("should return early when func returns a node", () => {
+			const container = document.createElement("div");
+			container.innerHTML = "<p>First</p><p>Second</p>";
+			document.body.appendChild(container);
+
+			const mapping = new Mapping(createMockLayout());
+			let callCount = 0;
+			const result = mapping.walk(container, (node) => {
+				callCount++;
+				return node;
+			});
+
+			expect(callCount).toBe(1);
+			expect(result).toBeDefined();
+			expect(result!.nodeType).toBe(Node.TEXT_NODE);
+		});
+
+		it("should return undefined for empty container", () => {
+			const container = document.createElement("div");
+			document.body.appendChild(container);
+
+			const mapping = new Mapping(createMockLayout());
+			const result = mapping.walk(container, (node) => node);
+
+			expect(result).toBeUndefined();
+		});
+
+		it("should skip whitespace-only text nodes", () => {
+			const container = document.createElement("div");
+			container.innerHTML = "<p>  </p><p>Real text</p>";
+			document.body.appendChild(container);
+
+			const mapping = new Mapping(createMockLayout());
+			const collected: Node[] = [];
+			mapping.walk(container, (node) => {
+				collected.push(node);
+				return undefined;
+			});
+
+			expect(collected.length).toBe(1);
+			expect(collected[0]!.textContent!.trim()).toBe("Real text");
+		});
+	});
+
+	describe("splitTextNodeIntoRanges() edge cases", () => {
+		it("should handle empty text node", () => {
+			const textNode = document.createTextNode("");
+			const container = document.createElement("div");
+			container.appendChild(textNode);
+			document.body.appendChild(container);
+			const mapping = new Mapping(createMockLayout());
+			const ranges = mapping.splitTextNodeIntoRanges(textNode);
+			expect(ranges.length).toBe(1);
+		});
+
+		it("should handle text with only whitespace", () => {
+			const textNode = document.createTextNode("   ");
+			const container = document.createElement("div");
+			container.appendChild(textNode);
+			document.body.appendChild(container);
+			const mapping = new Mapping(createMockLayout());
+			const ranges = mapping.splitTextNodeIntoRanges(textNode);
+			expect(ranges.length).toBe(1);
+		});
+	});
+
+	describe("page() with body content", () => {
+		it("should call findStart and findEnd and return a CFI pair", () => {
+			const mapping = new Mapping(createMockLayout());
+
+			const p = document.createElement("p");
+			p.textContent = "Some test content here";
+			document.body.appendChild(p);
+
+			const startRange = document.createRange();
+			startRange.selectNodeContents(p.firstChild!);
+			const endRange = document.createRange();
+			endRange.selectNodeContents(p.firstChild!);
+
+			vi.spyOn(mapping, "findStart" as any).mockReturnValue(startRange);
+			vi.spyOn(mapping, "findEnd" as any).mockReturnValue(endRange);
+			vi.spyOn(mapping, "rangePairToCfiPair").mockReturnValue({ start: "epubcfi(/6/2!/4/1:0)", end: "epubcfi(/6/2!/4/1:22)" });
+
+			const mockContents = {
+				document: document
+			} as unknown as Contents;
+
+			const result = mapping.page(mockContents, "epubcfi(/6/2!)", 0, 800);
+			expect(result).toBeDefined();
+			expect(result).toHaveProperty("start");
+			expect(result).toHaveProperty("end");
 		});
 	});
 });
