@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.4.7 (2026-02-26)
+
+### Bug fixes
+
+- Fix Android Chrome/Brave skipping the last page of each EPUB chapter — re-expand view before jumping to next/prev section to force layout reflow; on Android Chrome/Brave, the initial `expand()` measures before CSS column layout fully settles, making `scrollWidth` one page too narrow
+- Apply the same re-expand-then-recheck pattern to `prev()` and vertical pagination branches for completeness
+- Re-enable `fontLoadListeners()` (commented out since 2016) so font load events trigger `resizeCheck()`, proactively correcting iframe sizing after web fonts settle
+
+### Tests
+
+- Expand test coverage from 481 to 876 tests across 38 test files (10 new test files added covering Stage, marks-pane, Contents, Mapping, IframeView, Rendition, DefaultViewManager, ContinuousViewManager, Snap, and Store; expanded Locations, Section, and Resources tests)
+
 ## 0.4.6 (2026-02-20)
 
 ### Features

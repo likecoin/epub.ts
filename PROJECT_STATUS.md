@@ -32,6 +32,8 @@
 - [x] Node.js import support (guard `window` at module scope)
 - [x] Node.js parsing-only entry point (`@likecoin/epub-ts/node` with `linkedom` peer dep)
 - [x] Improve test coverage (38 test files, 876 tests for 42 source files)
+- [x] Fix Android Chrome/Brave last-page skip (re-expand before section jump in all `next()`/`prev()` branches)
+- [x] Re-enable `fontLoadListeners()` for proactive iframe resize on font load
 - [x] Reduce remaining `any` types (~82 → 21; 61 removed across 21 files, 21 intentionally kept: 14 event emitter pattern, 7 annotations.ts user data)
 - [x] Replace `Function` types with proper signatures (~33 removed across 6 files; 0 remaining in code, 3 in JSDoc comments)
 - [x] Reduce non-null assertions via definite assignment (~22 removed across `rendition.ts` and `book.ts`)
