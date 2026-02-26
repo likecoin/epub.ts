@@ -513,7 +513,20 @@ class DefaultViewManager implements IEventEmitter<DefaultManagerEvents> {
 			if(left <= this.container.scrollWidth) {
 				this.scrollBy(this.layout.delta, 0, true);
 			} else {
-				next = this.views.last()!.section.next?.();
+				// Re-expand to get accurate dimensions before jumping to next section.
+				// On some platforms (Android Chrome/Brave), the initial expand() during
+				// render may measure before CSS column layout fully settles, causing
+				// scrollWidth to be one page too narrow.
+				const view = this.views.last();
+				if (view) {
+					view.expand();
+				}
+				left = this.container.scrollLeft + this.container.offsetWidth + this.layout.delta;
+				if (left <= this.container.scrollWidth) {
+					this.scrollBy(this.layout.delta, 0, true);
+				} else {
+					next = view?.section.next?.();
+				}
 			}
 		} else if (this.isPaginated && this.settings.axis === "horizontal" && dir === "rtl") {
 
@@ -525,7 +538,16 @@ class DefaultViewManager implements IEventEmitter<DefaultManagerEvents> {
 				if (left > 0) {
 					this.scrollBy(this.layout.delta, 0, true);
 				} else {
-					next = this.views.last()!.section.next?.();
+					const view = this.views.last();
+					if (view) {
+						view.expand();
+					}
+					left = this.container.scrollLeft;
+					if (left > 0) {
+						this.scrollBy(this.layout.delta, 0, true);
+					} else {
+						next = view?.section.next?.();
+					}
 				}
 			} else {
 				left = this.container.scrollLeft + ( this.layout.delta * -1 );
@@ -533,7 +555,16 @@ class DefaultViewManager implements IEventEmitter<DefaultManagerEvents> {
 				if (left > this.container.scrollWidth * -1){
 					this.scrollBy(this.layout.delta, 0, true);
 				} else {
-					next = this.views.last()!.section.next?.();
+					const view = this.views.last();
+					if (view) {
+						view.expand();
+					}
+					left = this.container.scrollLeft + ( this.layout.delta * -1 );
+					if (left > this.container.scrollWidth * -1) {
+						this.scrollBy(this.layout.delta, 0, true);
+					} else {
+						next = view?.section.next?.();
+					}
 				}
 			}
 
@@ -546,7 +577,16 @@ class DefaultViewManager implements IEventEmitter<DefaultManagerEvents> {
 			if(!reachedBottom) {
 				this.scrollBy(0, this.layout.height, true);
 			} else {
-				next = this.views.last()!.section.next?.();
+				const view = this.views.last();
+				if (view) {
+					view.expand();
+				}
+				const reachedBottomAfterExpand = Math.abs(this.container.scrollHeight - this.container.clientHeight - this.container.scrollTop) < 1;
+				if (!reachedBottomAfterExpand) {
+					this.scrollBy(0, this.layout.height, true);
+				} else {
+					next = view?.section.next?.();
+				}
 			}
 
 		} else {
@@ -602,7 +642,16 @@ class DefaultViewManager implements IEventEmitter<DefaultManagerEvents> {
 			if(left > 0) {
 				this.scrollBy(-this.layout.delta, 0, true);
 			} else {
-				prev = this.views.first()!.section.prev?.();
+				const view = this.views.first();
+				if (view) {
+					view.expand();
+				}
+				left = this.container.scrollLeft;
+				if (left > 0) {
+					this.scrollBy(-this.layout.delta, 0, true);
+				} else {
+					prev = view?.section.prev?.();
+				}
 			}
 
 		} else if (this.isPaginated && this.settings.axis === "horizontal" && dir === "rtl") {
@@ -615,7 +664,16 @@ class DefaultViewManager implements IEventEmitter<DefaultManagerEvents> {
 				if (left < this.container.scrollWidth) {
 					this.scrollBy(-this.layout.delta, 0, true);
 				} else {
-					prev = this.views.first()!.section.prev?.();
+					const view = this.views.first();
+					if (view) {
+						view.expand();
+					}
+					left = this.container.scrollLeft + this.container.offsetWidth;
+					if (left < this.container.scrollWidth) {
+						this.scrollBy(-this.layout.delta, 0, true);
+					} else {
+						prev = view?.section.prev?.();
+					}
 				}
 			}
 			else{
@@ -624,7 +682,16 @@ class DefaultViewManager implements IEventEmitter<DefaultManagerEvents> {
 				if (left < 0) {
 					this.scrollBy(-this.layout.delta, 0, true);
 				} else {
-					prev = this.views.first()!.section.prev?.();
+					const view = this.views.first();
+					if (view) {
+						view.expand();
+					}
+					left = this.container.scrollLeft;
+					if (left < 0) {
+						this.scrollBy(-this.layout.delta, 0, true);
+					} else {
+						prev = view?.section.prev?.();
+					}
 				}
 			}
 
@@ -637,7 +704,16 @@ class DefaultViewManager implements IEventEmitter<DefaultManagerEvents> {
 			if(top > 0) {
 				this.scrollBy(0, -(this.layout.height), true);
 			} else {
-				prev = this.views.first()!.section.prev?.();
+				const view = this.views.first();
+				if (view) {
+					view.expand();
+				}
+				const topAfterExpand = this.container.scrollTop;
+				if (topAfterExpand > 0) {
+					this.scrollBy(0, -(this.layout.height), true);
+				} else {
+					prev = view?.section.prev?.();
+				}
 			}
 
 		} else {

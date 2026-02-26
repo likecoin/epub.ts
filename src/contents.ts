@@ -420,7 +420,7 @@ class Contents implements IEventEmitter<ContentsEvents> {
 
 		this.mediaQueryListeners();
 
-		// this.fontLoadListeners();
+		this.fontLoadListeners();
 
 		this.addEventListeners();
 
