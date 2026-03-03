@@ -184,6 +184,29 @@ describe("Queue", () => {
 		});
 	});
 
+	describe("run()", () => {
+		it("should process tasks via microtask when tick is false", async () => {
+			const q = new Queue();
+			q.tick = false;
+			q.pause();
+			const order: number[] = [];
+			q.enqueue(() => { order.push(1); });
+			q.enqueue(() => { order.push(2); });
+			q.enqueue(() => { order.push(3); });
+			await q.run();
+			expect(order).toEqual([1, 2, 3]);
+		});
+
+		it("should auto-process enqueued tasks when tick is false and not paused", async () => {
+			const q = new Queue();
+			q.tick = false;
+			let value = 0;
+			const promise = q.enqueue(() => { value = 42; });
+			await promise;
+			expect(value).toBe(42);
+		});
+	});
+
 	describe("dump()", () => {
 		it("should process all tasks immediately", () => {
 			const q = createTestQueue();

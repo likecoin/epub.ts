@@ -42,6 +42,7 @@ class Locations implements IEventEmitter<LocationsEvents> {
 		this.pause = pause || 0;
 
 		this.q = new Queue(this);
+		this.q.tick = false;
 		this.epubcfi = new EpubCFI();
 
 		this._locations = [];

@@ -138,22 +138,24 @@ class Queue {
 			this.defered = new defer<void>();
 		}
 
+		const step = (): void => {
+			if(this._q.length) {
+
+				this.dequeue()
+					?.then(() => {
+						this.run();
+					});
+
+			} else {
+				this.defered!.resolve();
+				this.running = undefined;
+			}
+		};
+
 		if (this.tick) {
-			this.tick(() => {
-
-				if(this._q.length) {
-
-					this.dequeue()
-						?.then(() => {
-							this.run();
-						});
-
-				} else {
-					this.defered!.resolve();
-					this.running = undefined;
-				}
-
-			});
+			this.tick(step);
+		} else {
+			Promise.resolve().then(step);
 		}
 
 		// Unpause
