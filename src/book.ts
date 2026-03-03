@@ -85,6 +85,12 @@ class Book implements IEventEmitter<BookEvents> {
 	loading!: BookLoadingState;
 	loaded!: BookLoadedState;
 	ready!: Promise<[PackagingManifestObject, Spine, PackagingMetadataObject, string, Navigation, Resources, DisplayOptions]>;
+	/**
+	 * @member {Promise<void>} replacementsReady resolves when all resource
+	 * replacement URLs (blob/base64) have been created. Undefined for
+	 * unarchived books or when replacements are "none".
+	 */
+	replacementsReady: Promise<void> | undefined;
 	isRendered: boolean;
 	request: RequestFunction;
 	spine!: Spine;
@@ -558,24 +564,17 @@ class Book implements IEventEmitter<BookEvents> {
 
 		const effectiveReplacements = this.settings.replacements || (this.archived ? "blobUrl" : "none");
 		if(effectiveReplacements !== "none") {
-			this.replacements().then(() => {
-				this.loaded.displayOptions.then(() => {
-					this.opening.resolve(this);
+			this.replacementsReady = this.replacements()
+				.catch((err) => {
+					// eslint-disable-next-line no-console
+					console.error(err);
 				});
-			})
-			.catch((err) => {
-				// eslint-disable-next-line no-console
-				console.error(err);
-				this.loaded.displayOptions.then(() => {
-					this.opening.resolve(this);
-				});
-			});
-		} else {
-			// Resolve book opened promise
-			this.loaded.displayOptions.then(() => {
-				this.opening.resolve(this);
-			});
 		}
+
+		// Resolve book opened promise without waiting for replacements
+		Promise.all([this.loaded.displayOptions, this.loaded.navigation]).then(() => {
+			this.opening.resolve(this);
+		});
 
 	}
 
@@ -750,14 +749,17 @@ class Book implements IEventEmitter<BookEvents> {
 	 * @return {Promise} completed loading urls
 	 */
 	replacements(): Promise<void> {
+		const ready: Promise<void> = this.resources.replacements()
+			.then(() => this.resources.replaceCss())
+			.then(() => undefined);
+
 		this.spine.hooks.serialize.register((output: string, section: Section) => {
-			section.output = this.resources.substitute(output, section.url);
+			return ready.then(() => {
+				section.output = this.resources.substitute(output, section.url);
+			});
 		});
 
-		return this.resources.replacements().
-			then(() => {
-				return this.resources.replaceCss();
-			}).then(() => {});
+		return ready;
 	}
 
 	/**
@@ -798,6 +800,7 @@ class Book implements IEventEmitter<BookEvents> {
 		this.loading = undefined!;
 		this.loaded = undefined!;
 		this.ready = undefined!;
+		this.replacementsReady = undefined;
 
 		this.isOpen = false;
 		this.isRendered = false;

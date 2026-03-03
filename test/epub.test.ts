@@ -17,5 +17,6 @@ describe("ePub", () => {
 		await book.opened;
 		expect(book.isOpen).toBe(true);
 		expect(book.archive).toBeTruthy();
+		await book.replacementsReady;
 	});
 });

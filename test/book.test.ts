@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll } from "vitest";
+import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import Book from "../src/book";
 import { getFixtureUrl } from "./helpers";
 
@@ -19,6 +19,7 @@ describe("Book", () => {
 
 	describe("Archived epub", () => {
 		var book = new Book(getFixtureUrl("/alice.epub"));
+		afterAll(async () => { await book.replacementsReady; });
 
 		it("should open a archived epub", async () => {
 			await book.opened;
@@ -40,6 +41,7 @@ describe("Book", () => {
 			const buffer = await response.arrayBuffer();
 			book = new Book(buffer);
 		});
+		afterAll(async () => { await book.replacementsReady; });
 
 		it("should open a archived epub", async () => {
 			await book.opened;
@@ -53,8 +55,41 @@ describe("Book", () => {
 		});
 	});
 
+	describe("Lazy replacements (archived epub)", () => {
+		it("should expose replacementsReady promise on archived epub", async () => {
+			const book = new Book(getFixtureUrl("/alice.epub"));
+			await book.opened;
+			expect(book.replacementsReady).toBeInstanceOf(Promise);
+			await book.replacementsReady;
+		});
+
+		it("book.opened should not be gated on replacementsReady", async () => {
+			const book = new Book(getFixtureUrl("/alice.epub"));
+			await book.opened;
+			// replacementsReady must be a separate promise, not the same as opened
+			expect(book.replacementsReady).not.toBe(book.opened);
+			// It must still resolve independently
+			await book.replacementsReady;
+		});
+
+		it("coverUrl() should still work immediately after book.opened", async () => {
+			const book = new Book(getFixtureUrl("/alice.epub"));
+			await book.opened;
+			const coverUrl = await book.coverUrl();
+			expect(coverUrl).toMatch(/^blob:/);
+			await book.replacementsReady;
+		});
+
+		it("should not expose replacementsReady for unarchived epub", async () => {
+			const book = new Book(getFixtureUrl("/alice/OPS/package.opf"));
+			await book.opened;
+			expect(book.replacementsReady).toBeUndefined();
+		});
+	});
+
 	describe("Archived epub without cover", () => {
 		var book = new Book(getFixtureUrl("/alice_without_cover.epub"));
+		afterAll(async () => { await book.replacementsReady; });
 
 		it("should open a archived epub", async () => {
 			await book.opened;
@@ -75,6 +110,7 @@ describe("Book", () => {
 			book = new Book(getFixtureUrl("/alice.epub"));
 			await book.opened;
 		});
+		afterAll(async () => { await book.replacementsReady; });
 
 		it("should have correct packaging metadata title", () => {
 			expect(book.packaging.metadata.title).toBe("Alice's Adventures in Wonderland");
