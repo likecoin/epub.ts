@@ -556,7 +556,8 @@ class Book implements IEventEmitter<BookEvents> {
 
 		this.isOpen = true;
 
-		if(this.archived || this.settings.replacements && this.settings.replacements != "none") {
+		const effectiveReplacements = this.settings.replacements || (this.archived ? "blobUrl" : "none");
+		if(effectiveReplacements !== "none") {
 			this.replacements().then(() => {
 				this.loaded.displayOptions.then(() => {
 					this.opening.resolve(this);

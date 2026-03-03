@@ -189,6 +189,10 @@ class Resources {
 	 * @return {Promise}
 	 */
 	replaceCss(_archive?: Archive, _resolver?: (href: string, absolute?: boolean) => string): Promise<(string | void)[]> {
+		if (this.settings.replacements === "none") {
+			return Promise.resolve([]);
+		}
+
 		const replaced: Promise<string | void>[] = [];
 		this.cssUrls.forEach((href: string) => {
 			const replacement = this.createCssFile(href)
