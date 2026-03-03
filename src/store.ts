@@ -295,29 +295,14 @@ class Store implements IEventEmitter<StoreEvents> {
 	/**
 	 * Get Text from Storage by Url
 	 * @param  {string} url
-	 * @param  {string} [mimeType]
 	 * @return {string}
 	 */
-	getText(url: string, mimeType?: string): Promise<string | undefined> {
+	getText(url: string, _mimeType?: string): Promise<string | undefined> {
 		const encodedUrl = encodeURIComponent(url);
 
-		mimeType = mimeType || mime.lookup(url);
-
 		return this.storage.getItem(encodedUrl).then(function(uint8array) {
-			const deferred = new defer<string>();
-			const reader = new FileReader();
-
 			if(!uint8array) return;
-
-			const blob = new Blob([uint8array as BlobPart], {type : mimeType});
-
-			reader.addEventListener("loadend", () => {
-				deferred.resolve(reader.result as string);
-			});
-
-			reader.readAsText(blob, mimeType);
-
-			return deferred.promise;
+			return new TextDecoder().decode(uint8array as Uint8Array);
 		});
 	}
 
