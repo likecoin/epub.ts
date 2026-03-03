@@ -525,7 +525,7 @@ class Contents implements IEventEmitter<ContentsEvents> {
 		const sheets = this.document.styleSheets;
 		const mediaChangeHandler = (m: MediaQueryListEvent): void => {
 			if(m.matches && !this._expanding) {
-				setTimeout(this.expand.bind(this), 1);
+				setTimeout(() => this.expand(), 0);
 			}
 		};
 
@@ -747,7 +747,7 @@ class Contents implements IEventEmitter<ContentsEvents> {
 					// Let apply
 					setTimeout(() => {
 						resolve(true);
-					}, 1);
+					}, 0);
 				}
 			};
 
@@ -867,7 +867,7 @@ class Contents implements IEventEmitter<ContentsEvents> {
 					ready = true;
 					setTimeout(() => {
 						resolve(true);
-					}, 1);
+					}, 0);
 				}
 			};
 

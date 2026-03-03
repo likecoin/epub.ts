@@ -1030,11 +1030,9 @@ class Rendition implements IEventEmitter<RenditionEvents> {
 			}
 		});
 
-		return new Promise<void>(function(resolve, _reject){
+		return new Promise<void>(function(resolve){
 			// Wait to apply
-			setTimeout(function() {
-				resolve();
-			}, 1);
+			setTimeout(resolve, 0);
 		});
 	}
 
