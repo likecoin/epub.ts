@@ -84,31 +84,6 @@ export function isFloat(n: unknown): boolean {
 }
 
 /**
- * Get a prefixed css property
- * @param {string} unprefixed
- * @returns {string}
- * @memberof Core
- */
-export function prefixed(unprefixed: string): string {
-	const vendors = ["Webkit", "webkit", "Moz", "O", "ms" ];
-	const prefixes = ["-webkit-", "-webkit-", "-moz-", "-o-", "-ms-"];
-	const lower = unprefixed.toLowerCase();
-	const length = vendors.length;
-
-	if (typeof(document) === "undefined" || lower in document.body.style) {
-		return unprefixed;
-	}
-
-	for (let i = 0; i < length; i++) {
-		if ((prefixes[i] + lower) in document.body.style) {
-			return prefixes[i] + lower;
-		}
-	}
-
-	return unprefixed;
-}
-
-/**
  * Apply defaults to an object
  * @param {object} obj
  * @returns {object}

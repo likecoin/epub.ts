@@ -1,5 +1,5 @@
 import EventEmitter from "./utils/event-emitter";
-import {isNumber, prefixed, borders, defaults} from "./utils/core";
+import {isNumber, borders, defaults} from "./utils/core";
 import EpubCFI from "./epubcfi";
 import Mapping from "./mapping";
 import {replaceLinks} from "./utils/replacements";
@@ -1117,10 +1117,10 @@ class Contents implements IEventEmitter<ContentsEvents> {
 	 * @param {number} gap
 	 */
 	columns(width: number, height: number, columnWidth: number, gap: number, dir?: string): void {
-		const COLUMN_AXIS = prefixed("column-axis");
-		const COLUMN_GAP = prefixed("column-gap");
-		const COLUMN_WIDTH = prefixed("column-width");
-		const COLUMN_FILL = prefixed("column-fill");
+		const COLUMN_AXIS = "-webkit-column-axis";
+		const COLUMN_GAP = "column-gap";
+		const COLUMN_WIDTH = "column-width";
+		const COLUMN_FILL = "column-fill";
 
 		const writingMode = this.writingMode();
 		const axis = (writingMode.indexOf("vertical") === 0) ? "vertical" : "horizontal";
@@ -1273,13 +1273,11 @@ class Contents implements IEventEmitter<ContentsEvents> {
 	 * @param {string} [mode="horizontal-tb"] "horizontal-tb" | "vertical-rl" | "vertical-lr"
 	 */
 	writingMode(mode?: string): string {
-		const WRITING_MODE = prefixed("writing-mode");
-
 		if (mode && this.documentElement) {
-			(this.documentElement.style as unknown as Record<string, string>)[WRITING_MODE] = mode;
+			this.documentElement.style.writingMode = mode;
 		}
 
-		return (this.window.getComputedStyle(this.documentElement) as unknown as Record<string, string>)[WRITING_MODE] || "";
+		return this.window.getComputedStyle(this.documentElement).writingMode || "";
 	}
 
 	/**
