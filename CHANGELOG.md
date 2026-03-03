@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.4.9 (2026-03-03)
+
+### Performance
+
+- Reduce Locations default pause from 100ms to 0 — eliminates ~10s of artificial delay for 100-chapter books; consumers can still pass a custom pause value
+- Replace FileReader + Blob roundtrip with synchronous TextDecoder in `Store.getText()` (~5x faster per call)
+- Single-pass regex for CSS URL substitution — replaces O(N×M) loop with one combined regex and Map lookup; fixes a substring collision edge case
+- Batch CSS writes in `Contents.columns()`/`size()`/`fit()` — reduces ~15 forced layouts per call to 1
+- Add microtask scheduling mode to Queue, use it in Locations — saves ~1.5s of rAF overhead for background computation
+- Defer blob URL creation to not block `book.opened` — replacements now run concurrently; new `book.replacementsReady` promise for consumers who need to wait; section rendering still waits for replacements via serialize hook
+
+### Bug fixes
+
+- Fix `book.opened` resolving before navigation is loaded — now waits for `loaded.navigation` (previously masked by slow replacements)
+
 ## 0.4.8 (2026-03-03)
 
 ### Bug fixes
