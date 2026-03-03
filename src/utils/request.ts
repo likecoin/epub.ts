@@ -42,10 +42,10 @@ async function request(url: string, type?: string, withCredentials?: boolean, he
 
 	if (type === "blob") {
 		const blob = await response.blob();
-		// Re-wrap to ensure the Blob matches the current global (avoids
+		// Re-wrap when the Blob doesn't match the current global (avoids
 		// cross-realm instanceof failures when fetch runs in a different
 		// context, e.g. Node native fetch inside jsdom).
-		return new Blob([blob], { type: blob.type });
+		return (blob instanceof Blob) ? blob : new Blob([blob], { type: (blob as Blob).type });
 	}
 
 	if (type === "binary") {

@@ -318,7 +318,7 @@ class Snap implements IEventEmitter<Record<string, any[]>> {
 			const tick = (): void => {
 				const now = this.now();
 				const time = Math.min(1, ((now - startTime) / duration));
-				easing(time);
+				const easedTime = easing(time);
 
 				if (this.touchCanceler || this.resizeCanceler) {
 					this.resizeCanceler = false;
@@ -329,7 +329,7 @@ class Snap implements IEventEmitter<Record<string, any[]>> {
 
 				if (time < 1) {
 					window.requestAnimationFrame(tick);
-					this.scrollTo(start + ((destination - start) * time), 0);
+					this.scrollTo(start + ((destination - start) * easedTime), 0);
 				} else {
 					this.scrollTo(destination, 0);
 					this.snapping = false;

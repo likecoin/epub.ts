@@ -1074,7 +1074,7 @@ class Contents implements IEventEmitter<ContentsEvents> {
 	 * @param {number} gap
 	 */
 	columns(width: number, height: number, columnWidth: number, gap: number, dir?: string): void {
-		const COLUMN_AXIS = "-webkit-column-axis";
+		const WEBKIT_COLUMN_AXIS = "-webkit-column-axis";
 		const COLUMN_GAP = "column-gap";
 		const COLUMN_WIDTH = "column-width";
 		const COLUMN_FILL = "column-fill";
@@ -1111,7 +1111,7 @@ class Contents implements IEventEmitter<ContentsEvents> {
 				["padding-bottom", (gap / 2) + "px", true],
 				["padding-left", "20px"],
 				["padding-right", "20px"],
-				[COLUMN_AXIS, "vertical"],
+				[WEBKIT_COLUMN_AXIS, "vertical"],
 			);
 		} else {
 			batch.push(
@@ -1119,7 +1119,7 @@ class Contents implements IEventEmitter<ContentsEvents> {
 				["padding-bottom", "20px"],
 				["padding-left", (gap / 2) + "px", true],
 				["padding-right", (gap / 2) + "px", true],
-				[COLUMN_AXIS, "horizontal"],
+				[WEBKIT_COLUMN_AXIS, "horizontal"],
 			);
 		}
 

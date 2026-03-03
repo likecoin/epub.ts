@@ -4,6 +4,8 @@ import mime from "./utils/mime";
 import Path from "./utils/path";
 import JSZip from "jszip";
 
+const _URL = typeof window !== "undefined" ? window.URL : URL;
+
 /**
  * Handles Unzipping a requesting files from an Epub Archive
  * @class
@@ -179,8 +181,6 @@ class Archive {
 	 * @return {Promise} url promise with Url string
 	 */
 	async createUrl(url: string, options?: { base64?: boolean }): Promise<string> {
-		const _URL = typeof window !== "undefined" ? window.URL : URL;
-
 		if(url in this.urlCache) {
 			return this.urlCache[url]!;
 		}
@@ -215,13 +215,11 @@ class Archive {
 	 * @param  {string} url url of the item in the archive
 	 */
 	revokeUrl(url: string): void {
-		const _URL = typeof window !== "undefined" ? window.URL : URL;
 		const fromCache = this.urlCache[url];
 		if(fromCache) _URL.revokeObjectURL(fromCache);
 	}
 
 	destroy(): void {
-		const _URL = typeof window !== "undefined" ? window.URL : URL;
 		for (const key in this.urlCache) {
 			const cachedUrl = this.urlCache[key];
 			if (cachedUrl) _URL.revokeObjectURL(cachedUrl);
