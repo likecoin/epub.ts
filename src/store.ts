@@ -416,8 +416,9 @@ class Store implements IEventEmitter<StoreEvents> {
 	}
 
 	destroy(): void {
-		for (const fromCache in this.urlCache) {
-			_URL!.revokeObjectURL(fromCache);
+		for (const key in this.urlCache) {
+			const cachedUrl = this.urlCache[key];
+			if(cachedUrl) _URL!.revokeObjectURL(cachedUrl);
 		}
 		this.urlCache = {};
 		this.removeListeners();

@@ -1,5 +1,5 @@
 import {substitute} from "./utils/replacements";
-import {createBase64Url, createBlobUrl, blob2base64} from "./utils/core";
+import {createBase64Url, createBlobUrl, revokeBlobUrl, blob2base64} from "./utils/core";
 import Url from "./utils/url";
 import mime from "./utils/mime";
 import Path from "./utils/path";
@@ -323,6 +323,12 @@ class Resources {
 	}
 
 	destroy(): void {
+		if (this.replacementUrls) {
+			this.replacementUrls.forEach((url) => {
+				if (url) revokeBlobUrl(url);
+			});
+		}
+
 		this.settings = undefined!;
 		this.manifest = undefined!;
 		this.resources = undefined!;

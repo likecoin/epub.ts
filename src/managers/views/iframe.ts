@@ -906,6 +906,8 @@ class IframeView implements IEventEmitter<IframeViewEvents> {
 			this.iframe = undefined;
 			this.contents = undefined;
 
+			this.section.unload();
+
 			this._textWidth = undefined;
 			this._textHeight = undefined;
 			this._width = undefined;
