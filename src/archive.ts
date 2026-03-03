@@ -1,4 +1,4 @@
-import {defer, isXml, parse} from "./utils/core";
+import {isXml, parse} from "./utils/core";
 import request from "./utils/request";
 import mime from "./utils/mime";
 import Path from "./utils/path";
@@ -62,9 +62,7 @@ class Archive {
 	 * @param  {string} [type] specify the type of the returned result
 	 * @return {Promise<Blob | string | JSON | Document | XMLDocument>}
 	 */
-	request(url: string, type?: string): Promise<unknown> {
-		const deferred = new defer<unknown>();
-		let response;
+	async request(url: string, type?: string): Promise<unknown> {
 		const path = new Path(url);
 
 		// If type isn't set, determine it from the file extension
@@ -72,24 +70,19 @@ class Archive {
 			type = path.extension;
 		}
 
-		if(type == "blob"){
-			response = this.getBlob(url);
-		} else {
-			response = this.getText(url);
-		}
+		const response = type == "blob"
+			? this.getBlob(url)
+			: this.getText(url);
 
-		if (response) {
-			response.then((r: string | Blob) => {
-				const result = this.handleResponse(r, type);
-				deferred.resolve(result);
-			});
-		} else {
-			deferred.reject({
+		if (!response) {
+			throw {
 				message : "File not found in the epub: " + url,
 				stack : new Error().stack
-			});
+			};
 		}
-		return deferred.promise;
+
+		const r = await response;
+		return this.handleResponse(r, type);
 	}
 
 	/**
@@ -185,56 +178,36 @@ class Archive {
 	 * @param  {object} [options.base64] use base64 encoding or blob url
 	 * @return {Promise} url promise with Url string
 	 */
-	createUrl(url: string, options?: { base64?: boolean }): Promise<string> {
-		const deferred = new defer<string>();
+	async createUrl(url: string, options?: { base64?: boolean }): Promise<string> {
 		const _URL = typeof window !== "undefined" ? window.URL : URL;
-		let tempUrl;
-		let response;
-		const useBase64 = options && options.base64;
 
 		if(url in this.urlCache) {
-			deferred.resolve(this.urlCache[url]!);
-			return deferred.promise;
+			return this.urlCache[url]!;
 		}
+
+		const useBase64 = options && options.base64;
 
 		if (useBase64) {
-			response = this.getBase64(url);
-
-			if (response) {
-				response.then((tempUrl: string) => {
-
-					this.urlCache[url] = tempUrl;
-					deferred.resolve(tempUrl);
-
-				});
-
+			const tempUrl = this.getBase64(url);
+			if (tempUrl) {
+				const result = await tempUrl;
+				this.urlCache[url] = result;
+				return result;
 			}
-
 		} else {
-
-			response = this.getBlob(url);
-
-			if (response) {
-				response.then((blob: Blob) => {
-
-					tempUrl = _URL.createObjectURL(blob);
-					this.urlCache[url] = tempUrl;
-					deferred.resolve(tempUrl);
-
-				});
-
+			const blobPromise = this.getBlob(url);
+			if (blobPromise) {
+				const blob = await blobPromise;
+				const tempUrl = _URL.createObjectURL(blob);
+				this.urlCache[url] = tempUrl;
+				return tempUrl;
 			}
 		}
 
-
-		if (!response) {
-			deferred.reject({
-				message : "File not found in the epub: " + url,
-				stack : new Error().stack
-			});
-		}
-
-		return deferred.promise;
+		throw {
+			message : "File not found in the epub: " + url,
+			stack : new Error().stack
+		};
 	}
 
 	/**

@@ -80,20 +80,13 @@ class ContinuousViewManager extends DefaultViewManager {
 			});
 	}
 
-	fill(_full?: defer<void>): Promise<void> {
-		const full = _full || new defer<void>();
-
-		this.q.enqueue(() => {
-			return this.check();
-		}).then((result) => {
-			if (result) {
-				this.fill(full);
-			} else {
-				full.resolve();
-			}
-		});
-
-		return full.promise;
+	async fill(): Promise<void> {
+		let result: boolean | void | Error = true;
+		while (result) {
+			result = await this.q.enqueue(() => {
+				return this.check();
+			});
+		}
 	}
 
 	moveTo(offset: { left: number; top: number }): void {

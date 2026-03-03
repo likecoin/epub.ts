@@ -1,4 +1,3 @@
-import { defer } from "./utils/core";
 import EpubCFI from "./epubcfi";
 import Hook from "./utils/hook";
 import { sprint } from "./utils/core";
@@ -61,32 +60,20 @@ class Section {
 	 * @param  {method} [_request] a request method to use for loading
 	 * @return {document} a promise with the xml document
 	 */
-	load(_request?: RequestFunction): Promise<Element> {
+	async load(_request?: RequestFunction): Promise<Element> {
 		const request = _request || this.request || Request;
-		const loading = new defer<Element>();
-		const loaded = loading.promise;
 
 		if(this.contents) {
-			loading.resolve(this.contents);
-		} else {
-			request(this.url!)
-				.then((xml) => {
-					// var directory = new Url(this.url).directory;
-
-					this.document = xml as Document;
-					this.contents = (xml as Document).documentElement;
-
-					return this.hooks!.content.trigger(this.document, this);
-				})
-				.then(() => {
-					loading.resolve(this.contents!);
-				})
-				.catch(function(error: Error){
-					loading.reject(error);
-				});
+			return this.contents;
 		}
 
-		return loaded;
+		const xml = await request(this.url!);
+
+		this.document = xml as Document;
+		this.contents = (xml as Document).documentElement;
+
+		await this.hooks!.content.trigger(this.document, this);
+		return this.contents;
 	}
 
 	/**
@@ -102,26 +89,13 @@ class Section {
 	 * @param  {method} [_request] a request method to use for loading
 	 * @return {string} output a serialized XML Document
 	 */
-	render(_request?: RequestFunction): Promise<string> {
-		const rendering = new defer<string>();
-		const rendered = rendering.promise;
-		this.load(_request).
-			then((contents: Element) => {
-				const serializer = new XMLSerializer();
-				this.output = serializer.serializeToString(contents);
-				return this.output;
-			}).
-			then(() => {
-				return this.hooks!.serialize.trigger(this.output, this);
-			}).
-			then(() => {
-				rendering.resolve(this.output!);
-			})
-			.catch(function(error: Error){
-				rendering.reject(error);
-			});
+	async render(_request?: RequestFunction): Promise<string> {
+		const contents = await this.load(_request);
+		const serializer = new XMLSerializer();
+		this.output = serializer.serializeToString(contents);
 
-		return rendered;
+		await this.hooks!.serialize.trigger(this.output, this);
+		return this.output;
 	}
 
 	/**

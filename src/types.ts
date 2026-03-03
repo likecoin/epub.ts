@@ -7,7 +7,6 @@ import type Queue from "./utils/queue";
 
 // ===== Deferred =====
 export interface Deferred<T = unknown> {
-	id: string;
 	resolve: (value: T | PromiseLike<T>) => void;
 	reject: (reason?: unknown) => void;
 	promise: Promise<T>;

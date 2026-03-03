@@ -1,4 +1,4 @@
-import {defer, isXml, parse} from "./utils/core";
+import {isXml, parse} from "./utils/core";
 import httpRequest from "./utils/request";
 import mime from "./utils/mime";
 import Path from "./utils/path";
@@ -210,8 +210,7 @@ class Store implements IEventEmitter<StoreEvents> {
 	 * @param  {string} [type] specify the type of the returned result
 	 * @return {Promise<Blob | string | JSON | Document | XMLDocument>}
 	 */
-	retrieve(url: string, type?: string): Promise<unknown> {
-		let response;
+	async retrieve(url: string, type?: string): Promise<unknown> {
 		const path = new Path(url);
 
 		// If type isn't set, determine it from the file extension
@@ -219,27 +218,18 @@ class Store implements IEventEmitter<StoreEvents> {
 			type = path.extension;
 		}
 
-		if(type == "blob"){
-			response = this.getBlob(url);
-		} else {
-			response = this.getText(url);
+		const r = type == "blob"
+			? await this.getBlob(url)
+			: await this.getText(url);
+
+		if (r) {
+			return this.handleResponse(r, type);
 		}
 
-
-		return response.then((r) => {
-			const deferred = new defer<unknown>();
-			let result;
-			if (r) {
-				result = this.handleResponse(r, type);
-				deferred.resolve(result);
-			} else {
-				deferred.reject({
-					message : "File not found in storage: " + url,
-					stack : new Error().stack
-				});
-			}
-			return deferred.promise;
-		});
+		throw {
+			message : "File not found in storage: " + url,
+			stack : new Error().stack
+		};
 	}
 
 	/**
@@ -312,25 +302,22 @@ class Store implements IEventEmitter<StoreEvents> {
 	 * @param  {string} [mimeType]
 	 * @return {string} base64 encoded
 	 */
-	getBase64(url: string, mimeType?: string): Promise<string | undefined> {
+	async getBase64(url: string, mimeType?: string): Promise<string | undefined> {
 		const encodedUrl = encodeURIComponent(url);
 
 		mimeType = mimeType || mime.lookup(url);
 
-		return this.storage.getItem(encodedUrl).then((uint8array) => {
-			const deferred = new defer<string>();
+		const uint8array = await this.storage.getItem(encodedUrl);
+		if(!uint8array) return;
+
+		const blob = new Blob([uint8array as BlobPart], {type : mimeType});
+
+		return new Promise<string>((resolve) => {
 			const reader = new FileReader();
-
-			if(!uint8array) return;
-
-			const blob = new Blob([uint8array as BlobPart], {type : mimeType});
-
 			reader.addEventListener("loadend", () => {
-				deferred.resolve(reader.result as string);
+				resolve(reader.result as string);
 			});
 			reader.readAsDataURL(blob);
-
-			return deferred.promise;
 		});
 	}
 
@@ -340,55 +327,32 @@ class Store implements IEventEmitter<StoreEvents> {
 	 * @param  {object} [options.base64] use base64 encoding or blob url
 	 * @return {Promise} url promise with Url string
 	 */
-	createUrl(url: string, options?: { base64?: boolean }): Promise<string> {
-		const deferred = new defer<string>();
-		let tempUrl;
-		let response;
+	async createUrl(url: string, options?: { base64?: boolean }): Promise<string> {
+		if(url in this.urlCache) {
+			return this.urlCache[url]!;
+		}
+
 		const useBase64 = options && options.base64;
 
-		if(url in this.urlCache) {
-			deferred.resolve(this.urlCache[url]!);
-			return deferred.promise;
-		}
-
 		if (useBase64) {
-			response = this.getBase64(url);
-
-			if (response) {
-				response.then((tempUrl: string | undefined) => {
-
-					this.urlCache[url] = tempUrl!;
-					deferred.resolve(tempUrl!);
-
-				});
-
+			const tempUrl = await this.getBase64(url);
+			if (tempUrl) {
+				this.urlCache[url] = tempUrl;
+				return tempUrl;
 			}
-
 		} else {
-
-			response = this.getBlob(url);
-
-			if (response) {
-				response.then((blob: Blob | undefined) => {
-
-					tempUrl = blob ? _URL!.createObjectURL(blob) : undefined;
-					this.urlCache[url] = tempUrl!;
-					deferred.resolve(tempUrl!);
-
-				});
-
+			const blob = await this.getBlob(url);
+			if (blob) {
+				const tempUrl = _URL!.createObjectURL(blob);
+				this.urlCache[url] = tempUrl;
+				return tempUrl;
 			}
 		}
 
-
-		if (!response) {
-			deferred.reject({
-				message : "File not found in storage: " + url,
-				stack : new Error().stack
-			});
-		}
-
-		return deferred.promise;
+		throw {
+			message : "File not found in storage: " + url,
+			stack : new Error().stack
+		};
 	}
 
 	/**

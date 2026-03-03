@@ -558,22 +558,15 @@ export function blob2base64(blob: Blob): Promise<string | ArrayBuffer> {
  * From: https://developer.mozilla.org/en-US/docs/Mozilla/JavaScript_code_modules/Promise.jsm/Deferred#backwards_forwards_compatible
  */
 export class defer<T = unknown> {
-	id: string;
 	resolve!: (value: T | PromiseLike<T>) => void;
 	reject!: (reason?: unknown) => void;
 	promise: Promise<T>;
 
 	constructor() {
-		this.id = uuid();
-
-		/* A newly created Promise object.
-		 * Initially in pending state.
-		 */
 		this.promise = new Promise<T>((resolve, reject) => {
 			this.resolve = resolve;
 			this.reject = reject;
 		});
-		Object.freeze(this);
 	}
 }
 

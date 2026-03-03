@@ -1,4 +1,4 @@
-import {qs, sprint, locationOf, defer} from "./utils/core";
+import {qs, sprint, locationOf} from "./utils/core";
 import Queue from "./utils/queue";
 import EpubCFI from "./epubcfi";
 import { EVENTS } from "./utils/constants";
@@ -100,20 +100,16 @@ class Locations implements IEventEmitter<LocationsEvents> {
 		};
 	}
 
-	process(section: Section): Promise<string[]> {
+	async process(section: Section): Promise<string[]> {
+		const contents = await section.load(this.request);
+		const locations = this.parse(contents, section.cfiBase!);
+		this._locations = this._locations!.concat(locations);
 
-		return section.load(this.request)
-			.then((contents: Element) => {
-				const completed = new defer<string[]>();
-				const locations = this.parse(contents, section.cfiBase!);
-				this._locations = this._locations!.concat(locations);
+		section.unload();
 
-				section.unload();
-
-				this.processingTimeout = setTimeout(() => completed.resolve(locations), this.pause);
-				return completed.promise;
-			});
-
+		return new Promise<string[]>((resolve) => {
+			this.processingTimeout = setTimeout(() => resolve(locations), this.pause);
+		});
 	}
 
 	parse(contents: Element, cfiBase: string, chars?: number): string[] {
@@ -238,23 +234,21 @@ class Locations implements IEventEmitter<LocationsEvents> {
 
 	}
 
-	processWords(section: Section, wordCount: number, startCfi?: EpubCFI, count?: number): Promise<{ cfi: string; wordCount: number }[]> {
+	async processWords(section: Section, wordCount: number, startCfi?: EpubCFI, count?: number): Promise<{ cfi: string; wordCount: number }[]> {
 		if (count && this._locationsWords.length >= count) {
-			return Promise.resolve([]);
+			return [];
 		}
 
-		return section.load(this.request)
-			.then((contents: Element) => {
-				const completed = new defer<{ cfi: string; wordCount: number }[]>();
-				const locations = this.parseWords(contents, section, wordCount, startCfi);
-				const remainingCount = count! - this._locationsWords.length;
-				this._locationsWords = this._locationsWords.concat(locations.length >= count! ? locations.slice(0, remainingCount) : locations);
+		const contents = await section.load(this.request);
+		const locations = this.parseWords(contents, section, wordCount, startCfi);
+		const remainingCount = count! - this._locationsWords.length;
+		this._locationsWords = this._locationsWords.concat(locations.length >= count! ? locations.slice(0, remainingCount) : locations);
 
-				section.unload();
+		section.unload();
 
-				this.processingTimeout = setTimeout(() => completed.resolve(locations), this.pause);
-				return completed.promise;
-			});
+		return new Promise<{ cfi: string; wordCount: number }[]>((resolve) => {
+			this.processingTimeout = setTimeout(() => resolve(locations), this.pause);
+		});
 	}
 
 	//http://stackoverflow.com/questions/18679576/counting-words-in-string

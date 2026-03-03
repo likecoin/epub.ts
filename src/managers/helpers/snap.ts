@@ -1,4 +1,4 @@
-import {extend, defer} from "../../utils/core";
+import {extend} from "../../utils/core";
 import { EVENTS } from "../../utils/constants";
 import EventEmitter from "../../utils/event-emitter";
 import type { IEventEmitter } from "../../types";
@@ -305,7 +305,6 @@ class Snap implements IEventEmitter<Record<string, any[]>> {
 	}
 
 	smoothScrollTo(destination: number): Promise<void> {
-		const deferred = new defer<void>();
 		const start = this.scrollLeft;
 		const startTime = this.now();
 
@@ -314,33 +313,32 @@ class Snap implements IEventEmitter<Record<string, any[]>> {
 
 		this.snapping = true;
 
-		// add animation loop
-		const tick = (): void => {
-			const now = this.now();
-			const time = Math.min(1, ((now - startTime) / duration));
-			const _timeFunction = easing(time);
+		return new Promise<void>((resolve) => {
+			// add animation loop
+			const tick = (): void => {
+				const now = this.now();
+				const time = Math.min(1, ((now - startTime) / duration));
+				easing(time);
 
+				if (this.touchCanceler || this.resizeCanceler) {
+					this.resizeCanceler = false;
+					this.snapping = false;
+					resolve();
+					return;
+				}
 
-			if (this.touchCanceler || this.resizeCanceler) {
-				this.resizeCanceler = false;
-				this.snapping = false;
-				deferred.resolve();
-				return;
-			}
-
-			if (time < 1) {
+				if (time < 1) {
 					window.requestAnimationFrame(tick);
 					this.scrollTo(start + ((destination - start) * time), 0);
-			} else {
+				} else {
 					this.scrollTo(destination, 0);
 					this.snapping = false;
-					deferred.resolve();
-			}
-		};
+					resolve();
+				}
+			};
 
-		tick();
-
-		return deferred.promise;
+			tick();
+		});
 	}
 
 	scrollTo(left: number = 0, top: number = 0): void {
