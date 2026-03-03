@@ -1,5 +1,5 @@
 import EventEmitter from "../../utils/event-emitter";
-import {extend, defer, windowBounds, isNumber} from "../../utils/core";
+import {extend, defer, isNumber} from "../../utils/core";
 import scrollType from "../../utils/scrolltype";
 import Mapping from "../../mapping";
 import Queue from "../../utils/queue";
@@ -49,10 +49,9 @@ class DefaultViewManager implements IEventEmitter<DefaultManagerEvents> {
 	_hasScrolled!: boolean;
 	_onScroll: ((e?: Event) => void) | undefined;
 	_onUnload: ((e: Event) => void) | undefined;
-	orientationTimeout: ReturnType<typeof setTimeout> | undefined;
 	resizeTimeout!: ReturnType<typeof setTimeout>;
 	afterScrolled!: ReturnType<typeof setTimeout>;
-	winBounds!: { top: number; left: number; right: number; bottom: number; width: number; height: number };
+
 
 	declare on: IEventEmitter<DefaultManagerEvents>["on"];
 	declare off: IEventEmitter<DefaultManagerEvents>["off"];
@@ -200,7 +199,6 @@ class DefaultViewManager implements IEventEmitter<DefaultManagerEvents> {
 	}
 
 	destroy(): void {
-		clearTimeout(this.orientationTimeout);
 		clearTimeout(this.resizeTimeout);
 		clearTimeout(this.afterScrolled);
 
@@ -222,22 +220,7 @@ class DefaultViewManager implements IEventEmitter<DefaultManagerEvents> {
 			this.resize();
 		}
 
-		// Per ampproject:
-		// In IOS 10.3, the measured size of an element is incorrect if the
-		// element size depends on window size directly and the measurement
-		// happens in window.resize event. Adding a timeout for correct
-		// measurement. See https://github.com/ampproject/amphtml/issues/8479
-		clearTimeout(this.orientationTimeout);
-		this.orientationTimeout = setTimeout(() => {
-			this.orientationTimeout = undefined;
-
-			if(this.optsSettings?.resizeOnOrientationChange) {
-				this.resize();
-			}
-
-			this.emit(EVENTS.MANAGERS.ORIENTATION_CHANGE, orientation);
-		}, 500);
-
+		this.emit(EVENTS.MANAGERS.ORIENTATION_CHANGE, orientation);
 	}
 
 	onResized(_e?: Event): void {
@@ -246,16 +229,6 @@ class DefaultViewManager implements IEventEmitter<DefaultManagerEvents> {
 
 	resize(width?: number, height?: number, epubcfi?: string): void {
 		const stageSize = this.stage.size(width, height);
-
-		// For Safari, wait for orientation to catch up
-		// if the window is a square
-		this.winBounds = windowBounds();
-		if (this.orientationTimeout &&
-				this.winBounds.width === this.winBounds.height) {
-			// reset the stage size for next resize
-			this._stageSize = undefined;
-			return;
-		}
 
 		if (this._stageSize &&
 				this._stageSize.width === stageSize.width &&
