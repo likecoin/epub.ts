@@ -9,8 +9,7 @@ import type Section from "./section";
 
 const hasNavigator = typeof (navigator) !== "undefined";
 
-const isChrome = hasNavigator && /Chrome/.test(navigator.userAgent);
-const isWebkit = hasNavigator && !isChrome && /AppleWebKit/.test(navigator.userAgent);
+const isWebkit = hasNavigator && !/Chrome/.test(navigator.userAgent) && /AppleWebKit/.test(navigator.userAgent);
 
 const ELEMENT_NODE = 1;
 const _TEXT_NODE = 3;

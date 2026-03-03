@@ -87,7 +87,6 @@ class Snap implements IEventEmitter<Record<string, any[]>> {
 		} else {
 			this.element = this.manager.stage.container;
 			this.scroller = this.element;
-			this.element.style.setProperty("-webkit-overflow-scrolling", "touch");
 		}
 
 		// this.overflow = this.manager.overflow;
@@ -354,7 +353,7 @@ class Snap implements IEventEmitter<Record<string, any[]>> {
 	}
 
 	now(): number {
-		return ("now" in window.performance) ? performance.now() : new Date().getTime();
+		return performance.now();
 	}
 
 	destroy(): void {
