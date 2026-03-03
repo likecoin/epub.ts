@@ -191,5 +191,11 @@ describe("replacements", () => {
 			const content = "<p>hello</p>";
 			expect(substitute(content, [], [])).toBe(content);
 		});
+
+		it("should not corrupt overlapping URL patterns", () => {
+			const content = '<img src="big-img.jpg"/> <img src="img.jpg"/>';
+			const result = substitute(content, ["img.jpg", "big-img.jpg"], ["blob:short", "blob:long"]);
+			expect(result).toBe('<img src="blob:long"/> <img src="blob:short"/>');
+		});
 	});
 });

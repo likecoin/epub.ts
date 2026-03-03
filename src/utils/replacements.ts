@@ -128,23 +128,35 @@ export function replaceLinks(contents: Element, fn: (path: string) => void): voi
 }
 
 export function substitute(content: string, urls: string[], replacements: string[]): string {
-	urls.forEach(function(url, i){
-		if (url && replacements[i]) {
-			// Also try decoded form for URLs with percent-encoded characters (e.g. CJK filenames)
-			try {
-				const decoded = decodeURIComponent(url);
-				if (decoded !== url) {
-					const escapedDecoded = decoded.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
-					content = content.replace(new RegExp(escapedDecoded, "g"), replacements[i]);
-				}
-			} catch (_e) {
-				// Invalid URI encoding, skip decoded replacement
+	const map = new Map<string, string>();
+	const alternatives: string[] = [];
+	const escapeRe = /[-[\]{}()*+?.,\\^$|#\s]/g;
+
+	for (let i = 0; i < urls.length; i++) {
+		const url = urls[i];
+		const replacement = replacements[i];
+		if (!url || !replacement) continue;
+
+		const escapedUrl = url.replace(escapeRe, "\\$&");
+		map.set(url, replacement);
+		alternatives.push(escapedUrl);
+
+		try {
+			const decoded = decodeURIComponent(url);
+			if (decoded !== url) {
+				const escapedDecoded = decoded.replace(escapeRe, "\\$&");
+				map.set(decoded, replacement);
+				alternatives.push(escapedDecoded);
 			}
-			// Account for special characters in the file name.
-			// See https://stackoverflow.com/a/6318729.
-			url = url.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
-			content = content.replace(new RegExp(url, "g"), replacements[i]);
+		} catch (_e) {
+			// Invalid URI encoding, skip decoded variant
 		}
-	});
-	return content;
+	}
+
+	if (alternatives.length === 0) return content;
+
+	// Sort longest first to prevent substring collisions
+	alternatives.sort((a, b) => b.length - a.length);
+	const combined = new RegExp(alternatives.join("|"), "g");
+	return content.replace(combined, (match) => map.get(match) ?? match);
 }
