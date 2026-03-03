@@ -475,6 +475,22 @@ describe("Contents", () => {
 			expect(container.style.columnWidth).toBe("400px");
 			expect(container.style.columnGap).toBe("20px");
 		});
+
+		it("should set all layout properties for horizontal axis", () => {
+			const { contents, container } = createContents();
+			contents.columns(800, 600, 400, 20);
+			expect(container.style.display).toBe("inline-block");
+			expect(container.style.overflowY).toBe("hidden");
+			expect(container.style.getPropertyValue("margin")).toBe("0px");
+			expect(container.style.getPropertyPriority("margin")).toBe("important");
+			expect(container.style.paddingTop).toBe("20px");
+			expect(container.style.paddingBottom).toBe("20px");
+			expect(container.style.getPropertyValue("padding-left")).toBe("10px");
+			expect(container.style.getPropertyValue("padding-right")).toBe("10px");
+			expect(container.style.boxSizing).toBe("border-box");
+			expect(container.style.maxWidth).toBe("inherit");
+			expect(container.style.columnFill).toBe("auto");
+		});
 	});
 
 	describe("scaler()", () => {

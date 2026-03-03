@@ -297,6 +297,23 @@ class Contents implements IEventEmitter<ContentsEvents> {
 	}
 
 	/**
+		* Set multiple Css properties at once without triggering
+		* intermediate getComputedStyle reads.
+		* @param {Array<[string, string?, boolean?]>} properties
+		* @private
+		*/
+	cssBatch(properties: [string, string?, boolean?][]): void {
+		const content = this.content || this.document.body;
+		for (const [property, value, priority] of properties) {
+			if (value) {
+				content.style.setProperty(property, value, priority ? "important" : "");
+			} else {
+				content.style.removeProperty(property);
+			}
+		}
+	}
+
+	/**
 		* Get or Set the viewport element
 		* @param {object} [options]
 		* @param {string} [options.width]
@@ -1071,10 +1088,12 @@ class Contents implements IEventEmitter<ContentsEvents> {
 
 		this.layoutStyle("scrolling");
 
+		const batch: [string, string?, boolean?][] = [];
+
 		if (width !== undefined && width >= 0) {
 			this.width(width);
 			viewport.width = width;
-			this.css("padding", "0 "+(width/12)+"px");
+			batch.push(["padding", "0 " + (width / 12) + "px"]);
 		}
 
 		if (height !== undefined && height >= 0) {
@@ -1082,10 +1101,12 @@ class Contents implements IEventEmitter<ContentsEvents> {
 			viewport.height = height;
 		}
 
-		this.css("margin", "0");
-		this.css("box-sizing", "border-box");
+		batch.push(
+			["margin", "0"],
+			["box-sizing", "border-box"],
+		);
 
-
+		this.cssBatch(batch);
 		this.viewport(viewport);
 	}
 
@@ -1117,37 +1138,44 @@ class Contents implements IEventEmitter<ContentsEvents> {
 		// Deal with Mobile trying to scale to viewport
 		this.viewport({ width: width, height: height, scale: 1.0, scalable: "no" });
 
-		// Fixes Safari column cut offs, but causes RTL issues.
-		// Required on iOS: block-level body in CSS columns triggers a
-		// WKWebView content-size expansion feedback loop where scrollWidth
-		// grows toward infinity. inline-block shrink-wraps the body to
-		// its explicit width, breaking the cycle.
-		this.css("display", "inline-block");
-
-		this.css("overflow-y", "hidden");
-		this.css("margin", "0", true);
+		const batch: [string, string?, boolean?][] = [
+			// Fixes Safari column cut offs, but causes RTL issues.
+			// Required on iOS: block-level body in CSS columns triggers a
+			// WKWebView content-size expansion feedback loop where scrollWidth
+			// grows toward infinity. inline-block shrink-wraps the body to
+			// its explicit width, breaking the cycle.
+			["display", "inline-block"],
+			["overflow-y", "hidden"],
+			["margin", "0", true],
+		];
 
 		if (axis === "vertical") {
-			this.css("padding-top", (gap / 2) + "px", true);
-			this.css("padding-bottom", (gap / 2) + "px", true);
-			this.css("padding-left", "20px");
-			this.css("padding-right", "20px");
-			this.css(COLUMN_AXIS, "vertical");
+			batch.push(
+				["padding-top", (gap / 2) + "px", true],
+				["padding-bottom", (gap / 2) + "px", true],
+				["padding-left", "20px"],
+				["padding-right", "20px"],
+				[COLUMN_AXIS, "vertical"],
+			);
 		} else {
-			this.css("padding-top", "20px");
-			this.css("padding-bottom", "20px");
-			this.css("padding-left", (gap / 2) + "px", true);
-			this.css("padding-right", (gap / 2) + "px", true);
-			this.css(COLUMN_AXIS, "horizontal");
+			batch.push(
+				["padding-top", "20px"],
+				["padding-bottom", "20px"],
+				["padding-left", (gap / 2) + "px", true],
+				["padding-right", (gap / 2) + "px", true],
+				[COLUMN_AXIS, "horizontal"],
+			);
 		}
 
-		this.css("box-sizing", "border-box");
-		this.css("max-width", "inherit");
+		batch.push(
+			["box-sizing", "border-box"],
+			["max-width", "inherit"],
+			[COLUMN_FILL, "auto"],
+			[COLUMN_GAP, gap + "px"],
+			[COLUMN_WIDTH, columnWidth + "px"],
+		);
 
-		this.css(COLUMN_FILL, "auto");
-
-		this.css(COLUMN_GAP, gap+"px");
-		this.css(COLUMN_WIDTH, columnWidth+"px");
+		this.cssBatch(batch);
 	}
 
 	/**
@@ -1200,15 +1228,19 @@ class Contents implements IEventEmitter<ContentsEvents> {
 		this.scaler(scale, 0, 0);
 		// this.scaler(scale, offsetX > 0 ? offsetX : 0, offsetY);
 
-		// background images are not scaled by transform
-		this.css("background-size", viewportWidth * scale + "px " + viewportHeight * scale + "px");
+		const batch: [string, string?, boolean?][] = [
+			// background images are not scaled by transform
+			["background-size", viewportWidth * scale + "px " + viewportHeight * scale + "px"],
+			["background-color", "transparent"],
+		];
 
-		this.css("background-color", "transparent");
 		if (section && section.properties!.includes("page-spread-left")) {
 			// set margin since scale is weird
 			const marginLeft = width - (viewportWidth * scale);
-			this.css("margin-left", marginLeft + "px");
+			batch.push(["margin-left", marginLeft + "px"]);
 		}
+
+		this.cssBatch(batch);
 	}
 
 	/**
