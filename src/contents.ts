@@ -48,13 +48,11 @@ class Contents implements IEventEmitter<ContentsEvents> {
 	called: number;
 	active: boolean;
 	observer: ResizeObserver | MutationObserver | undefined;
-	expanding: ReturnType<typeof setTimeout> | undefined;
 	onResize: ((size: { width: number; height: number }) => void) | undefined;
 	_expanding!: boolean;
 	_resizeCheck: (() => void) | undefined;
 	_triggerEvent: ((e: Event) => void) | undefined;
 	_onSelectionChange: ((e: Event) => void) | undefined;
-	_onVisibilityChange: (() => void) | undefined;
 	_mediaQueryHandlers: { mql: MediaQueryList; handler: (e: MediaQueryListEvent) => void }[];
 	selectionEndTimeout: ReturnType<typeof setTimeout> | undefined;
 	_layoutStyle!: string;
@@ -444,12 +442,7 @@ class Contents implements IEventEmitter<ContentsEvents> {
 
 		// this.transitionListeners();
 
-		if (typeof ResizeObserver === "undefined") {
-			this.resizeListeners();
-			this.visibilityListeners();
-		} else {
-			this.resizeObservers();
-		}
+		this.resizeObservers();
 
 		// this.mutationObservers();
 
@@ -466,11 +459,6 @@ class Contents implements IEventEmitter<ContentsEvents> {
 
 		this.removeSelectionListeners();
 
-		if (this._onVisibilityChange) {
-			document.removeEventListener("visibilitychange", this._onVisibilityChange);
-			this._onVisibilityChange = undefined;
-		}
-
 		if (this._resizeCheck) {
 			this.document.removeEventListener("transitionend", this._resizeCheck);
 			this._resizeCheck = undefined;
@@ -484,8 +472,6 @@ class Contents implements IEventEmitter<ContentsEvents> {
 		if (this.observer) {
 			this.observer.disconnect();
 		}
-
-		clearTimeout(this.expanding);
 
 		const images = this.document.querySelectorAll("img");
 		for (let i = 0; i < images.length; i++) {
@@ -512,35 +498,6 @@ class Contents implements IEventEmitter<ContentsEvents> {
 			this.onResize && this.onResize(this._size);
 			this.emit(EVENTS.CONTENTS.RESIZE, this._size);
 		}
-	}
-
-	/**
-	 * Poll for resize detection
-	 * @private
-	 */
-	resizeListeners(): void {
-		let _width, _height;
-		// Test size again
-		clearTimeout(this.expanding);
-		requestAnimationFrame(this.resizeCheck.bind(this));
-		this.expanding = setTimeout(this.resizeListeners.bind(this), 350);
-	}
-
-	/**
-	 * Listen for visibility of tab to change
-	 * @private
-	 */
-	visibilityListeners(): void {
-		this._onVisibilityChange = (): void => {
-			if (document.visibilityState === "visible" && this.active === false) {
-				this.active = true;
-				this.resizeListeners();
-			} else {
-				this.active = false;
-				clearTimeout(this.expanding);
-			}
-		};
-		document.addEventListener("visibilitychange", this._onVisibilityChange);
 	}
 
 	/**
