@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.4.8 (2026-03-03)
+
+### Bug fixes
+
+- Plug memory leaks in view, resource, and store cleanup:
+  - Call `section.unload()` in `IframeView.destroy()` to release off-screen chapter DOMs
+  - Revoke blob URLs in `Resources.destroy()` before clearing `replacementUrls`
+  - Fix `Store.destroy()` to revoke `urlCache` values instead of keys
+
 ## 0.4.7 (2026-02-26)
 
 ### Bug fixes

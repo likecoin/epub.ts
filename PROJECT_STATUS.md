@@ -1,46 +1,5 @@
 # Project Status
 
-## Current Stage: C (Improvements)
-
-### Stage A: Build + Tests
-- [x] A1: Replace webpack+babel+karma with vite+vitest
-- [x] A2: Convert tests to Vitest
-
-### Stage B: TypeScript Conversion
-- [x] B0a: Replace event-emitter with inline typed emitter
-- [x] B0b: Inline marks-pane
-- [x] B1: Level 0 leaf utilities
-- [x] B2: Level 1 simple dependents
-- [x] B3: Level 2 modules
-- [x] B4: Level 3 modules
-- [x] B5: Level 4-5 managers + rendition
-- [x] B6: Level 6 top-level modules, remove types/
-
-### Stage C: Improvements
-- [x] Enable `noImplicitAny` (270 implicit-any params annotated)
-- [x] Replace ~528 explicit `any` with proper types (~64 remain across 22 files)
-- [x] Type all public APIs (no `any` in user-facing signatures)
-- [x] Fix CSS injection vulnerability (use `textContent` instead of `innerHTML` for style elements)
-- [x] Fix dangerous URL scheme handling (strip `javascript:` and `data:text/html` hrefs)
-- [x] Enable `strictNullChecks` (476 errors fixed across 30 files)
-- [x] Full `strict: true` (377 errors fixed: strictPropertyInitialization 120, noImplicitThis 251, others 6)
-- [x] ESLint + TS plugin (0 errors, 0 warnings)
-- [x] GitHub Actions CI
-- [x] Replace `localforage` with native IndexedDB wrapper
-- [x] Replace `@xmldom/xmldom` with browser-native DOMParser
-- [x] Add `"sideEffects": false` to package.json (enables better tree-shaking for consumers)
-- [x] Node.js import support (guard `window` at module scope)
-- [x] Node.js parsing-only entry point (`@likecoin/epub-ts/node` with `linkedom` peer dep)
-- [x] Improve test coverage (38 test files, 876 tests for 42 source files)
-- [x] Fix Android Chrome/Brave last-page skip (re-expand before section jump in all `next()`/`prev()` branches)
-- [x] Re-enable `fontLoadListeners()` for proactive iframe resize on font load
-- [x] Reduce remaining `any` types (~82 → 21; 61 removed across 21 files, 21 intentionally kept: 14 event emitter pattern, 7 annotations.ts user data)
-- [x] Replace `Function` types with proper signatures (~33 removed across 6 files; 0 remaining in code, 3 in JSDoc comments)
-- [x] Reduce non-null assertions via definite assignment (~22 removed across `rendition.ts` and `book.ts`)
-- [x] Add typed event emitter generics (`IEventEmitter<E>`) with per-class event maps exported from public API
-
----
-
 ## Build Output
 
 | Format | File | Size | Notes |
@@ -56,63 +15,7 @@ All formats are single-file bundles. `preserveModules` was considered for ESM bu
 
 ---
 
-## Dependency Status
-
-| Dep | Status | Notes |
-|---|---|---|
-| `core-js` | ✅ Removed (A1) | Babel polyfills, not needed with Vite |
-| `lodash` | ✅ Removed (A1) | throttle/debounce replaced with native |
-| `path-webpack` | ✅ Removed (A1) | Replaced with inline path utils |
-| `event-emitter` | ✅ Removed (B0a) | Replaced with inline typed emitter |
-| `marks-pane` | ✅ Removed (B0b) | Inlined as src/marks-pane/ |
-| `jszip` | ✅ Keep | Core dependency (ZIP handling) |
-| `localforage` | ✅ Removed (C) | Replaced with native IndexedDB wrapper (~30 lines) |
-| `@xmldom/xmldom` | ✅ Removed (C) | Replaced with native DOMParser and XMLSerializer |
-
----
-
 ## Test Status
-
-| Test | Status | Notes |
-|---|---|---|
-| annotations.test.ts | ✅ 13 passing | Constructor, add/remove, convenience wrappers, each, Annotation class, update |
-| archive.test.ts | ✅ 24 passing | Constructor, openUrl, getText, getBlob, getBase64, request, handleResponse, createUrl (base64+blob), destroy |
-| book.test.ts | ✅ 18 passing | Unarchived, archived, ArrayBuffer, no-cover, sub-object parity |
-| container.test.ts | ✅ 8 passing | Standard/nested/root paths, errors, destroy |
-| contents.test.ts | ✅ 61 passing | Constructor, width/height, scrollWidth/Height, overflow, css, viewport, addClass/removeClass, addStylesheet/Css/Rules, addScript, direction, writingMode, layoutStyle, textWidth/Height, root, expand, resizeCheck, locationOf, size, columns, scaler, epubReadingSystem, listenedEvents, triggerEvent, destroy |
-| continuous-manager.test.ts | ✅ 16 passing | Constructor, render, display, fill, scrollBy, snap, updateLayout, bounds, destroy |
-| core.test.ts | ✅ 19 passing | All, including file URL and directory-with-dot tests |
-| default-manager.test.ts | ✅ 33 passing | Constructor, render, display, scrollBy, snap, updateLayout, bounds, destroy |
-| displayoptions.test.ts | ✅ 8 passing | Parse all fields, missing, empty, destroy |
-| epub.test.ts | ✅ 2 passing | Unarchived + archived open |
-| epubcfi.test.ts | ✅ 27 passing | |
-| event-emitter.test.ts | ✅ 14 passing | Mixin application, on/off/emit, chaining, listener isolation, snapshot during emit |
-| hook.test.ts | ✅ 18 passing | register, deregister, trigger (sync/async/error), list, clear |
-| iframe.test.ts | ✅ 49 passing | Constructor, create, load, render, display, section, resize, destroy |
-| layout.test.ts | ✅ 26 passing | Constructor, flow, spread, calculate, count |
-| locations.test.ts | ✅ 38 passing | Constructor, generate, current, start/end, percentageFromCfi, cfiFromPercentage, length, save/load, destroy |
-| mapping.test.ts | ✅ 24 passing | Constructor, axis, walk, splitTextNodeIntoRanges, rangePairToCfiPair, rangeListToCfiList, page, section |
-| marks-pane.test.ts | ✅ 21 passing | Highlight, underline, mark, pane creation, render, element positioning |
-| mime.test.ts | ✅ 24 passing | EPUB types (xhtml, opf, ncx, epub), images, fonts, audio, video, case-insensitive |
-| navigation.test.ts | ✅ 20 passing | Alice TOC, get(), NCX, nested nav, landmarks |
-| node.test.ts | ✅ 10 passing | Node.js entry point: open, metadata, spine, navigation, render |
-| packaging.test.ts | ✅ 29 passing | Metadata, manifest, spine, paths, edge cases, EPUB2 fallbacks |
-| pagelist.test.ts | ✅ 19 passing | Nav HTML, NCX, CFI hrefs, process, pageFromCfi (empty+populated), cfiFromPage, percentages, percentageFromCfi, destroy |
-| path.test.ts | ✅ 17 passing | Constructor, directory/filename/extension, resolve, relative, isAbsolute, URL stripping |
-| path-utils.test.ts | ✅ 29 passing | resolve, relative, dirname, isAbsolute, parse — POSIX path edge cases |
-| queue.test.ts | ✅ 24 passing | enqueue, dequeue (sync/async/context), flush, dump, clear, pause, stop, length, Task class |
-| rendition.test.ts | ✅ 40 passing | Constructor, display, flow, spread, layout, themes, annotations, hooks, destroy |
-| replacements.test.ts | ✅ 23 passing | replaceBase, replaceCanonical, replaceMeta, replaceLinks (security: js/data: strip), substitute |
-| request.test.ts | ✅ 6 passing | Type inference (.opf/.xhtml/.ncx), binary, blob, 404 rejection |
-| resources.test.ts | ✅ 25 passing | Constructor, split, splitUrls, relativeTo, get (missing+found), substitute (direct+relative), replacements, createUrl, destroy |
-| section.test.ts | ✅ 20 passing | Constructor, load, render, find, search, hooks, destroy |
-| snap.test.ts | ✅ 15 passing | Constructor, snap, current, destroy |
-| spine.test.ts | ✅ 19 passing | Unpack, get, first/last, each, append/remove |
-| stage.test.ts | ✅ 39 passing | Constructor, create, wrap, container, bounds, orientation, destroy |
-| store.test.ts | ✅ 33 passing | Constructor, add, put, getUrl, getText, getBlob, getBase64, request, handleResponse, createUrl, destroy |
-| themes.test.ts | ✅ 21 passing | register dispatch, registerUrl/Rules/Css, select, add, override/removeOverride, fontSize, font, destroy |
-| url.test.ts | ✅ 17 passing | Absolute/relative/base parsing, resolve, relative, path(), toString, hash/search |
-| views.test.ts | ✅ 27 passing | append, prepend, insert, remove, first/last, indexOf, get, slice, find, displayed, show/hide, clear |
 
 **Total: 876 tests passing (38 test files)**
 
@@ -142,11 +45,6 @@ All formats are single-file bundles. `preserveModules` was considered for ESM bu
 
 ---
 
-## Priority Next Steps
+## Next Steps
 
-### Done
-1. ~~Node.js parsing-only entry point (no rendering)~~
-2. ~~Improve test coverage~~ — 38 test files / 876 tests covering 40 of 42 source files (only `inline.ts` and `scrolltype.ts` untested)
-
-### Medium Priority
-3. Explore splitting `Book` dependency graph for better tree-shaking
+- Explore splitting `Book` dependency graph for better tree-shaking
