@@ -334,8 +334,6 @@ export interface ParsedPath {
 
 // ===== Window Augmentation =====
 declare global {
-	interface Window {
-	}
 	interface Navigator {
 		epubReadingSystem?: {
 			name: string;
