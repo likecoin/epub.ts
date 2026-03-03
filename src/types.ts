@@ -335,8 +335,6 @@ export interface ParsedPath {
 // ===== Window Augmentation =====
 declare global {
 	interface Window {
-		webkitURL?: typeof URL;
-		mozURL?: typeof URL;
 	}
 	interface Navigator {
 		epubReadingSystem?: {

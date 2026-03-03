@@ -44,7 +44,7 @@ function createStorage(name: string): SimpleStorage {
 	};
 }
 
-const _URL = typeof window != "undefined" ? (window.URL || window.webkitURL || window.mozURL) : undefined;
+const _URL = typeof window != "undefined" ? window.URL : undefined;
 
 /**
  * Handles saving and requesting files from local storage
