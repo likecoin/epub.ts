@@ -7,7 +7,8 @@
  * @returns {function} requestAnimationFrame
  * @memberof Core
  */
-export const requestAnimationFrame = (typeof window != "undefined") ? window.requestAnimationFrame.bind(window) : false;
+export const microTick: (cb: FrameRequestCallback) => number = (cb) => { Promise.resolve().then(() => cb(performance.now())); return 0; };
+export const requestAnimationFrame: (cb: FrameRequestCallback) => number = (typeof window != "undefined") ? window.requestAnimationFrame.bind(window) : microTick;
 const ELEMENT_NODE = 1;
 const TEXT_NODE = 3;
 const _COMMENT_NODE = 8;

@@ -1,4 +1,4 @@
-import {extend, defer, requestAnimationFrame} from "../../utils/core";
+import {extend, defer} from "../../utils/core";
 import DefaultViewManager from "../default";
 import Snap from "../helpers/snap";
 import { EVENTS } from "../../utils/constants";
@@ -18,7 +18,6 @@ function debounce(func: (...args: unknown[]) => void, wait: number): (...args: u
 
 class ContinuousViewManager extends DefaultViewManager {
 	snapper: Snap | undefined;
-	tick!: typeof requestAnimationFrame;
 	scrollDeltaVert!: number;
 	scrollDeltaHorz!: number;
 	_scrolled!: (...args: unknown[]) => void;
@@ -438,8 +437,6 @@ class ContinuousViewManager extends DefaultViewManager {
 	addScrollListeners(): void {
 		let scroller;
 
-		this.tick = requestAnimationFrame;
-
 		const dir = this.settings.direction === "rtl" && this.settings.rtlScrollType === "default" ? -1 : 1;
 
 		this.scrollDeltaVert = 0;
@@ -458,7 +455,6 @@ class ContinuousViewManager extends DefaultViewManager {
 		this._onScroll = this.onScroll.bind(this);
 		scroller.addEventListener("scroll", this._onScroll);
 		this._scrolled = debounce(() => this.scrolled(), 30);
-		// this.tick.call(window, this.onScroll.bind(this));
 
 		this.didScroll = false;
 

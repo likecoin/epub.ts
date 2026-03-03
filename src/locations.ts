@@ -1,4 +1,4 @@
-import {qs, sprint, locationOf} from "./utils/core";
+import {qs, sprint, locationOf, microTick} from "./utils/core";
 import Queue from "./utils/queue";
 import EpubCFI from "./epubcfi";
 import { EVENTS } from "./utils/constants";
@@ -42,7 +42,7 @@ class Locations implements IEventEmitter<LocationsEvents> {
 		this.pause = pause || 0;
 
 		this.q = new Queue(this);
-		this.q.tick = false;
+		this.q.tick = microTick;
 		this.epubcfi = new EpubCFI();
 
 		this._locations = [];

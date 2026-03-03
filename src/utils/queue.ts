@@ -15,7 +15,7 @@ interface QueueItem {
 class Queue {
 	_q: QueueItem[];
 	context: object | undefined;
-	tick: ((cb: FrameRequestCallback) => number) | false;
+	tick: (cb: FrameRequestCallback) => number;
 	running: boolean | Promise<void> | undefined;
 	paused: boolean;
 	defered: defer<void> | undefined;
@@ -152,11 +152,7 @@ class Queue {
 			}
 		};
 
-		if (this.tick) {
-			this.tick(step);
-		} else {
-			Promise.resolve().then(step);
-		}
+		this.tick(step);
 
 		// Unpause
 		if(this.paused == true) {

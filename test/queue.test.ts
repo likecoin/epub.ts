@@ -1,13 +1,14 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
 import Queue from "../src/utils/queue";
 import { Task } from "../src/utils/queue";
+import { microTick } from "../src/utils/core";
 
-// In jsdom, requestAnimationFrame exists and would cause run() to auto-process.
-// We disable tick so enqueue() doesn't trigger async processing, then test
-// dequeue/flush/dump manually.
+// In jsdom, requestAnimationFrame exists and would cause run() to auto-process
+// on rAF timing. We use microTick so enqueue() processes via microtask instead,
+// then test dequeue/flush/dump manually.
 function createTestQueue(ctx?: object): Queue {
 	const q = new Queue(ctx);
-	q.tick = false;
+	q.tick = microTick;
 	return q;
 }
 
@@ -185,9 +186,9 @@ describe("Queue", () => {
 	});
 
 	describe("run()", () => {
-		it("should process tasks via microtask when tick is false", async () => {
+		it("should process tasks via microtask when tick is microTick", async () => {
 			const q = new Queue();
-			q.tick = false;
+			q.tick = microTick;
 			q.pause();
 			const order: number[] = [];
 			q.enqueue(() => { order.push(1); });
@@ -197,9 +198,9 @@ describe("Queue", () => {
 			expect(order).toEqual([1, 2, 3]);
 		});
 
-		it("should auto-process enqueued tasks when tick is false and not paused", async () => {
+		it("should auto-process enqueued tasks when tick is microTick and not paused", async () => {
 			const q = new Queue();
-			q.tick = false;
+			q.tick = microTick;
 			let value = 0;
 			const promise = q.enqueue(() => { value = 42; });
 			await promise;
