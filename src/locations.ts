@@ -11,7 +11,7 @@ import type Section from "./section";
  * Find Locations for a Book
  * @param {Spine} spine
  * @param {request} request
- * @param {number} [pause=100]
+ * @param {number} [pause=0]
  */
 export interface LocationsEvents extends Record<string, any[]> {
 	"changed": [{ percentage: number }];
@@ -39,7 +39,7 @@ class Locations implements IEventEmitter<LocationsEvents> {
 	constructor(spine: Spine, request: RequestFunction, pause?: number) {
 		this.spine = spine;
 		this.request = request;
-		this.pause = pause || 100;
+		this.pause = pause || 0;
 
 		this.q = new Queue(this);
 		this.epubcfi = new EpubCFI();

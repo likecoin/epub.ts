@@ -48,9 +48,9 @@ describe("Locations", () => {
 			expect(loc.pause).toBe(200);
 		});
 
-		it("defaults pause to 100", () => {
+		it("defaults pause to 0", () => {
 			const loc = new Locations(createMockSpine(), createMockRequest());
-			expect(loc.pause).toBe(100);
+			expect(loc.pause).toBe(0);
 		});
 
 		it("initializes _locations, _locationsWords, total, break, _current, _wordCounter", () => {
