@@ -104,8 +104,8 @@ class DefaultViewManager implements IEventEmitter<DefaultManagerEvents> {
 		const tag = element.tagName;
 
 		if (typeof this.settings.fullsize === "undefined" &&
-				tag && (tag.toLowerCase() == "body" ||
-				tag.toLowerCase() == "html")) {
+				tag && (tag.toLowerCase() === "body" ||
+				tag.toLowerCase() === "html")) {
 				this.settings.fullsize = true;
 		}
 

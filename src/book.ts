@@ -327,10 +327,10 @@ class Book implements IEventEmitter<BookEvents> {
 			this.url = new Url("/", "");
 			opening = this.request(input as string, "binary", this.settings.requestCredentials, this.settings.requestHeaders)
 				.then((result) => this.openEpub(result as string | ArrayBuffer));
-		} else if(type == INPUT_TYPE.OPF) {
+		} else if(type === INPUT_TYPE.OPF) {
 			this.url = new Url(input as string);
 			opening = this.openPackaging(this.url.Path.toString());
-		} else if(type == INPUT_TYPE.MANIFEST) {
+		} else if(type === INPUT_TYPE.MANIFEST) {
 			this.url = new Url(input as string);
 			opening = this.openManifest(this.url.Path.toString());
 		} else {
@@ -439,7 +439,7 @@ class Book implements IEventEmitter<BookEvents> {
 			resolved = this.path.resolve(path);
 		}
 
-		if(absolute != false && this.url) {
+		if(absolute !== false && this.url) {
 			resolved = this.url.resolve(resolved);
 		}
 
@@ -480,7 +480,7 @@ class Book implements IEventEmitter<BookEvents> {
 			return INPUT_TYPE.BASE64;
 		}
 
-		if(typeof(input) != "string") {
+		if(typeof(input) !== "string") {
 			return INPUT_TYPE.BINARY;
 		}
 

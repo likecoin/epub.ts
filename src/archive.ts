@@ -1,4 +1,4 @@
-import {isXml, parse} from "./utils/core";
+import {handleResponse as _handleResponse, EpubError} from "./utils/core";
 import request from "./utils/request";
 import mime from "./utils/mime";
 import Path from "./utils/path";
@@ -72,15 +72,12 @@ class Archive {
 			type = path.extension;
 		}
 
-		const response = type == "blob"
+		const response = type === "blob"
 			? this.getBlob(url)
 			: this.getText(url);
 
 		if (!response) {
-			throw {
-				message : "File not found in the epub: " + url,
-				stack : new Error().stack
-			};
+			throw new EpubError("File not found in the epub: " + url);
 		}
 
 		const r = await response;
@@ -95,27 +92,7 @@ class Archive {
 	 * @return {any} the parsed result
 	 */
 	handleResponse(response: string | Blob, type?: string): Document | object | Blob | string {
-		let r;
-
-		if(type == "json") {
-			r = JSON.parse(response as string);
-		}
-		else
-		if(isXml(type!)) {
-			r = parse(response as string, "text/xml");
-		}
-		else
-		if(type == "xhtml") {
-			r = parse(response as string, "application/xhtml+xml");
-		}
-		else
-		if(type == "html" || type == "htm") {
-			r = parse(response as string, "text/html");
-		 } else {
-			 r = response;
-		 }
-
-		return r;
+		return _handleResponse(response, type);
 	}
 
 	/**
@@ -204,10 +181,7 @@ class Archive {
 			}
 		}
 
-		throw {
-			message : "File not found in the epub: " + url,
-			stack : new Error().stack
-		};
+		throw new EpubError("File not found in the epub: " + url);
 	}
 
 	/**

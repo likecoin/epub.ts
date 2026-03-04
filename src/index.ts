@@ -16,12 +16,14 @@ import DisplayOptions from "./displayoptions";
 import Annotations from "./annotations";
 import Themes from "./themes";
 import Mapping from "./mapping";
+import { EpubError } from "./utils/core";
 import ePub from "./epub";
 
 export default ePub;
 export {
 	Book,
 	EpubCFI,
+	EpubError,
 	Rendition,
 	Contents,
 	Layout,

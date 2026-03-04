@@ -1,4 +1,4 @@
-import {isXml, parse} from "./utils/core";
+import {handleResponse as _handleResponse, EpubError} from "./utils/core";
 import httpRequest from "./utils/request";
 import mime from "./utils/mime";
 import Path from "./utils/path";
@@ -44,7 +44,7 @@ function createStorage(name: string): SimpleStorage {
 	};
 }
 
-const _URL = typeof window != "undefined" ? window.URL : undefined;
+const _URL = typeof window !== "undefined" ? window.URL : undefined;
 
 /**
  * Handles saving and requesting files from local storage
@@ -218,7 +218,7 @@ class Store implements IEventEmitter<StoreEvents> {
 			type = path.extension;
 		}
 
-		const r = type == "blob"
+		const r = type === "blob"
 			? await this.getBlob(url)
 			: await this.getText(url);
 
@@ -226,10 +226,7 @@ class Store implements IEventEmitter<StoreEvents> {
 			return this.handleResponse(r, type);
 		}
 
-		throw {
-			message : "File not found in storage: " + url,
-			stack : new Error().stack
-		};
+		throw new EpubError("File not found in storage: " + url);
 	}
 
 	/**
@@ -240,27 +237,7 @@ class Store implements IEventEmitter<StoreEvents> {
 	 * @return {string | Document | Blob | object} the parsed result
 	 */
 	handleResponse(response: string | Blob, type?: string): string | Document | Blob | object {
-		let r;
-
-		if(type == "json") {
-			r = JSON.parse(response as string);
-		}
-		else
-		if(isXml(type!)) {
-			r = parse(response as string, "text/xml");
-		}
-		else
-		if(type == "xhtml") {
-			r = parse(response as string, "application/xhtml+xml");
-		}
-		else
-		if(type == "html" || type == "htm") {
-			r = parse(response as string, "text/html");
-		 } else {
-			 r = response;
-		 }
-
-		return r;
+		return _handleResponse(response, type);
 	}
 
 	/**
@@ -349,10 +326,7 @@ class Store implements IEventEmitter<StoreEvents> {
 			}
 		}
 
-		throw {
-			message : "File not found in storage: " + url,
-			stack : new Error().stack
-		};
+		throw new EpubError("File not found in storage: " + url);
 	}
 
 	/**

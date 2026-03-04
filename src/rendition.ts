@@ -245,7 +245,7 @@ class Rendition implements IEventEmitter<RenditionEvents> {
 		let View;
 
 		// If view is a string, try to load from imported views,
-		if (typeof view == "string" && view === "iframe") {
+		if (typeof view === "string" && view === "iframe") {
 			View = IframeView;
 		} else {
 			// otherwise, assume we were passed a class function
@@ -866,10 +866,10 @@ class Rendition implements IEventEmitter<RenditionEvents> {
 		const pageStart = this.book.pageList.pageFromCfi(start.mapping.start);
 		const pageEnd = this.book.pageList.pageFromCfi(end.mapping.end);
 
-		if (pageStart != -1) {
+		if (pageStart !== -1) {
 			located.start.page = pageStart;
 		}
-		if (pageEnd != -1) {
+		if (pageEnd !== -1) {
 			located.end.page = pageEnd;
 		}
 

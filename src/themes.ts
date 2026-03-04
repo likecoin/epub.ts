@@ -98,7 +98,7 @@ class Themes {
 	 */
 	registerCss (name: string, css: string): void {
 		this._themes![name] = { "serialized" : css };
-		if ((this._injected as unknown as Record<string, boolean>)[name] || name == "default") {
+		if ((this._injected as unknown as Record<string, boolean>)[name] || name === "default") {
 			this.update(name);
 		}
 	}
@@ -111,7 +111,7 @@ class Themes {
 	registerUrl (name: string, input: string): void {
 		const url = new Url(input);
 		this._themes![name] = { "url": url.toString() };
-		if ((this._injected as unknown as Record<string, boolean>)[name] || name == "default") {
+		if ((this._injected as unknown as Record<string, boolean>)[name] || name === "default") {
 			this.update(name);
 		}
 	}
@@ -124,7 +124,7 @@ class Themes {
 	registerRules (name: string, rules: Record<string, Record<string, string>>): void {
 		this._themes![name] = { "rules": rules };
 		// TODO: serialize css rules
-		if ((this._injected as unknown as Record<string, boolean>)[name] || name == "default") {
+		if ((this._injected as unknown as Record<string, boolean>)[name] || name === "default") {
 			this.update(name);
 		}
 	}
@@ -176,7 +176,7 @@ class Themes {
 			}
 		}
 
-		if(this._current != "default") {
+		if(this._current !== "default") {
 			contents.addClass(this._current!);
 		}
 	}

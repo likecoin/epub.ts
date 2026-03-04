@@ -389,7 +389,7 @@ class Locations implements IEventEmitter<LocationsEvents> {
 	cfiFromLocation(loc: string | number): string | number {
 		let cfi: string | number = -1;
 		// check that pg is an int
-		if(typeof loc != "number"){
+		if(typeof loc !== "number"){
 			loc = parseInt(loc);
 		}
 
@@ -451,9 +451,9 @@ class Locations implements IEventEmitter<LocationsEvents> {
 	setCurrent(curr: string | number | undefined): void {
 		let loc;
 
-		if(typeof curr == "string"){
+		if(typeof curr === "string"){
 			this._currentCfi = curr;
-		} else if (typeof curr == "number") {
+		} else if (typeof curr === "number") {
 			this._current = curr;
 		} else {
 			return;
@@ -463,7 +463,7 @@ class Locations implements IEventEmitter<LocationsEvents> {
 			return;
 		}
 
-		if(typeof curr == "string"){
+		if(typeof curr === "string"){
 			loc = this.locationFromCfi(curr);
 			this._current = loc;
 		} else {

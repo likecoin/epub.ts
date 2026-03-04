@@ -85,7 +85,7 @@ class Layout implements IEventEmitter<LayoutEvents> {
 	 * @return {string} simplified flow
 	 */
 	flow(flow?: string): string {
-		if (typeof(flow) != "undefined") {
+		if (typeof(flow) !== "undefined") {
 			if (flow === "scrolled" ||
 					flow === "scrolled-continuous" ||
 					flow === "scrolled-doc") {

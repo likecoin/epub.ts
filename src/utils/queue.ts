@@ -72,7 +72,7 @@ class Queue {
 		this._q.push(queued);
 
 		// Wait to start queue flush
-		if (this.paused == false && !this.running) {
+		if (!this.paused && !this.running) {
 			// setTimeout(this.flush.bind(this), 0);
 			// this.tick.call(window, this.run.bind(this));
 			this.run();
@@ -155,7 +155,7 @@ class Queue {
 		this.tick(step);
 
 		// Unpause
-		if(this.paused == true) {
+		if(this.paused) {
 			this.paused = false;
 		}
 

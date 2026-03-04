@@ -415,7 +415,7 @@ class Mapping {
 
 		let pos = text.indexOf(splitter);
 
-		if(pos === -1 || node.nodeType != Node.TEXT_NODE) {
+		if(pos === -1 || node.nodeType !== Node.TEXT_NODE) {
 			range = doc.createRange();
 			range.selectNodeContents(node);
 			return [range];
@@ -427,7 +427,7 @@ class Mapping {
 		ranges.push(range);
 		range = null;
 
-		while ( pos != -1 ) {
+		while ( pos !== -1 ) {
 
 			pos = text.indexOf(splitter, pos + 1);
 			if(pos > 0) {

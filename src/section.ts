@@ -116,11 +116,11 @@ class Section {
 			let excerpt;
 			const limit = 150;
 
-			while (pos != -1) {
+			while (pos !== -1) {
 				// Search for the query
 				pos = text.indexOf(query, last + 1);
 
-				if (pos != -1) {
+				if (pos !== -1) {
 					// We found it! Generate a CFI
 					range = section.document!.createRange();
 					range.setStart(node, pos);
@@ -173,7 +173,7 @@ class Section {
 			},"");
 			const text = textWithCase.toLowerCase();
 			const pos = text.indexOf(query);
-			if (pos != -1){
+			if (pos !== -1){
 				const startNodeIndex = 0 , endPos = pos + query.length;
 				let endNodeIndex = 0 , l = 0;
 				if (pos < (nodeList[startNodeIndex] as Text).length){
@@ -209,7 +209,7 @@ class Section {
 		let node: Node | null , nodeList: Node[] = [];
 		while ((node = treeWalker.nextNode())) {
 			nodeList.push(node);
-			if (nodeList.length == maxSeqEle){
+			if (nodeList.length === maxSeqEle){
 				search(nodeList.slice(0 , maxSeqEle));
 				nodeList = nodeList.slice(1, maxSeqEle);
 			}
@@ -240,7 +240,7 @@ class Section {
 			const split = rendition.indexOf("-");
 			let property, value;
 
-			if(split != -1){
+			if(split !== -1){
 				property = rendition.slice(0, split);
 				value = rendition.slice(split+1);
 

@@ -103,7 +103,7 @@ class InlineView implements IEventEmitter<InlineViewEvents> {
 
 		element.style.overflow = "hidden";
 
-		if(axis && axis == "horizontal"){
+		if(axis && axis === "horizontal"){
 			element.style.display = "inline-block";
 		} else {
 			element.style.display = "block";
@@ -233,12 +233,12 @@ class InlineView implements IEventEmitter<InlineViewEvents> {
 			iframeBorders = {width: 0, height: 0};
 		}
 
-		if(what == "width" && isNumber(width)){
+		if(what === "width" && isNumber(width)){
 			this.lockedWidth = width - elBorders.width - iframeBorders.width;
 			this.resize(this.lockedWidth, false); //  width keeps ratio correct
 		}
 
-		if(what == "height" && isNumber(height)){
+		if(what === "height" && isNumber(height)){
 			this.lockedHeight = height - elBorders.height - iframeBorders.height;
 			this.resize(false, this.lockedHeight);
 		}
@@ -276,7 +276,7 @@ class InlineView implements IEventEmitter<InlineViewEvents> {
 
 		// Only Resize if dimensions have changed or
 		// if Frame is still hidden, so needs reframing
-		if(this._needsReframe || width != this._width || height != this._height){
+		if(this._needsReframe || width !== this._width || height !== this._height){
 			this.resize(width, height);
 		}
 

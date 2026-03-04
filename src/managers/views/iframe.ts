@@ -126,7 +126,7 @@ class IframeView implements IEventEmitter<IframeViewEvents> {
 		element.style.position = "relative";
 		element.style.display = "block";
 
-		if(axis && axis == "horizontal"){
+		if(axis && axis === "horizontal"){
 			element.style.flex = "none";
 		} else {
 			element.style.flex = "initial";
@@ -314,12 +314,12 @@ class IframeView implements IEventEmitter<IframeViewEvents> {
 			iframeBorders = {width: 0, height: 0};
 		}
 
-		if(what == "width" && isNumber(width)){
+		if(what === "width" && isNumber(width)){
 			this.lockedWidth = width - elBorders.width - iframeBorders.width;
 			// this.resize(this.lockedWidth, width); //  width keeps ratio correct
 		}
 
-		if(what == "height" && isNumber(height)){
+		if(what === "height" && isNumber(height)){
 			this.lockedHeight = height - elBorders.height - iframeBorders.height;
 			// this.resize(width, this.lockedHeight);
 		}
@@ -389,7 +389,7 @@ class IframeView implements IEventEmitter<IframeViewEvents> {
 
 		// Only Resize if dimensions have changed or
 		// if Frame is still hidden, so needs reframing
-		if(this._needsReframe || width != this._width || height != this._height){
+		if(this._needsReframe || width !== this._width || height !== this._height){
 			this.reframe(width, height);
 		}
 
@@ -537,7 +537,7 @@ class IframeView implements IEventEmitter<IframeViewEvents> {
 
 		this.settings.axis = axis;
 
-		if(axis == "horizontal"){
+		if(axis === "horizontal"){
 			this.element.style.flex = "none";
 		} else {
 			this.element.style.flex = "initial";
@@ -809,7 +809,7 @@ class IframeView implements IEventEmitter<IframeViewEvents> {
 			const rects = range.getClientRects();
 
 			let rect;
-			for (let i = 0; i != rects.length; i++) {
+			for (let i = 0; i !== rects.length; i++) {
 				rect = rects[i]!;
 				if (!left || rect.left < left) {
 					left = rect.left;

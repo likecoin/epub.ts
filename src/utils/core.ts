@@ -8,12 +8,12 @@
  * @memberof Core
  */
 export const microTick: (cb: FrameRequestCallback) => number = (cb) => { Promise.resolve().then(() => cb(performance.now())); return 0; };
-export const requestAnimationFrame: (cb: FrameRequestCallback) => number = (typeof window != "undefined") ? window.requestAnimationFrame.bind(window) : microTick;
+export const requestAnimationFrame: (cb: FrameRequestCallback) => number = (typeof window !== "undefined") ? window.requestAnimationFrame.bind(window) : microTick;
 const ELEMENT_NODE = 1;
 const TEXT_NODE = 3;
 const _COMMENT_NODE = 8;
 const _DOCUMENT_NODE = 9;
-const _URL = typeof URL != "undefined" ? URL : (typeof window != "undefined" ? window.URL : undefined!);
+const _URL = typeof URL !== "undefined" ? URL : (typeof window !== "undefined" ? window.URL : undefined!);
 
 /**
  * Generates a UUID
@@ -26,7 +26,7 @@ export function uuid(): string {
 	const uuid = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function(c) {
 		const r = (d + Math.random()*16)%16 | 0;
 		d = Math.floor(d/16);
-		return (c=="x" ? r : (r&0x7|0x8)).toString(16);
+		return (c==="x" ? r : (r&0x7|0x8)).toString(16);
 	});
 	return uuid;
 }
@@ -53,7 +53,7 @@ export function documentHeight(): number {
  * @memberof Core
  */
 export function isElement(obj: unknown): boolean {
-	return !!(obj && (obj as Node).nodeType == 1);
+	return !!(obj && (obj as Node).nodeType === 1);
 }
 
 /**
@@ -282,7 +282,7 @@ export function borders(el: Element): { width: number; height: number } {
 export function nodeBounds(node: Node): DOMRect {
 	let elPos;
 	const doc = node.ownerDocument;
-	if(node.nodeType == Node.TEXT_NODE){
+	if(node.nodeType === Node.TEXT_NODE){
 		const elRange = doc!.createRange();
 		elRange.selectNodeContents(node);
 		elPos = elRange.getBoundingClientRect();
@@ -330,7 +330,7 @@ export function indexOfNode(node: Node, typeId: number): number {
 		if (sib.nodeType === typeId) {
 			index++;
 		}
-		if (sib == node) break;
+		if (sib === node) break;
 	}
 
 	return index;
@@ -364,6 +364,43 @@ export function indexOfElementNode(elementNode: Node): number {
  */
 export function isXml(ext: string): boolean {
 	return ["xml", "opf", "ncx"].indexOf(ext) > -1;
+}
+
+/**
+ * Handle a response string or Blob, parsing it based on file type
+ * @param {string | Blob} response
+ * @param {string} [type]
+ * @returns {Document | object | Blob | string} the parsed result
+ * @memberof Core
+ */
+export function handleResponse(response: string | Blob, type?: string): Document | object | Blob | string {
+	if (type === "json") {
+		return JSON.parse(response as string);
+	}
+	if (type && isXml(type)) {
+		return parse(response as string, "text/xml");
+	}
+	if (type === "xhtml") {
+		return parse(response as string, "application/xhtml+xml");
+	}
+	if (type === "html" || type === "htm") {
+		return parse(response as string, "text/html");
+	}
+	return response;
+}
+
+/**
+ * Error subclass for EPUB-related errors
+ * @class
+ * @memberof Core
+ */
+export class EpubError extends Error {
+	status?: number;
+	constructor(message: string, status?: number) {
+		super(message);
+		this.name = "EpubError";
+		this.status = status;
+	}
 }
 
 /**
@@ -759,10 +796,10 @@ export class RangeObject {
 		const startParents = parents(startContainer ?? this.startContainer);
 		const endParents = parents(endContainer ?? this.endContainer);
 
-		if (startParents[0] != endParents[0]) return undefined;
+		if (startParents[0] !== endParents[0]) return undefined;
 
 		for (let i = 0; i < startParents.length; i++) {
-			if (startParents[i] != endParents[i]) {
+			if (startParents[i] !== endParents[i]) {
 				return startParents[i - 1];
 			}
 		}

@@ -85,9 +85,9 @@ class EpubCFI {
 		if (this.isCfiString(cfi)) {
 			return "string";
 		// Is a range object
-		} else if (cfi && typeof cfi === "object" && (type(cfi) === "Range" || typeof((cfi as Range).startContainer) != "undefined")){
+		} else if (cfi && typeof cfi === "object" && (type(cfi) === "Range" || typeof((cfi as Range).startContainer) !== "undefined")){
 			return "range";
-		} else if (cfi && typeof cfi === "object" && typeof((cfi as Node).nodeType) != "undefined" ){ // || typeof cfi === "function"
+		} else if (cfi && typeof cfi === "object" && typeof((cfi as Node).nodeType) !== "undefined" ){ // || typeof cfi === "function"
 			return "node";
 		} else if (cfi && typeof cfi === "object" && cfi instanceof EpubCFI){
 			return "EpubCFI";
@@ -460,7 +460,7 @@ class EpubCFI {
 		let step;
 
 		while(currentNode && currentNode.parentNode &&
-					currentNode.parentNode.nodeType != DOCUMENT_NODE) {
+					currentNode.parentNode.nodeType !== DOCUMENT_NODE) {
 
 			if (ignoreClass) {
 				step = this.filteredStep(currentNode, ignoreClass);
@@ -481,7 +481,7 @@ class EpubCFI {
 			segment.terminal.offset = offset;
 
 			// Make sure we are getting to a textNode if there is an offset
-			if(segment.steps.length > 0 && segment.steps[segment.steps.length-1]!.type != "text") {
+			if(segment.steps.length > 0 && segment.steps[segment.steps.length-1]!.type !== "text") {
 				segment.steps.push({
 					"type" : "text",
 					"index" : 0,
@@ -678,7 +678,7 @@ class EpubCFI {
 	}
 
 	patchOffset(anchor: Node, offset: number, ignoreClass: string): number {
-		if (anchor.nodeType != TEXT_NODE) {
+		if (anchor.nodeType !== TEXT_NODE) {
 			throw new Error("Anchor must be a text node");
 		}
 
@@ -814,7 +814,7 @@ class EpubCFI {
 	// Find the containing element
 	startContainerParent = doc.querySelector(query);
 	// Find the text node within that element
-	if(startContainerParent && lastStep.type == "text") {
+	if(startContainerParent && lastStep.type === "text") {
 		container = startContainerParent.childNodes[lastStep.index];
 	}
 	*/
@@ -891,7 +891,7 @@ class EpubCFI {
 		let container;
 		let xpath;
 
-		if(!ignoreClass && typeof doc.evaluate != "undefined") {
+		if(!ignoreClass && typeof doc.evaluate !== "undefined") {
 			xpath = this.stepsToXpath(steps);
 			container = doc.evaluate(xpath, doc, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue ?? undefined;
 		} else if(ignoreClass) {

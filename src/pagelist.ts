@@ -140,7 +140,7 @@ class PageList {
 				packageUrl,
 				cfi;
 
-		if(isCfi != -1) {
+		if(isCfi !== -1) {
 			split = href.split("#");
 			packageUrl = split[0];
 			cfi = split.length > 1 ? split[1] : undefined;
@@ -193,7 +193,7 @@ class PageList {
 		// check if the cfi is in the location list
 		// var index = this.locations.indexOf(cfi);
 		let index = indexOfSorted(cfi, this.locations!, this.epubcfi!.compare);
-		if(index != -1) {
+		if(index !== -1) {
 			pg = this.pages![index]!;
 		} else {
 			// Otherwise add it to the list of locations
@@ -221,14 +221,14 @@ class PageList {
 	cfiFromPage(pg: string | number): string | number {
 		let cfi: string | number = -1;
 		// check that pg is an int
-		if(typeof pg != "number"){
+		if(typeof pg !== "number"){
 			pg = parseInt(pg);
 		}
 
 		// check if the cfi is in the page list
 		// Pages could be unsorted.
 		const index = this.pages!.indexOf(pg);
-		if(index != -1 && index < this.locations!.length) {
+		if(index !== -1 && index < this.locations!.length) {
 			cfi = this.locations![index]!;
 		}
 		// TODO: handle pages not in the list

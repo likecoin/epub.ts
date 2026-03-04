@@ -123,7 +123,7 @@ class Views {
 
 		for (let i = 0; i < len; i++) {
 			view = this._views[i]!;
-			if(view.displayed && view.section.index == section.index) {
+			if(view.displayed && view.section.index === section.index) {
 				return view;
 			}
 		}

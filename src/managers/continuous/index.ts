@@ -207,7 +207,7 @@ class ContinuousViewManager extends DefaultViewManager {
 		const views = this.views.all();
 		const viewsLength = views.length;
 		const visible = [];
-		const offset = typeof _offset != "undefined" ? _offset : (this.settings.offset || 0);
+		const offset = typeof _offset !== "undefined" ? _offset : (this.settings.offset || 0);
 		let isVisible;
 		let view: IframeView;
 

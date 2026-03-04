@@ -1,4 +1,4 @@
-import { isXml, parse } from "./core";
+import { isXml, parse, EpubError } from "./core";
 import Path from "./path";
 
 async function request(
@@ -30,20 +30,12 @@ async function request(
   try {
     response = await fetch(url, init);
   } catch (e) {
-    throw {
-      message: (e as Error).message || "Network Error",
-      stack: new Error().stack,
-      status: 0,
-    };
+    throw new EpubError((e as Error).message || "Network Error", 0);
   }
 
   if (!response.ok) {
     const body = await response.text().catch(() => "");
-    throw {
-      status: response.status,
-      message: body || response.statusText,
-      stack: new Error().stack,
-    };
+    throw new EpubError(body || response.statusText, response.status);
   }
 
   if (type === "blob") {

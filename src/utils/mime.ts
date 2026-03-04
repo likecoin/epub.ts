@@ -147,7 +147,7 @@ const mimeTypes = (function(): Record<string, string> {
 			for (subtype in category) {
 				if (category.hasOwnProperty(subtype)) {
 					val = (category as Record<string, string | string[]>)[subtype]!;
-					if (typeof val == "string") {
+					if (typeof val === "string") {
 						mimeTypes[val] = type + "/" + subtype;
 					} else {
 						for (index = 0; index < val.length; index++) {
