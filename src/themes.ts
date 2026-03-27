@@ -123,7 +123,6 @@ class Themes {
 	 */
 	registerRules (name: string, rules: Record<string, Record<string, string>>): void {
 		this._themes![name] = { "rules": rules };
-		// TODO: serialize css rules
 		if ((this._injected as unknown as Record<string, boolean>)[name] || name === "default") {
 			this.update(name);
 		}

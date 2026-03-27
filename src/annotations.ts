@@ -206,7 +206,6 @@ class Annotations {
 
 	/**
 	 * [Not Implemented] Show annotations
-	 * @TODO: needs implementation in View
 	 */
 	show (): void {
 
@@ -214,7 +213,6 @@ class Annotations {
 
 	/**
 	 * [Not Implemented] Hide annotations
-	 * @TODO: needs implementation in View
 	 */
 	hide (): void {
 
@@ -325,7 +323,6 @@ class Annotation implements IEventEmitter<AnnotationEvents> {
 
 	/**
 	 * [Not Implemented] Get text of an annotation
-	 * @TODO: needs implementation in contents
 	 */
 	text (): void {
 

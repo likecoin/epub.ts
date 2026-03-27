@@ -67,7 +67,6 @@ export function replaceMeta(doc: Document, section: { idref: string }): void {
 	}
 }
 
-// TODO: move me to Contents
 export function replaceLinks(contents: Element, fn: (path: string) => void): void {
 
 	const links = contents.querySelectorAll("a[href]");

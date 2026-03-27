@@ -519,7 +519,7 @@ class Book implements IEventEmitter<BookEvents> {
 	 * @param {Packaging} packaging object
 	 */
 	unpack(packaging: Packaging): void {
-		this.package = packaging; //TODO: deprecated this
+		this.package = packaging;
 
 		if (this.packaging.metadata.layout === "") {
 			// rendition:layout not set - check display options if book is pre-paginated
@@ -593,7 +593,7 @@ class Book implements IEventEmitter<BookEvents> {
 				this.navigation = new Navigation(toc);
 
 				if ("pageList" in packaging && packaging.pageList) {
-					this.pageList = new PageList(packaging.pageList as Document); // TODO: handle page lists from Manifest
+					this.pageList = new PageList(packaging.pageList as Document); // Web Publication Manifest page lists are not yet supported
 				}
 
 				resolve(this.navigation);

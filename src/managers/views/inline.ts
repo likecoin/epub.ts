@@ -212,7 +212,6 @@ class InlineView implements IEventEmitter<InlineViewEvents> {
 		const height = _height || this.settings.height!;
 
 		if(this.layout.name === "pre-paginated") {
-			// TODO: check if these are different than the size set in chapter
 			this.lock("both", width, height);
 		} else if(this.settings.axis === "horizontal") {
 			this.lock("height", width, height);
@@ -373,11 +372,9 @@ class InlineView implements IEventEmitter<InlineViewEvents> {
 	}
 
 	addListeners(): void {
-		//TODO: Add content listeners for expanding
 	}
 
 	removeListeners(): void {
-		//TODO: remove content listeners for expanding
 	}
 
 	display(request: RequestFunction): Promise<InlineView> {

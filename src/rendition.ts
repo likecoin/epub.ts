@@ -694,7 +694,7 @@ class Rendition implements IEventEmitter<RenditionEvents> {
 
 	/**
 	 * Adjust if the rendition uses spreads
-	 * @param  {string} spread none | auto (TODO: implement landscape, portrait, both)
+	 * @param  {string} spread none | auto
 	 * @param  {int} [min] min width to use spreads at
 	 */
 	spread(spread: string, min?: number): void {

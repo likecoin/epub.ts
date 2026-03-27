@@ -553,7 +553,6 @@ class IframeView implements IEventEmitter<IframeViewEvents> {
 	}
 
 	addListeners(): void {
-		//TODO: Add content listeners for expanding
 	}
 
 	removeListeners(): void {

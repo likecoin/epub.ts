@@ -816,7 +816,6 @@ export class RangeObject {
 	}
 
 	toString(): string {
-		// TODO: implement walking between start and end to find text
 		return "";
 	}
 }

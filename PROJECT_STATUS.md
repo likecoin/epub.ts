@@ -46,8 +46,7 @@ All formats are single-file bundles. `preserveModules` was considered for ESM bu
 
 ## Next Steps
 
-- **Test coverage for `InlineView`** — `src/managers/views/inline.ts` (480 lines) has no test file; largest untested module
 - **Annotation rendering** — `highlight()`, `underline()`, `mark()` in `annotations.ts` have TODO stubs needing View/Contents integration
-- **14 inherited TODOs** — across 8 files, mostly from original epubjs (see `grep -r TODO src/`)
+- **3 remaining TODOs** — CFI range validation (`epubcfi.ts`), CFI validity check and page list fallback (`pagelist.ts`)
 - **Logger abstraction** — 9 `eslint-disable no-console` suppressions could be replaced with a pluggable logger
 
