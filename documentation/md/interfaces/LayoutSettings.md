@@ -6,7 +6,7 @@
 
 # Interface: LayoutSettings
 
-Defined in: types.ts:165
+Defined in: src/types.ts:173
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: types.ts:165
 
 > `optional` **direction**: `string`
 
-Defined in: types.ts:171
+Defined in: src/types.ts:179
 
 ***
 
@@ -22,7 +22,7 @@ Defined in: types.ts:171
 
 > `optional` **evenSpreads**: `boolean`
 
-Defined in: types.ts:169
+Defined in: src/types.ts:177
 
 ***
 
@@ -30,7 +30,7 @@ Defined in: types.ts:169
 
 > `optional` **flow**: `string`
 
-Defined in: types.ts:170
+Defined in: src/types.ts:178
 
 ***
 
@@ -38,7 +38,7 @@ Defined in: types.ts:170
 
 > `optional` **layout**: `string`
 
-Defined in: types.ts:166
+Defined in: src/types.ts:174
 
 ***
 
@@ -46,7 +46,7 @@ Defined in: types.ts:166
 
 > `optional` **minSpreadWidth**: `number`
 
-Defined in: types.ts:168
+Defined in: src/types.ts:176
 
 ***
 
@@ -54,4 +54,4 @@ Defined in: types.ts:168
 
 > `optional` **spread**: `string`
 
-Defined in: types.ts:167
+Defined in: src/types.ts:175

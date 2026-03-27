@@ -4,9 +4,15 @@
 
 [@likecoin/epub-ts](../README.md) / IEventEmitter
 
-# Interface: IEventEmitter
+# Interface: IEventEmitter\<E\>
 
-Defined in: types.ts:16
+Defined in: src/types.ts:18
+
+## Type Parameters
+
+### E
+
+`E` *extends* [`EventMap`](../type-aliases/EventMap.md) = `Record`\<`string`, `any`[]\>
 
 ## Properties
 
@@ -14,25 +20,31 @@ Defined in: types.ts:16
 
 > `optional` **\_\_listeners**: `Record`\<`string`, (...`args`) => `void`[]\>
 
-Defined in: types.ts:20
+Defined in: src/types.ts:22
 
 ## Methods
 
 ### emit()
 
-> **emit**(`type`, ...`args`): `void`
+> **emit**\<`K`\>(`type`, ...`args`): `void`
 
-Defined in: types.ts:19
+Defined in: src/types.ts:21
+
+#### Type Parameters
+
+##### K
+
+`K` *extends* `string`
 
 #### Parameters
 
 ##### type
 
-`string`
+`K`
 
 ##### args
 
-...`any`[]
+...`E`\[`K`\]
 
 #### Returns
 
@@ -42,15 +54,21 @@ Defined in: types.ts:19
 
 ### off()
 
-> **off**(`type`, `fn?`): `any`
+> **off**\<`K`\>(`type`, `fn?`): `void`
 
-Defined in: types.ts:18
+Defined in: src/types.ts:20
+
+#### Type Parameters
+
+##### K
+
+`K` *extends* `string`
 
 #### Parameters
 
 ##### type
 
-`string`
+`K`
 
 ##### fn?
 
@@ -58,21 +76,27 @@ Defined in: types.ts:18
 
 #### Returns
 
-`any`
+`void`
 
 ***
 
 ### on()
 
-> **on**(`type`, `fn`): `any`
+> **on**\<`K`\>(`type`, `fn`): `void`
 
-Defined in: types.ts:17
+Defined in: src/types.ts:19
+
+#### Type Parameters
+
+##### K
+
+`K` *extends* `string`
 
 #### Parameters
 
 ##### type
 
-`string`
+`K`
 
 ##### fn
 
@@ -80,4 +104,4 @@ Defined in: types.ts:17
 
 #### Returns
 
-`any`
+`void`

@@ -6,7 +6,7 @@
 
 # Interface: LayoutProps
 
-Defined in: types.ts:174
+Defined in: src/types.ts:182
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: types.ts:174
 
 > **columnWidth**: `number`
 
-Defined in: types.ts:183
+Defined in: src/types.ts:191
 
 ***
 
@@ -22,7 +22,7 @@ Defined in: types.ts:183
 
 > **delta**: `number`
 
-Defined in: types.ts:182
+Defined in: src/types.ts:190
 
 ***
 
@@ -30,7 +30,7 @@ Defined in: types.ts:182
 
 > **divisor**: `number`
 
-Defined in: types.ts:185
+Defined in: src/types.ts:193
 
 ***
 
@@ -38,7 +38,7 @@ Defined in: types.ts:185
 
 > **flow**: `string`
 
-Defined in: types.ts:177
+Defined in: src/types.ts:185
 
 ***
 
@@ -46,7 +46,7 @@ Defined in: types.ts:177
 
 > **gap**: `number`
 
-Defined in: types.ts:184
+Defined in: src/types.ts:192
 
 ***
 
@@ -54,7 +54,7 @@ Defined in: types.ts:184
 
 > **height**: `number`
 
-Defined in: types.ts:179
+Defined in: src/types.ts:187
 
 ***
 
@@ -62,7 +62,7 @@ Defined in: types.ts:179
 
 > **name**: `string`
 
-Defined in: types.ts:175
+Defined in: src/types.ts:183
 
 ***
 
@@ -70,7 +70,7 @@ Defined in: types.ts:175
 
 > `optional` **pageWidth**: `number`
 
-Defined in: types.ts:181
+Defined in: src/types.ts:189
 
 ***
 
@@ -78,7 +78,7 @@ Defined in: types.ts:181
 
 > **spread**: `boolean`
 
-Defined in: types.ts:176
+Defined in: src/types.ts:184
 
 ***
 
@@ -86,7 +86,7 @@ Defined in: types.ts:176
 
 > **spreadWidth**: `number`
 
-Defined in: types.ts:180
+Defined in: src/types.ts:188
 
 ***
 
@@ -94,4 +94,4 @@ Defined in: types.ts:180
 
 > **width**: `number`
 
-Defined in: types.ts:178
+Defined in: src/types.ts:186

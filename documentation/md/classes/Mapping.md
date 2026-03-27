@@ -6,7 +6,7 @@
 
 # Class: Mapping
 
-Defined in: mapping.ts:15
+Defined in: src/mapping.ts:15
 
 Map text locations to CFI ranges
 
@@ -32,7 +32,7 @@ toggle developer highlighting
 
 > **new Mapping**(`layout`, `direction?`, `axis?`, `dev?`): `Mapping`
 
-Defined in: mapping.ts:21
+Defined in: src/mapping.ts:21
 
 #### Parameters
 
@@ -62,7 +62,7 @@ Defined in: mapping.ts:21
 
 > **\_dev**: `boolean`
 
-Defined in: mapping.ts:19
+Defined in: src/mapping.ts:19
 
 ***
 
@@ -70,7 +70,7 @@ Defined in: mapping.ts:19
 
 > **direction**: `string`
 
-Defined in: mapping.ts:18
+Defined in: src/mapping.ts:18
 
 ***
 
@@ -78,7 +78,7 @@ Defined in: mapping.ts:18
 
 > **horizontal**: `boolean`
 
-Defined in: mapping.ts:17
+Defined in: src/mapping.ts:17
 
 ***
 
@@ -86,7 +86,7 @@ Defined in: mapping.ts:17
 
 > **layout**: [`LayoutProps`](../interfaces/LayoutProps.md)
 
-Defined in: mapping.ts:16
+Defined in: src/mapping.ts:16
 
 ## Methods
 
@@ -94,7 +94,7 @@ Defined in: mapping.ts:16
 
 > **axis**(`axis?`): `boolean`
 
-Defined in: mapping.ts:508
+Defined in: src/mapping.ts:498
 
 Set the axis for mapping
 
@@ -118,7 +118,7 @@ is it horizontal?
 
 > **findRanges**(`view`): [`RangePair`](../interfaces/RangePair.md)[]
 
-Defined in: mapping.ts:112
+Defined in: src/mapping.ts:102
 
 #### Parameters
 
@@ -136,7 +136,7 @@ Defined in: mapping.ts:112
 
 > **page**(`contents`, `cfiBase`, `start`, `end`): [`EpubCFIPair`](../interfaces/EpubCFIPair.md) \| `undefined`
 
-Defined in: mapping.ts:45
+Defined in: src/mapping.ts:45
 
 Find CFI pairs for a page
 
@@ -176,7 +176,7 @@ position to end at
 
 > **rangeListToCfiList**(`cfiBase`, `columns`): [`EpubCFIPair`](../interfaces/EpubCFIPair.md)[]
 
-Defined in: mapping.ts:489
+Defined in: src/mapping.ts:479
 
 #### Parameters
 
@@ -198,7 +198,7 @@ Defined in: mapping.ts:489
 
 > **section**(`view`): [`EpubCFIPair`](../interfaces/EpubCFIPair.md)[]
 
-Defined in: mapping.ts:31
+Defined in: src/mapping.ts:31
 
 Find CFI pairs for entire section at once
 

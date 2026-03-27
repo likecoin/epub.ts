@@ -6,15 +6,23 @@
 
 # Interface: PackagingManifestItem
 
-Defined in: types.ts:51
+Defined in: src/types.ts:54
 
 ## Properties
+
+### fallback
+
+> **fallback**: `string`
+
+Defined in: src/types.ts:59
+
+***
 
 ### href
 
 > **href**: `string`
 
-Defined in: types.ts:52
+Defined in: src/types.ts:55
 
 ***
 
@@ -22,7 +30,7 @@ Defined in: types.ts:52
 
 > **overlay**: `string`
 
-Defined in: types.ts:54
+Defined in: src/types.ts:57
 
 ***
 
@@ -30,7 +38,7 @@ Defined in: types.ts:54
 
 > **properties**: `string`[]
 
-Defined in: types.ts:55
+Defined in: src/types.ts:58
 
 ***
 
@@ -38,4 +46,4 @@ Defined in: types.ts:55
 
 > **type**: `string`
 
-Defined in: types.ts:53
+Defined in: src/types.ts:56

@@ -147,8 +147,7 @@ class ContinuousViewManager extends DefaultViewManager {
 		return view.display(this.request);
 	}
 
-	// @ts-expect-error - Returns IframeView synchronously unlike base class Promise<IframeView>
-	append(section: Section): IframeView {
+	append(section: Section): Promise<IframeView> {
 		const view = this.createView(section);
 
 		view.on(EVENTS.VIEWS.RESIZED, (_bounds: ReframeBounds) => {
@@ -167,11 +166,10 @@ class ContinuousViewManager extends DefaultViewManager {
 
 		view.onDisplayed = (view): void => this.afterDisplayed(view);
 
-		return view;
+		return Promise.resolve(view);
 	}
 
-	// @ts-expect-error - Returns IframeView synchronously unlike base class Promise<IframeView>
-	prepend(section: Section): IframeView {
+	prepend(section: Section): Promise<IframeView> {
 		const view = this.createView(section);
 
 		view.on(EVENTS.VIEWS.RESIZED, (_bounds: ReframeBounds) => {
@@ -191,7 +189,7 @@ class ContinuousViewManager extends DefaultViewManager {
 
 		view.onDisplayed = (view): void => this.afterDisplayed(view);
 
-		return view;
+		return Promise.resolve(view);
 	}
 
 	counter(bounds: ReframeBounds): void {
@@ -259,7 +257,7 @@ class ContinuousViewManager extends DefaultViewManager {
 
 	check(_offsetLeft?: number, _offsetTop?: number): Promise<boolean | void | Error> {
 		const checking = new defer<boolean>();
-		const newViews: IframeView[] = [];
+		const newViews: Promise<IframeView>[] = [];
 
 		const horizontal = (this.settings.axis === "horizontal");
 		let delta = this.settings.offset || 0;
@@ -329,8 +327,8 @@ class ContinuousViewManager extends DefaultViewManager {
 		}
 		
 
-		const promises = newViews.map((view) => {
-			return view.display(this.request);
+		const promises = newViews.map((viewPromise) => {
+			return viewPromise.then((view) => view.display(this.request));
 		});
 
 		if(newViews.length){

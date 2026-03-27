@@ -6,7 +6,7 @@
 
 # Interface: StageOptions
 
-Defined in: types.ts:277
+Defined in: src/types.ts:296
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: types.ts:277
 
 > `optional` **axis**: `string`
 
-Defined in: types.ts:282
+Defined in: src/types.ts:301
 
 ***
 
@@ -22,7 +22,7 @@ Defined in: types.ts:282
 
 > `optional` **dir**: `string`
 
-Defined in: types.ts:285
+Defined in: src/types.ts:304
 
 ***
 
@@ -30,7 +30,7 @@ Defined in: types.ts:285
 
 > `optional` **direction**: `string`
 
-Defined in: types.ts:284
+Defined in: src/types.ts:303
 
 ***
 
@@ -38,7 +38,7 @@ Defined in: types.ts:284
 
 > `optional` **fullsize**: `boolean`
 
-Defined in: types.ts:283
+Defined in: src/types.ts:302
 
 ***
 
@@ -46,7 +46,7 @@ Defined in: types.ts:283
 
 > `optional` **height**: `string` \| `number`
 
-Defined in: types.ts:279
+Defined in: src/types.ts:298
 
 ***
 
@@ -54,7 +54,7 @@ Defined in: types.ts:279
 
 > `optional` **hidden**: `boolean`
 
-Defined in: types.ts:281
+Defined in: src/types.ts:300
 
 ***
 
@@ -62,7 +62,7 @@ Defined in: types.ts:281
 
 > `optional` **overflow**: `string` \| `boolean`
 
-Defined in: types.ts:280
+Defined in: src/types.ts:299
 
 ***
 
@@ -70,7 +70,7 @@ Defined in: types.ts:280
 
 > `optional` **width**: `string` \| `number`
 
-Defined in: types.ts:278
+Defined in: src/types.ts:297
 
 ***
 
@@ -78,4 +78,4 @@ Defined in: types.ts:278
 
 > `optional` **writingMode**: `string`
 
-Defined in: types.ts:286
+Defined in: src/types.ts:305

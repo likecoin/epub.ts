@@ -6,7 +6,7 @@
 
 # Class: Navigation
 
-Defined in: navigation.ts:8
+Defined in: src/navigation.ts:8
 
 Navigation Parser
 
@@ -20,7 +20,7 @@ navigation html / xhtml / ncx
 
 > **new Navigation**(`xml?`): `Navigation`
 
-Defined in: navigation.ts:16
+Defined in: src/navigation.ts:16
 
 #### Parameters
 
@@ -38,7 +38,7 @@ Defined in: navigation.ts:16
 
 > **landmarks**: [`LandmarkItem`](../interfaces/LandmarkItem.md)[]
 
-Defined in: navigation.ts:12
+Defined in: src/navigation.ts:12
 
 ***
 
@@ -46,7 +46,7 @@ Defined in: navigation.ts:12
 
 > **landmarksByType**: `Record`\<`string`, `number`\>
 
-Defined in: navigation.ts:13
+Defined in: src/navigation.ts:13
 
 ***
 
@@ -54,7 +54,7 @@ Defined in: navigation.ts:13
 
 > **length**: `number`
 
-Defined in: navigation.ts:14
+Defined in: src/navigation.ts:14
 
 ***
 
@@ -62,7 +62,7 @@ Defined in: navigation.ts:14
 
 > **toc**: [`NavItem`](../interfaces/NavItem.md)[]
 
-Defined in: navigation.ts:9
+Defined in: src/navigation.ts:9
 
 ***
 
@@ -70,7 +70,7 @@ Defined in: navigation.ts:9
 
 > **tocByHref**: `Record`\<`string`, `number`\>
 
-Defined in: navigation.ts:10
+Defined in: src/navigation.ts:10
 
 ***
 
@@ -78,7 +78,7 @@ Defined in: navigation.ts:10
 
 > **tocById**: `Record`\<`string`, `number`\>
 
-Defined in: navigation.ts:11
+Defined in: src/navigation.ts:11
 
 ## Methods
 
@@ -86,7 +86,7 @@ Defined in: navigation.ts:11
 
 > **forEach**(`fn`): `void`
 
-Defined in: navigation.ts:362
+Defined in: src/navigation.ts:364
 
 forEach pass through
 
@@ -110,7 +110,7 @@ forEach loop
 
 > **get**(`target?`): [`NavItem`](../interfaces/NavItem.md) \| [`NavItem`](../interfaces/NavItem.md)[] \| `undefined`
 
-Defined in: navigation.ts:91
+Defined in: src/navigation.ts:91
 
 Get an item from the navigation
 
@@ -132,7 +132,7 @@ navItem
 
 > **getByIndex**(`target`, `index`, `navItems`): [`NavItem`](../interfaces/NavItem.md) \| `undefined`
 
-Defined in: navigation.ts:114
+Defined in: src/navigation.ts:115
 
 Get an item from navigation subitems recursively by index
 
@@ -162,7 +162,7 @@ navItem
 
 > **landmark**(`type?`): [`LandmarkItem`](../interfaces/LandmarkItem.md) \| [`LandmarkItem`](../interfaces/LandmarkItem.md)[] \| `undefined`
 
-Defined in: navigation.ts:140
+Defined in: src/navigation.ts:141
 
 Get a landmark by type
 List of types: https://idpf.github.io/epub-vocabs/structure/
@@ -185,7 +185,7 @@ landmarkItem
 
 > **load**(`json`): [`NavItem`](../interfaces/NavItem.md)[]
 
-Defined in: navigation.ts:349
+Defined in: src/navigation.ts:350
 
 Load Spine Items
 
@@ -193,7 +193,7 @@ Load Spine Items
 
 ##### json
 
-`any`[]
+[`NavItem`](../interfaces/NavItem.md)[]
 
 the items to be loaded
 
@@ -209,7 +209,7 @@ navItems
 
 > **parse**(`xml`): `void`
 
-Defined in: navigation.ts:34
+Defined in: src/navigation.ts:34
 
 Parse out the navigation items
 
@@ -231,7 +231,7 @@ navigation html / xhtml / ncx
 
 > **parseNavList**(`navListHtml`, `parent?`): [`NavItem`](../interfaces/NavItem.md)[]
 
-Defined in: navigation.ts:175
+Defined in: src/navigation.ts:176
 
 Parses lists in the toc
 

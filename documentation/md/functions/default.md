@@ -8,7 +8,7 @@
 
 > **default**(`url?`, `options?`): [`Book`](../classes/Book.md)
 
-Defined in: epub.ts:17
+Defined in: src/epub.ts:17
 
 Creates a new Book
 
@@ -18,7 +18,7 @@ Creates a new Book
 
 URL, Path or ArrayBuffer
 
-`string` | `ArrayBuffer` | `Blob` | [`BookOptions`](../interfaces/BookOptions.md)
+`string` | `Blob` | `ArrayBuffer` | [`BookOptions`](../interfaces/BookOptions.md)
 
 ### options?
 

@@ -6,7 +6,7 @@
 
 # Class: Spine
 
-Defined in: spine.ts:10
+Defined in: src/spine.ts:11
 
 A collection of Spine Items
 
@@ -16,7 +16,7 @@ A collection of Spine Items
 
 > **new Spine**(): `Spine`
 
-Defined in: spine.ts:23
+Defined in: src/spine.ts:24
 
 #### Returns
 
@@ -28,7 +28,7 @@ Defined in: spine.ts:23
 
 > **baseUrl**: `string`
 
-Defined in: spine.ts:20
+Defined in: src/spine.ts:21
 
 ***
 
@@ -36,7 +36,7 @@ Defined in: spine.ts:20
 
 > **epubcfi**: [`EpubCFI`](EpubCFI.md)
 
-Defined in: spine.ts:15
+Defined in: src/spine.ts:16
 
 ***
 
@@ -44,7 +44,7 @@ Defined in: spine.ts:15
 
 > **hooks**: `object`
 
-Defined in: spine.ts:14
+Defined in: src/spine.ts:15
 
 #### content
 
@@ -60,7 +60,7 @@ Defined in: spine.ts:14
 
 > **items**: [`SpineItem`](../interfaces/SpineItem.md)[]
 
-Defined in: spine.ts:17
+Defined in: src/spine.ts:18
 
 ***
 
@@ -68,7 +68,7 @@ Defined in: spine.ts:17
 
 > **length**: `number`
 
-Defined in: spine.ts:21
+Defined in: src/spine.ts:22
 
 ***
 
@@ -76,7 +76,7 @@ Defined in: spine.ts:21
 
 > **loaded**: `boolean`
 
-Defined in: spine.ts:16
+Defined in: src/spine.ts:17
 
 ***
 
@@ -84,7 +84,7 @@ Defined in: spine.ts:16
 
 > **manifest**: [`PackagingManifestObject`](../interfaces/PackagingManifestObject.md)
 
-Defined in: spine.ts:18
+Defined in: src/spine.ts:19
 
 ***
 
@@ -92,7 +92,7 @@ Defined in: spine.ts:18
 
 > **spineByHref**: `Record`\<`string`, `number`\>
 
-Defined in: spine.ts:12
+Defined in: src/spine.ts:13
 
 ***
 
@@ -100,7 +100,7 @@ Defined in: spine.ts:12
 
 > **spineById**: `Record`\<`string`, `number`\>
 
-Defined in: spine.ts:13
+Defined in: src/spine.ts:14
 
 ***
 
@@ -108,7 +108,7 @@ Defined in: spine.ts:13
 
 > **spineItems**: [`Section`](Section.md)[]
 
-Defined in: spine.ts:11
+Defined in: src/spine.ts:12
 
 ***
 
@@ -116,7 +116,7 @@ Defined in: spine.ts:11
 
 > **spineNodeIndex**: `number`
 
-Defined in: spine.ts:19
+Defined in: src/spine.ts:20
 
 ## Methods
 
@@ -124,7 +124,7 @@ Defined in: spine.ts:19
 
 > **destroy**(): `void`
 
-Defined in: spine.ts:266
+Defined in: src/spine.ts:267
 
 #### Returns
 
@@ -136,7 +136,7 @@ Defined in: spine.ts:266
 
 > **each**(`fn`): `void`
 
-Defined in: spine.ts:227
+Defined in: src/spine.ts:228
 
 Loop over the Sections in the Spine
 
@@ -158,7 +158,7 @@ forEach
 
 > **first**(): [`Section`](Section.md) \| `undefined`
 
-Defined in: spine.ts:235
+Defined in: src/spine.ts:236
 
 Find the first Section in the Spine
 
@@ -174,7 +174,7 @@ first section
 
 > **get**(`target?`): [`Section`](Section.md) \| `null`
 
-Defined in: spine.ts:135
+Defined in: src/spine.ts:136
 
 Get an item from the spine
 
@@ -214,7 +214,7 @@ spine.get("#id1234");
 
 > **last**(): [`Section`](Section.md) \| `undefined`
 
-Defined in: spine.ts:253
+Defined in: src/spine.ts:254
 
 Find the last Section in the Spine
 
@@ -230,7 +230,7 @@ last section
 
 > **unpack**(`_package`, `resolver`, `canonical`): `void`
 
-Defined in: spine.ts:54
+Defined in: src/spine.ts:55
 
 Unpack items from a opf into spine items
 
@@ -238,7 +238,7 @@ Unpack items from a opf into spine items
 
 ##### \_package
 
-[`PackagingObject`](../interfaces/PackagingObject.md) & `object`
+[`Packaging`](Packaging.md) & `object`
 
 ##### resolver
 

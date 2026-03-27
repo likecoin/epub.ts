@@ -6,23 +6,11 @@
 
 # Class: Layout
 
-Defined in: layout.ts:17
-
-Figures out the CSS values to apply for a layout
-
-## Param
-
-## Param
-
-## Param
-
-## Param
-
-## Param
+Defined in: src/layout.ts:21
 
 ## Implements
 
-- [`IEventEmitter`](../interfaces/IEventEmitter.md)
+- [`IEventEmitter`](../interfaces/IEventEmitter.md)\<[`LayoutEvents`](../interfaces/LayoutEvents.md)\>
 
 ## Constructors
 
@@ -30,7 +18,7 @@ Figures out the CSS values to apply for a layout
 
 > **new Layout**(`settings`): `Layout`
 
-Defined in: layout.ts:38
+Defined in: src/layout.ts:42
 
 #### Parameters
 
@@ -48,7 +36,7 @@ Defined in: layout.ts:38
 
 > **\_evenSpreads**: `boolean`
 
-Defined in: layout.ts:26
+Defined in: src/layout.ts:30
 
 ***
 
@@ -56,7 +44,7 @@ Defined in: layout.ts:26
 
 > **\_flow**: `string`
 
-Defined in: layout.ts:27
+Defined in: src/layout.ts:31
 
 ***
 
@@ -64,7 +52,7 @@ Defined in: layout.ts:27
 
 > **\_minSpreadWidth**: `number`
 
-Defined in: layout.ts:25
+Defined in: src/layout.ts:29
 
 ***
 
@@ -72,7 +60,7 @@ Defined in: layout.ts:25
 
 > **\_spread**: `boolean`
 
-Defined in: layout.ts:24
+Defined in: src/layout.ts:28
 
 ***
 
@@ -80,7 +68,7 @@ Defined in: layout.ts:24
 
 > **columnWidth**: `number`
 
-Defined in: layout.ts:32
+Defined in: src/layout.ts:36
 
 ***
 
@@ -88,7 +76,7 @@ Defined in: layout.ts:32
 
 > **delta**: `number`
 
-Defined in: layout.ts:31
+Defined in: src/layout.ts:35
 
 ***
 
@@ -96,25 +84,31 @@ Defined in: layout.ts:31
 
 > **divisor**: `number`
 
-Defined in: layout.ts:34
+Defined in: src/layout.ts:38
 
 ***
 
 ### emit()
 
-> **emit**: (`type`, ...`args`) => `void`
+> **emit**: \<`K`\>(`type`, ...`args`) => `void`
 
-Defined in: layout.ts:20
+Defined in: src/layout.ts:24
+
+#### Type Parameters
+
+##### K
+
+`K` *extends* `string`
 
 #### Parameters
 
 ##### type
 
-`string`
+`K`
 
 ##### args
 
-...`any`[]
+...[`LayoutEvents`](../interfaces/LayoutEvents.md)\[`K`\]
 
 #### Returns
 
@@ -130,7 +124,7 @@ Defined in: layout.ts:20
 
 > **gap**: `number`
 
-Defined in: layout.ts:33
+Defined in: src/layout.ts:37
 
 ***
 
@@ -138,7 +132,7 @@ Defined in: layout.ts:33
 
 > **height**: `number`
 
-Defined in: layout.ts:29
+Defined in: src/layout.ts:33
 
 ***
 
@@ -146,21 +140,27 @@ Defined in: layout.ts:29
 
 > **name**: `string`
 
-Defined in: layout.ts:23
+Defined in: src/layout.ts:27
 
 ***
 
 ### off()
 
-> **off**: (`type`, `fn?`) => `this`
+> **off**: \<`K`\>(`type`, `fn?`) => `void`
 
-Defined in: layout.ts:19
+Defined in: src/layout.ts:23
+
+#### Type Parameters
+
+##### K
+
+`K` *extends* `string`
 
 #### Parameters
 
 ##### type
 
-`string`
+`K`
 
 ##### fn?
 
@@ -168,7 +168,7 @@ Defined in: layout.ts:19
 
 #### Returns
 
-`this`
+`void`
 
 #### Implementation of
 
@@ -178,15 +178,21 @@ Defined in: layout.ts:19
 
 ### on()
 
-> **on**: (`type`, `fn`) => `this`
+> **on**: \<`K`\>(`type`, `fn`) => `void`
 
-Defined in: layout.ts:18
+Defined in: src/layout.ts:22
+
+#### Type Parameters
+
+##### K
+
+`K` *extends* `string`
 
 #### Parameters
 
 ##### type
 
-`string`
+`K`
 
 ##### fn
 
@@ -194,7 +200,7 @@ Defined in: layout.ts:18
 
 #### Returns
 
-`this`
+`void`
 
 #### Implementation of
 
@@ -206,7 +212,7 @@ Defined in: layout.ts:18
 
 > **pageWidth**: `number`
 
-Defined in: layout.ts:35
+Defined in: src/layout.ts:39
 
 ***
 
@@ -214,7 +220,7 @@ Defined in: layout.ts:35
 
 > **props**: [`LayoutProps`](../interfaces/LayoutProps.md)
 
-Defined in: layout.ts:36
+Defined in: src/layout.ts:40
 
 ***
 
@@ -222,7 +228,7 @@ Defined in: layout.ts:36
 
 > **settings**: [`LayoutSettings`](../interfaces/LayoutSettings.md)
 
-Defined in: layout.ts:22
+Defined in: src/layout.ts:26
 
 ***
 
@@ -230,7 +236,7 @@ Defined in: layout.ts:22
 
 > **spreadWidth**: `number`
 
-Defined in: layout.ts:30
+Defined in: src/layout.ts:34
 
 ***
 
@@ -238,7 +244,7 @@ Defined in: layout.ts:30
 
 > **width**: `number`
 
-Defined in: layout.ts:28
+Defined in: src/layout.ts:32
 
 ## Methods
 
@@ -246,7 +252,7 @@ Defined in: layout.ts:28
 
 > **calculate**(`_width`, `_height`, `_gap?`): `void`
 
-Defined in: layout.ts:126
+Defined in: src/layout.ts:130
 
 Calculate the dimensions of the pagination
 
@@ -280,7 +286,7 @@ width of the gap between columns
 
 > **count**(`totalLength`, `pageLength?`): `object`
 
-Defined in: layout.ts:235
+Defined in: src/layout.ts:239
 
 Count number of pages
 
@@ -312,7 +318,7 @@ Count number of pages
 
 > **flow**(`flow?`): `string`
 
-Defined in: layout.ts:83
+Defined in: src/layout.ts:87
 
 Switch the flow between paginated and scrolled
 
@@ -336,7 +342,7 @@ simplified flow
 
 > **format**(`contents`, `section?`, `axis?`): `void`
 
-Defined in: layout.ts:213
+Defined in: src/layout.ts:217
 
 Apply Css to a Document
 
@@ -364,7 +370,7 @@ Apply Css to a Document
 
 > **spread**(`spread?`, `min?`): `boolean`
 
-Defined in: layout.ts:105
+Defined in: src/layout.ts:109
 
 Switch between using spreads or not, and set the
 width at which they switch to single.

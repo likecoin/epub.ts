@@ -6,7 +6,7 @@
 
 # Interface: PackagingSpineItem
 
-Defined in: types.ts:43
+Defined in: src/types.ts:46
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: types.ts:43
 
 > `optional` **id**: `string`
 
-Defined in: types.ts:44
+Defined in: src/types.ts:47
 
 ***
 
@@ -22,7 +22,7 @@ Defined in: types.ts:44
 
 > **idref**: `string`
 
-Defined in: types.ts:45
+Defined in: src/types.ts:48
 
 ***
 
@@ -30,7 +30,7 @@ Defined in: types.ts:45
 
 > **index**: `number`
 
-Defined in: types.ts:48
+Defined in: src/types.ts:51
 
 ***
 
@@ -38,7 +38,7 @@ Defined in: types.ts:48
 
 > **linear**: `string`
 
-Defined in: types.ts:46
+Defined in: src/types.ts:49
 
 ***
 
@@ -46,4 +46,4 @@ Defined in: types.ts:46
 
 > **properties**: `string`[]
 
-Defined in: types.ts:47
+Defined in: src/types.ts:50

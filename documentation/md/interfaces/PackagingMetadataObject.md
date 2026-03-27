@@ -6,7 +6,7 @@
 
 # Interface: PackagingMetadataObject
 
-Defined in: types.ts:24
+Defined in: src/types.ts:26
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: types.ts:24
 
 > **creator**: `string`
 
-Defined in: types.ts:26
+Defined in: src/types.ts:28
 
 ***
 
@@ -22,7 +22,7 @@ Defined in: types.ts:26
 
 > **description**: `string`
 
-Defined in: types.ts:27
+Defined in: src/types.ts:29
 
 ***
 
@@ -30,7 +30,7 @@ Defined in: types.ts:27
 
 > **direction**: `string`
 
-Defined in: types.ts:40
+Defined in: src/types.ts:42
 
 ***
 
@@ -38,7 +38,7 @@ Defined in: types.ts:40
 
 > **flow**: `string`
 
-Defined in: types.ts:36
+Defined in: src/types.ts:38
 
 ***
 
@@ -46,7 +46,7 @@ Defined in: types.ts:36
 
 > **identifier**: `string`
 
-Defined in: types.ts:30
+Defined in: src/types.ts:32
 
 ***
 
@@ -54,7 +54,7 @@ Defined in: types.ts:30
 
 > **language**: `string`
 
-Defined in: types.ts:31
+Defined in: src/types.ts:33
 
 ***
 
@@ -62,7 +62,7 @@ Defined in: types.ts:31
 
 > **layout**: `string`
 
-Defined in: types.ts:34
+Defined in: src/types.ts:36
 
 ***
 
@@ -70,7 +70,15 @@ Defined in: types.ts:34
 
 > **media\_active\_class**: `string`
 
-Defined in: types.ts:38
+Defined in: src/types.ts:40
+
+***
+
+### minSpreadWidth?
+
+> `optional` **minSpreadWidth**: `number`
+
+Defined in: src/types.ts:43
 
 ***
 
@@ -78,7 +86,7 @@ Defined in: types.ts:38
 
 > **modified\_date**: `string`
 
-Defined in: types.ts:33
+Defined in: src/types.ts:35
 
 ***
 
@@ -86,7 +94,7 @@ Defined in: types.ts:33
 
 > **orientation**: `string`
 
-Defined in: types.ts:35
+Defined in: src/types.ts:37
 
 ***
 
@@ -94,7 +102,7 @@ Defined in: types.ts:35
 
 > **pubdate**: `string`
 
-Defined in: types.ts:28
+Defined in: src/types.ts:30
 
 ***
 
@@ -102,7 +110,7 @@ Defined in: types.ts:28
 
 > **publisher**: `string`
 
-Defined in: types.ts:29
+Defined in: src/types.ts:31
 
 ***
 
@@ -110,7 +118,7 @@ Defined in: types.ts:29
 
 > **rights**: `string`
 
-Defined in: types.ts:32
+Defined in: src/types.ts:34
 
 ***
 
@@ -118,7 +126,7 @@ Defined in: types.ts:32
 
 > **spread**: `string`
 
-Defined in: types.ts:39
+Defined in: src/types.ts:41
 
 ***
 
@@ -126,7 +134,7 @@ Defined in: types.ts:39
 
 > **title**: `string`
 
-Defined in: types.ts:25
+Defined in: src/types.ts:27
 
 ***
 
@@ -134,4 +142,4 @@ Defined in: types.ts:25
 
 > **viewport**: `string`
 
-Defined in: types.ts:37
+Defined in: src/types.ts:39

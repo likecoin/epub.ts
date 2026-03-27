@@ -6,7 +6,7 @@
 
 # Interface: PackagingManifestObject
 
-Defined in: types.ts:58
+Defined in: src/types.ts:62
 
 ## Indexable
 

@@ -6,7 +6,7 @@
 
 # Interface: BookOptions
 
-Defined in: types.ts:111
+Defined in: src/types.ts:115
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: types.ts:111
 
 > `optional` **canonical**: (`path`) => `string`
 
-Defined in: types.ts:117
+Defined in: src/types.ts:121
 
 #### Parameters
 
@@ -32,7 +32,7 @@ Defined in: types.ts:117
 
 > `optional` **encoding**: `string`
 
-Defined in: types.ts:115
+Defined in: src/types.ts:119
 
 ***
 
@@ -40,7 +40,7 @@ Defined in: types.ts:115
 
 > `optional` **openAs**: `string`
 
-Defined in: types.ts:118
+Defined in: src/types.ts:122
 
 ***
 
@@ -48,7 +48,7 @@ Defined in: types.ts:118
 
 > `optional` **replacements**: `string`
 
-Defined in: types.ts:116
+Defined in: src/types.ts:120
 
 ***
 
@@ -56,7 +56,7 @@ Defined in: types.ts:116
 
 > `optional` **requestCredentials**: `boolean`
 
-Defined in: types.ts:113
+Defined in: src/types.ts:117
 
 ***
 
@@ -64,7 +64,7 @@ Defined in: types.ts:113
 
 > `optional` **requestHeaders**: `Record`\<`string`, `string`\>
 
-Defined in: types.ts:114
+Defined in: src/types.ts:118
 
 ***
 
@@ -72,7 +72,7 @@ Defined in: types.ts:114
 
 > `optional` **requestMethod**: [`RequestFunction`](../type-aliases/RequestFunction.md)
 
-Defined in: types.ts:112
+Defined in: src/types.ts:116
 
 ***
 
@@ -80,4 +80,4 @@ Defined in: types.ts:112
 
 > `optional` **store**: `string` \| `boolean`
 
-Defined in: types.ts:119
+Defined in: src/types.ts:123

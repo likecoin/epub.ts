@@ -6,11 +6,11 @@
 
 # Class: Rendition
 
-Defined in: rendition.ts:57
+Defined in: src/rendition.ts:73
 
 ## Implements
 
-- [`IEventEmitter`](../interfaces/IEventEmitter.md)
+- [`IEventEmitter`](../interfaces/IEventEmitter.md)\<[`RenditionEvents`](../interfaces/RenditionEvents.md)\>
 
 ## Constructors
 
@@ -18,7 +18,7 @@ Defined in: rendition.ts:57
 
 > **new Rendition**(`book`, `options?`): `Rendition`
 
-Defined in: rendition.ts:78
+Defined in: src/rendition.ts:94
 
 #### Parameters
 
@@ -40,7 +40,7 @@ Defined in: rendition.ts:78
 
 > **\_layout**: [`Layout`](Layout.md) \| `undefined`
 
-Defined in: rendition.ts:71
+Defined in: src/rendition.ts:87
 
 ***
 
@@ -48,41 +48,47 @@ Defined in: rendition.ts:71
 
 > **annotations**: [`Annotations`](Annotations.md)
 
-Defined in: rendition.ts:62
+Defined in: src/rendition.ts:78
 
 ***
 
 ### book
 
-> **book**: [`Book`](Book.md) \| `undefined`
+> **book**: [`Book`](Book.md)
 
-Defined in: rendition.ts:59
+Defined in: src/rendition.ts:75
 
 ***
 
 ### displaying
 
-> **displaying**: `defer` \| `undefined`
+> **displaying**: `defer`\<[`Section`](Section.md) \| `undefined`\> \| `undefined`
 
-Defined in: rendition.ts:72
+Defined in: src/rendition.ts:88
 
 ***
 
 ### emit()
 
-> **emit**: (`type`, ...`args`) => `void`
+> **emit**: \<`K`\>(`type`, ...`args`) => `void`
 
-Defined in: rendition.ts:76
+Defined in: src/rendition.ts:92
+
+#### Type Parameters
+
+##### K
+
+`K` *extends* `string`
 
 #### Parameters
 
 ##### type
 
-`string`
+`K`
 
 ##### args
 
-...`any`[]
+...[`RenditionEvents`](../interfaces/RenditionEvents.md)\[`K`\]
 
 #### Returns
 
@@ -98,7 +104,7 @@ Defined in: rendition.ts:76
 
 > **epubcfi**: [`EpubCFI`](EpubCFI.md)
 
-Defined in: rendition.ts:63
+Defined in: src/rendition.ts:79
 
 ***
 
@@ -106,7 +112,7 @@ Defined in: rendition.ts:63
 
 > **hooks**: `RenditionHooks`
 
-Defined in: rendition.ts:60
+Defined in: src/rendition.ts:76
 
 ***
 
@@ -114,29 +120,35 @@ Defined in: rendition.ts:60
 
 > **location**: [`Location`](../interfaces/Location.md) \| `undefined`
 
-Defined in: rendition.ts:65
+Defined in: src/rendition.ts:81
 
 ***
 
 ### manager
 
-> **manager**: `DefaultViewManager` \| `undefined`
+> **manager**: `DefaultViewManager`
 
-Defined in: rendition.ts:68
+Defined in: src/rendition.ts:84
 
 ***
 
 ### off()
 
-> **off**: (`type`, `fn?`) => `any`
+> **off**: \<`K`\>(`type`, `fn?`) => `void`
 
-Defined in: rendition.ts:75
+Defined in: src/rendition.ts:91
+
+#### Type Parameters
+
+##### K
+
+`K` *extends* `string`
 
 #### Parameters
 
 ##### type
 
-`string`
+`K`
 
 ##### fn?
 
@@ -144,7 +156,7 @@ Defined in: rendition.ts:75
 
 #### Returns
 
-`any`
+`void`
 
 #### Implementation of
 
@@ -154,15 +166,21 @@ Defined in: rendition.ts:75
 
 ### on()
 
-> **on**: (`type`, `fn`) => `any`
+> **on**: \<`K`\>(`type`, `fn`) => `void`
 
-Defined in: rendition.ts:74
+Defined in: src/rendition.ts:90
+
+#### Type Parameters
+
+##### K
+
+`K` *extends* `string`
 
 #### Parameters
 
 ##### type
 
-`string`
+`K`
 
 ##### fn
 
@@ -170,7 +188,7 @@ Defined in: rendition.ts:74
 
 #### Returns
 
-`any`
+`void`
 
 #### Implementation of
 
@@ -182,15 +200,15 @@ Defined in: rendition.ts:74
 
 > **q**: `Queue`
 
-Defined in: rendition.ts:64
+Defined in: src/rendition.ts:80
 
 ***
 
 ### settings
 
-> **settings**: [`RenditionOptions`](../interfaces/RenditionOptions.md) & `Record`\<`string`, `any`\>
+> **settings**: [`RenditionOptions`](../interfaces/RenditionOptions.md)
 
-Defined in: rendition.ts:58
+Defined in: src/rendition.ts:74
 
 ***
 
@@ -198,15 +216,15 @@ Defined in: rendition.ts:58
 
 > **started**: `Promise`\<`void`\>
 
-Defined in: rendition.ts:67
+Defined in: src/rendition.ts:83
 
 ***
 
 ### starting
 
-> **starting**: `defer`
+> **starting**: `defer`\<`void`\>
 
-Defined in: rendition.ts:66
+Defined in: src/rendition.ts:82
 
 ***
 
@@ -214,23 +232,23 @@ Defined in: rendition.ts:66
 
 > **themes**: [`Themes`](Themes.md)
 
-Defined in: rendition.ts:61
+Defined in: src/rendition.ts:77
 
 ***
 
 ### View
 
-> **View**: `Function` \| *typeof* `IframeView`
+> **View**: [`ViewConstructor`](../type-aliases/ViewConstructor.md)
 
-Defined in: rendition.ts:70
+Defined in: src/rendition.ts:86
 
 ***
 
 ### ViewManager
 
-> **ViewManager**: `Function` \| *typeof* `DefaultViewManager` \| *typeof* `ContinuousViewManager`
+> **ViewManager**: [`ViewManagerConstructor`](../type-aliases/ViewManagerConstructor.md)
 
-Defined in: rendition.ts:69
+Defined in: src/rendition.ts:85
 
 ## Methods
 
@@ -238,7 +256,7 @@ Defined in: rendition.ts:69
 
 > **attachTo**(`element`): `Promise`\<`void`\>
 
-Defined in: rendition.ts:310
+Defined in: src/rendition.ts:326
 
 Call to attach the container to an element in the dom
 Container must be attached before rendering can begin
@@ -261,7 +279,7 @@ to attach to
 
 > **clear**(): `void`
 
-Defined in: rendition.ts:563
+Defined in: src/rendition.ts:579
 
 Clear all rendered views
 
@@ -275,7 +293,7 @@ Clear all rendered views
 
 > **currentLocation**(): [`Location`](../interfaces/Location.md) \| `undefined`
 
-Defined in: rendition.ts:790
+Defined in: src/rendition.ts:806
 
 Get the Current Location object
 
@@ -291,7 +309,7 @@ location (may be a promise)
 
 > **destroy**(): `void`
 
-Defined in: rendition.ts:876
+Defined in: src/rendition.ts:892
 
 Remove and Clean Up the Rendition
 
@@ -305,7 +323,7 @@ Remove and Clean Up the Rendition
 
 > **direction**(`dir?`): `void`
 
-Defined in: rendition.ts:705
+Defined in: src/rendition.ts:721
 
 Adjust the direction of the rendition
 
@@ -325,7 +343,7 @@ Adjust the direction of the rendition
 
 > **display**(`target?`): `Promise`\<[`Section`](Section.md)\>
 
-Defined in: rendition.ts:339
+Defined in: src/rendition.ts:355
 
 Display a point in the book
 The request will be added to the rendering Queue,
@@ -350,7 +368,7 @@ Url or EpubCFI
 
 > **flow**(`flow`): `void`
 
-Defined in: rendition.ts:624
+Defined in: src/rendition.ts:640
 
 Adjust the flow of the rendition to paginated or scrolled
 (scrolled-continuous vs scrolled-doc are handled by different view managers)
@@ -371,7 +389,7 @@ Adjust the flow of the rendition to paginated or scrolled
 
 > **getContents**(): [`Contents`](Contents.md)[]
 
-Defined in: rendition.ts:1027
+Defined in: src/rendition.ts:1043
 
 Get the Contents object of each rendered view
 
@@ -385,7 +403,7 @@ Get the Contents object of each rendered view
 
 > **getRange**(`cfi`, `ignoreClass?`): `Range` \| `undefined`
 
-Defined in: rendition.ts:967
+Defined in: src/rendition.ts:985
 
 Get a Range from a Visible CFI
 
@@ -411,7 +429,7 @@ EpubCfi String
 
 > **layout**(`settings?`): [`Layout`](Layout.md) \| `undefined`
 
-Defined in: rendition.ts:660
+Defined in: src/rendition.ts:676
 
 Adjust the layout of the rendition to reflowable or pre-paginated
 
@@ -431,7 +449,7 @@ Adjust the layout of the rendition to reflowable or pre-paginated
 
 > **moveTo**(`offset`): `void`
 
-Defined in: rendition.ts:540
+Defined in: src/rendition.ts:556
 
 Move the Rendition to a specific offset
 Usually you would be better off calling display()
@@ -458,7 +476,7 @@ Usually you would be better off calling display()
 
 > **next**(): `Promise`\<`void`\>
 
-Defined in: rendition.ts:571
+Defined in: src/rendition.ts:587
 
 Go to the next "page" in the rendition
 
@@ -472,7 +490,7 @@ Go to the next "page" in the rendition
 
 > **prev**(): `Promise`\<`void`\>
 
-Defined in: rendition.ts:580
+Defined in: src/rendition.ts:596
 
 Go to the previous "page" in the rendition
 
@@ -486,7 +504,7 @@ Go to the previous "page" in the rendition
 
 > **reportLocation**(): `Promise`\<`void`\>
 
-Defined in: rendition.ts:723
+Defined in: src/rendition.ts:739
 
 Report the current location.
 Emits "relocated" and "locationChanged" events.
@@ -499,9 +517,9 @@ Emits "relocated" and "locationChanged" events.
 
 ### requireManager()
 
-> **requireManager**(`manager`): `Function` \| *typeof* `DefaultViewManager` \| *typeof* `ContinuousViewManager`
+> **requireManager**(`manager`): [`ViewManagerConstructor`](../type-aliases/ViewManagerConstructor.md)
 
-Defined in: rendition.ts:207
+Defined in: src/rendition.ts:223
 
 Require the manager from passed string, or as a class function
 
@@ -511,19 +529,19 @@ Require the manager from passed string, or as a class function
 
 [description]
 
-`string` | `object` | `Function`
+`string` | `object` | [`ViewManagerConstructor`](../type-aliases/ViewManagerConstructor.md)
 
 #### Returns
 
-`Function` \| *typeof* `DefaultViewManager` \| *typeof* `ContinuousViewManager`
+[`ViewManagerConstructor`](../type-aliases/ViewManagerConstructor.md)
 
 ***
 
 ### requireView()
 
-> **requireView**(`view`): `Function` \| *typeof* `IframeView`
+> **requireView**(`view`): [`ViewConstructor`](../type-aliases/ViewConstructor.md)
 
-Defined in: rendition.ts:228
+Defined in: src/rendition.ts:244
 
 Require the view from passed string, or as a class function
 
@@ -531,11 +549,11 @@ Require the view from passed string, or as a class function
 
 ##### view
 
-`string` | `object` | `Function`
+`string` | `object` | [`ViewConstructor`](../type-aliases/ViewConstructor.md)
 
 #### Returns
 
-`Function` \| *typeof* `IframeView`
+[`ViewConstructor`](../type-aliases/ViewConstructor.md)
 
 ***
 
@@ -543,7 +561,7 @@ Require the view from passed string, or as a class function
 
 > **resize**(`width?`, `height?`, `epubcfi?`): `void`
 
-Defined in: rendition.ts:550
+Defined in: src/rendition.ts:566
 
 Trigger a resize of the views
 
@@ -573,7 +591,7 @@ Trigger a resize of the views
 
 > **setManager**(`manager`): `void`
 
-Defined in: rendition.ts:198
+Defined in: src/rendition.ts:214
 
 Set the manager function
 
@@ -593,7 +611,7 @@ Set the manager function
 
 > **spread**(`spread`, `min?`): `void`
 
-Defined in: rendition.ts:684
+Defined in: src/rendition.ts:700
 
 Adjust if the rendition uses spreads
 
@@ -621,7 +639,7 @@ min width to use spreads at
 
 > **start**(): `void`
 
-Defined in: rendition.ts:246
+Defined in: src/rendition.ts:262
 
 Start the rendering
 
@@ -635,12 +653,12 @@ rendering has started
 
 ### views()
 
-> **views**(): `Views` \| `IframeView`[]
+> **views**(): `IframeView`[] \| `Views`
 
-Defined in: rendition.ts:1035
+Defined in: src/rendition.ts:1051
 
 Get the views member from the manager
 
 #### Returns
 
-`Views` \| `IframeView`[]
+`IframeView`[] \| `Views`

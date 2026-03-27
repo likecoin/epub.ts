@@ -6,19 +6,11 @@
 
 # Class: Locations
 
-Defined in: locations.ts:16
-
-Find Locations for a Book
-
-## Param
-
-## Param
-
-## Param
+Defined in: src/locations.ts:20
 
 ## Implements
 
-- [`IEventEmitter`](../interfaces/IEventEmitter.md)
+- [`IEventEmitter`](../interfaces/IEventEmitter.md)\<[`LocationsEvents`](../interfaces/LocationsEvents.md)\>
 
 ## Constructors
 
@@ -26,7 +18,7 @@ Find Locations for a Book
 
 > **new Locations**(`spine`, `request`, `pause?`): `Locations`
 
-Defined in: locations.ts:35
+Defined in: src/locations.ts:39
 
 #### Parameters
 
@@ -50,25 +42,25 @@ Defined in: locations.ts:35
 
 ### \_current
 
-> **\_current**: `number`
+> **\_current**: `number` \| `undefined`
 
-Defined in: locations.ts:30
+Defined in: src/locations.ts:34
 
 ***
 
 ### \_currentCfi
 
-> **\_currentCfi**: `string`
+> **\_currentCfi**: `string` \| `undefined`
 
-Defined in: locations.ts:32
+Defined in: src/locations.ts:36
 
 ***
 
 ### \_locations
 
-> **\_locations**: `string`[]
+> **\_locations**: `string`[] \| `undefined`
 
-Defined in: locations.ts:26
+Defined in: src/locations.ts:30
 
 ***
 
@@ -76,7 +68,7 @@ Defined in: locations.ts:26
 
 > **\_locationsWords**: `object`[]
 
-Defined in: locations.ts:27
+Defined in: src/locations.ts:31
 
 #### cfi
 
@@ -92,33 +84,39 @@ Defined in: locations.ts:27
 
 > **\_wordCounter**: `number`
 
-Defined in: locations.ts:31
+Defined in: src/locations.ts:35
 
 ***
 
 ### break
 
-> **break**: `number`
+> **break**: `number` \| `undefined`
 
-Defined in: locations.ts:29
+Defined in: src/locations.ts:33
 
 ***
 
 ### emit()
 
-> **emit**: (`type`, ...`args`) => `void`
+> **emit**: \<`K`\>(`type`, ...`args`) => `void`
 
-Defined in: locations.ts:19
+Defined in: src/locations.ts:23
+
+#### Type Parameters
+
+##### K
+
+`K` *extends* `string`
 
 #### Parameters
 
 ##### type
 
-`string`
+`K`
 
 ##### args
 
-...`any`[]
+...[`LocationsEvents`](../interfaces/LocationsEvents.md)\[`K`\]
 
 #### Returns
 
@@ -132,23 +130,29 @@ Defined in: locations.ts:19
 
 ### epubcfi
 
-> **epubcfi**: [`EpubCFI`](EpubCFI.md)
+> **epubcfi**: [`EpubCFI`](EpubCFI.md) \| `undefined`
 
-Defined in: locations.ts:25
+Defined in: src/locations.ts:29
 
 ***
 
 ### off()
 
-> **off**: (`type`, `fn?`) => `this`
+> **off**: \<`K`\>(`type`, `fn?`) => `void`
 
-Defined in: locations.ts:18
+Defined in: src/locations.ts:22
+
+#### Type Parameters
+
+##### K
+
+`K` *extends* `string`
 
 #### Parameters
 
 ##### type
 
-`string`
+`K`
 
 ##### fn?
 
@@ -156,7 +160,7 @@ Defined in: locations.ts:18
 
 #### Returns
 
-`this`
+`void`
 
 #### Implementation of
 
@@ -166,15 +170,21 @@ Defined in: locations.ts:18
 
 ### on()
 
-> **on**: (`type`, `fn`) => `this`
+> **on**: \<`K`\>(`type`, `fn`) => `void`
 
-Defined in: locations.ts:17
+Defined in: src/locations.ts:21
+
+#### Type Parameters
+
+##### K
+
+`K` *extends* `string`
 
 #### Parameters
 
 ##### type
 
-`string`
+`K`
 
 ##### fn
 
@@ -182,7 +192,7 @@ Defined in: locations.ts:17
 
 #### Returns
 
-`this`
+`void`
 
 #### Implementation of
 
@@ -192,9 +202,9 @@ Defined in: locations.ts:17
 
 ### pause
 
-> **pause**: `number`
+> **pause**: `number` \| `undefined`
 
-Defined in: locations.ts:23
+Defined in: src/locations.ts:27
 
 ***
 
@@ -202,39 +212,39 @@ Defined in: locations.ts:23
 
 > **processingTimeout**: `Timeout` \| `undefined`
 
-Defined in: locations.ts:33
+Defined in: src/locations.ts:37
 
 ***
 
 ### q
 
-> **q**: `Queue`
+> **q**: `Queue` \| `undefined`
 
-Defined in: locations.ts:24
+Defined in: src/locations.ts:28
 
 ***
 
 ### request
 
-> **request**: [`RequestFunction`](../type-aliases/RequestFunction.md)
+> **request**: [`RequestFunction`](../type-aliases/RequestFunction.md) \| `undefined`
 
-Defined in: locations.ts:22
+Defined in: src/locations.ts:26
 
 ***
 
 ### spine
 
-> **spine**: [`Spine`](Spine.md)
+> **spine**: [`Spine`](Spine.md) \| `undefined`
 
-Defined in: locations.ts:21
+Defined in: src/locations.ts:25
 
 ***
 
 ### total
 
-> **total**: `number`
+> **total**: `number` \| `undefined`
 
-Defined in: locations.ts:28
+Defined in: src/locations.ts:32
 
 ## Accessors
 
@@ -242,21 +252,21 @@ Defined in: locations.ts:28
 
 #### Get Signature
 
-> **get** **currentLocation**(): `number`
+> **get** **currentLocation**(): `number` \| `undefined`
 
-Defined in: locations.ts:481
+Defined in: src/locations.ts:481
 
 Get the current location
 
 ##### Returns
 
-`number`
+`number` \| `undefined`
 
 #### Set Signature
 
 > **set** **currentLocation**(`curr`): `void`
 
-Defined in: locations.ts:488
+Defined in: src/locations.ts:488
 
 Set the current location
 
@@ -264,7 +274,7 @@ Set the current location
 
 ###### curr
 
-`string` | `number`
+`string` | `number` | `undefined`
 
 ##### Returns
 
@@ -276,7 +286,7 @@ Set the current location
 
 > **cfiFromLocation**(`loc`): `string` \| `number`
 
-Defined in: locations.ts:389
+Defined in: src/locations.ts:389
 
 Get an EpubCFI from location index
 
@@ -298,7 +308,7 @@ cfi
 
 > **cfiFromPercentage**(`percentage`): `string` \| `number`
 
-Defined in: locations.ts:408
+Defined in: src/locations.ts:408
 
 Get an EpubCFI from location percentage
 
@@ -320,7 +330,7 @@ cfi
 
 > **countWords**(`s`): `number`
 
-Defined in: locations.ts:255
+Defined in: src/locations.ts:255
 
 #### Parameters
 
@@ -338,7 +348,7 @@ Defined in: locations.ts:255
 
 > **createRange**(): `object`
 
-Defined in: locations.ts:89
+Defined in: src/locations.ts:94
 
 #### Returns
 
@@ -366,7 +376,7 @@ Defined in: locations.ts:89
 
 > **destroy**(): `void`
 
-Defined in: locations.ts:499
+Defined in: src/locations.ts:499
 
 #### Returns
 
@@ -378,7 +388,7 @@ Defined in: locations.ts:499
 
 > **generate**(`chars?`): `Promise`\<`string`[]\>
 
-Defined in: locations.ts:62
+Defined in: src/locations.ts:67
 
 Load all of sections in the book to generate locations
 
@@ -402,7 +412,7 @@ locations
 
 > **generateFromWords**(`startCfi?`, `wordCount?`, `count?`): `Promise`\<`object`[]\>
 
-Defined in: locations.ts:207
+Defined in: src/locations.ts:209
 
 Load all of sections in the book to generate locations
 
@@ -438,7 +448,7 @@ locations
 
 > **getCurrent**(): `number`
 
-Defined in: locations.ts:447
+Defined in: src/locations.ts:447
 
 #### Returns
 
@@ -450,7 +460,7 @@ Defined in: locations.ts:447
 
 > **length**(): `number`
 
-Defined in: locations.ts:495
+Defined in: src/locations.ts:495
 
 Locations length
 
@@ -464,7 +474,7 @@ Locations length
 
 > **load**(`locations`): `string`[]
 
-Defined in: locations.ts:429
+Defined in: src/locations.ts:429
 
 Load locations from JSON
 
@@ -484,7 +494,7 @@ Load locations from JSON
 
 > **locationFromCfi**(`cfi`): `number`
 
-Defined in: locations.ts:338
+Defined in: src/locations.ts:338
 
 Get a location from an EpubCFI
 
@@ -504,7 +514,7 @@ Get a location from an EpubCFI
 
 > **parse**(`contents`, `cfiBase`, `chars?`): `string`[]
 
-Defined in: locations.ts:114
+Defined in: src/locations.ts:115
 
 #### Parameters
 
@@ -530,7 +540,7 @@ Defined in: locations.ts:114
 
 > **parseWords**(`contents`, `section`, `wordCount`, `startCfi?`): `object`[]
 
-Defined in: locations.ts:262
+Defined in: src/locations.ts:262
 
 #### Parameters
 
@@ -560,7 +570,7 @@ Defined in: locations.ts:262
 
 > **percentageFromCfi**(`cfi`): `number` \| `null`
 
-Defined in: locations.ts:361
+Defined in: src/locations.ts:361
 
 Get a percentage position in locations from an EpubCFI
 
@@ -580,7 +590,7 @@ Get a percentage position in locations from an EpubCFI
 
 > **percentageFromLocation**(`loc`): `number`
 
-Defined in: locations.ts:376
+Defined in: src/locations.ts:376
 
 Get a percentage position from a location index
 
@@ -604,7 +614,7 @@ percentage
 
 > **process**(`section`): `Promise`\<`string`[]\>
 
-Defined in: locations.ts:98
+Defined in: src/locations.ts:103
 
 #### Parameters
 
@@ -622,7 +632,7 @@ Defined in: locations.ts:98
 
 > **processWords**(`section`, `wordCount`, `startCfi?`, `count?`): `Promise`\<`object`[]\>
 
-Defined in: locations.ts:235
+Defined in: src/locations.ts:237
 
 #### Parameters
 
@@ -652,7 +662,7 @@ Defined in: locations.ts:235
 
 > **save**(): `string`
 
-Defined in: locations.ts:443
+Defined in: src/locations.ts:443
 
 Save locations to JSON
 
@@ -666,13 +676,13 @@ Save locations to JSON
 
 > **setCurrent**(`curr`): `void`
 
-Defined in: locations.ts:451
+Defined in: src/locations.ts:451
 
 #### Parameters
 
 ##### curr
 
-`string` | `number`
+`string` | `number` | `undefined`
 
 #### Returns
 

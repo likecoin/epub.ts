@@ -6,7 +6,7 @@
 
 # Class: DisplayOptions
 
-Defined in: displayoptions.ts:8
+Defined in: src/displayoptions.ts:8
 
 Open DisplayOptions Format Parser
 
@@ -20,7 +20,7 @@ XML
 
 > **new DisplayOptions**(`displayOptionsDocument?`): `DisplayOptions`
 
-Defined in: displayoptions.ts:14
+Defined in: src/displayoptions.ts:14
 
 #### Parameters
 
@@ -36,33 +36,33 @@ Defined in: displayoptions.ts:14
 
 ### fixedLayout
 
-> **fixedLayout**: `string`
+> **fixedLayout**: `string` \| `undefined`
 
-Defined in: displayoptions.ts:10
+Defined in: src/displayoptions.ts:10
 
 ***
 
 ### interactive
 
-> **interactive**: `string`
+> **interactive**: `string` \| `undefined`
 
-Defined in: displayoptions.ts:9
+Defined in: src/displayoptions.ts:9
 
 ***
 
 ### openToSpread
 
-> **openToSpread**: `string`
+> **openToSpread**: `string` \| `undefined`
 
-Defined in: displayoptions.ts:11
+Defined in: src/displayoptions.ts:11
 
 ***
 
 ### orientationLock
 
-> **orientationLock**: `string`
+> **orientationLock**: `string` \| `undefined`
 
-Defined in: displayoptions.ts:12
+Defined in: src/displayoptions.ts:12
 
 ## Methods
 
@@ -70,7 +70,7 @@ Defined in: displayoptions.ts:12
 
 > **destroy**(): `void`
 
-Defined in: displayoptions.ts:67
+Defined in: src/displayoptions.ts:67
 
 #### Returns
 
@@ -82,7 +82,7 @@ Defined in: displayoptions.ts:67
 
 > **parse**(`displayOptionsDocument`): `this`
 
-Defined in: displayoptions.ts:30
+Defined in: src/displayoptions.ts:30
 
 Parse XML
 

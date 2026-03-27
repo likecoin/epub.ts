@@ -6,21 +6,11 @@
 
 # Class: Store
 
-Defined in: store.ts:16
-
-Handles saving and requesting files from local storage
-
-## Param
-
-This should be the name of the application for modals
-
-## Param
-
-## Param
+Defined in: src/store.ts:61
 
 ## Implements
 
-- [`IEventEmitter`](../interfaces/IEventEmitter.md)
+- [`IEventEmitter`](../interfaces/IEventEmitter.md)\<[`StoreEvents`](../interfaces/StoreEvents.md)\>
 
 ## Constructors
 
@@ -28,7 +18,7 @@ This should be the name of the application for modals
 
 > **new Store**(`name`, `requester?`, `resolver?`): `Store`
 
-Defined in: store.ts:29
+Defined in: src/store.ts:74
 
 #### Parameters
 
@@ -54,25 +44,31 @@ Defined in: store.ts:29
 
 > **\_status**: (`event`) => `void` \| `undefined`
 
-Defined in: store.ts:27
+Defined in: src/store.ts:72
 
 ***
 
 ### emit()
 
-> **emit**: (`type`, ...`args`) => `void`
+> **emit**: \<`K`\>(`type`, ...`args`) => `void`
 
-Defined in: store.ts:19
+Defined in: src/store.ts:64
+
+#### Type Parameters
+
+##### K
+
+`K` *extends* `string`
 
 #### Parameters
 
 ##### type
 
-`string`
+`K`
 
 ##### args
 
-...`any`[]
+...[`StoreEvents`](../interfaces/StoreEvents.md)\[`K`\]
 
 #### Returns
 
@@ -88,21 +84,27 @@ Defined in: store.ts:19
 
 > **name**: `string`
 
-Defined in: store.ts:23
+Defined in: src/store.ts:68
 
 ***
 
 ### off()
 
-> **off**: (`type`, `fn?`) => `this`
+> **off**: \<`K`\>(`type`, `fn?`) => `void`
 
-Defined in: store.ts:18
+Defined in: src/store.ts:63
+
+#### Type Parameters
+
+##### K
+
+`K` *extends* `string`
 
 #### Parameters
 
 ##### type
 
-`string`
+`K`
 
 ##### fn?
 
@@ -110,7 +112,7 @@ Defined in: store.ts:18
 
 #### Returns
 
-`this`
+`void`
 
 #### Implementation of
 
@@ -120,15 +122,21 @@ Defined in: store.ts:18
 
 ### on()
 
-> **on**: (`type`, `fn`) => `this`
+> **on**: \<`K`\>(`type`, `fn`) => `void`
 
-Defined in: store.ts:17
+Defined in: src/store.ts:62
+
+#### Type Parameters
+
+##### K
+
+`K` *extends* `string`
 
 #### Parameters
 
 ##### type
 
-`string`
+`K`
 
 ##### fn
 
@@ -136,7 +144,7 @@ Defined in: store.ts:17
 
 #### Returns
 
-`this`
+`void`
 
 #### Implementation of
 
@@ -148,7 +156,7 @@ Defined in: store.ts:17
 
 > **online**: `boolean`
 
-Defined in: store.ts:26
+Defined in: src/store.ts:71
 
 ***
 
@@ -156,7 +164,7 @@ Defined in: store.ts:26
 
 > **requester**: [`RequestFunction`](../type-aliases/RequestFunction.md)
 
-Defined in: store.ts:24
+Defined in: src/store.ts:69
 
 ***
 
@@ -164,7 +172,7 @@ Defined in: store.ts:24
 
 > **resolver**: (`href`) => `string`
 
-Defined in: store.ts:25
+Defined in: src/store.ts:70
 
 #### Parameters
 
@@ -180,9 +188,9 @@ Defined in: store.ts:25
 
 ### storage
 
-> **storage**: `LocalForage`
+> **storage**: `SimpleStorage`
 
-Defined in: store.ts:22
+Defined in: src/store.ts:67
 
 ***
 
@@ -190,15 +198,15 @@ Defined in: store.ts:22
 
 > **urlCache**: `Record`\<`string`, `string`\>
 
-Defined in: store.ts:21
+Defined in: src/store.ts:66
 
 ## Methods
 
 ### add()
 
-> **add**(`resources`, `force?`): `Promise`\<`any`[]\>
+> **add**(`resources`, `force?`): `Promise`\<(`Uint8Array`\<`ArrayBufferLike`\> \| `null`)[]\>
 
-Defined in: store.ts:104
+Defined in: src/store.ts:143
 
 Add all of a book resources to the store
 
@@ -220,7 +228,7 @@ force resaving resources
 
 #### Returns
 
-`Promise`\<`any`[]\>
+`Promise`\<(`Uint8Array`\<`ArrayBufferLike`\> \| `null`)[]\>
 
 store objects
 
@@ -230,7 +238,7 @@ store objects
 
 > **createUrl**(`url`, `options?`): `Promise`\<`string`\>
 
-Defined in: store.ts:319
+Defined in: src/store.ts:307
 
 Create a Url from a stored item
 
@@ -260,7 +268,7 @@ url promise with Url string
 
 > **destroy**(): `void`
 
-Defined in: store.ts:383
+Defined in: src/store.ts:341
 
 #### Returns
 
@@ -272,7 +280,7 @@ Defined in: store.ts:383
 
 > **getBase64**(`url`, `mimeType?`): `Promise`\<`string` \| `undefined`\>
 
-Defined in: store.ts:291
+Defined in: src/store.ts:282
 
 Get a base64 encoded result from Storage by Url
 
@@ -298,7 +306,7 @@ base64 encoded
 
 > **getBlob**(`url`, `mimeType?`): `Promise`\<`Blob` \| `undefined`\>
 
-Defined in: store.ts:243
+Defined in: src/store.ts:249
 
 Get a Blob from Storage by Url
 
@@ -320,9 +328,9 @@ Get a Blob from Storage by Url
 
 ### getText()
 
-> **getText**(`url`, `mimeType?`): `Promise`\<`string` \| `undefined`\>
+> **getText**(`url`, `_mimeType?`): `Promise`\<`string` \| `undefined`\>
 
-Defined in: store.ts:262
+Defined in: src/store.ts:267
 
 Get Text from Storage by Url
 
@@ -332,7 +340,7 @@ Get Text from Storage by Url
 
 `string`
 
-##### mimeType?
+##### \_mimeType?
 
 `string`
 
@@ -344,9 +352,9 @@ Get Text from Storage by Url
 
 ### put()
 
-> **put**(`url`, `withCredentials?`, `headers?`): `Promise`\<`any`\>
+> **put**(`url`, `withCredentials?`, `headers?`): `Promise`\<`Uint8Array`\<`ArrayBufferLike`\> \| `null`\>
 
-Defined in: store.ts:132
+Defined in: src/store.ts:171
 
 Put binary data from a url to storage
 
@@ -368,15 +376,15 @@ a url to request from storage
 
 #### Returns
 
-`Promise`\<`any`\>
+`Promise`\<`Uint8Array`\<`ArrayBufferLike`\> \| `null`\>
 
 ***
 
 ### request()
 
-> **request**(`url`, `type?`, `withCredentials?`, `headers?`): `Promise`\<`any`\>
+> **request**(`url`, `type?`, `withCredentials?`, `headers?`): `Promise`\<`unknown`\>
 
-Defined in: store.ts:153
+Defined in: src/store.ts:192
 
 Request a url
 
@@ -404,15 +412,15 @@ specify the type of the returned result
 
 #### Returns
 
-`Promise`\<`any`\>
+`Promise`\<`unknown`\>
 
 ***
 
 ### retrieve()
 
-> **retrieve**(`url`, `type?`): `Promise`\<`any`\>
+> **retrieve**(`url`, `type?`): `Promise`\<`unknown`\>
 
-Defined in: store.ts:174
+Defined in: src/store.ts:213
 
 Request a url from storage
 
@@ -432,7 +440,7 @@ specify the type of the returned result
 
 #### Returns
 
-`Promise`\<`any`\>
+`Promise`\<`unknown`\>
 
 ***
 
@@ -440,7 +448,7 @@ specify the type of the returned result
 
 > **revokeUrl**(`url`): `void`
 
-Defined in: store.ts:377
+Defined in: src/store.ts:336
 
 Revoke Temp Url for a archive item
 

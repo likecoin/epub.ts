@@ -6,7 +6,7 @@
 
 # Class: Archive
 
-Defined in: archive.ts:11
+Defined in: src/archive.ts:13
 
 Handles Unzipping a requesting files from an Epub Archive
 
@@ -16,7 +16,7 @@ Handles Unzipping a requesting files from an Epub Archive
 
 > **new Archive**(): `Archive`
 
-Defined in: archive.ts:15
+Defined in: src/archive.ts:17
 
 #### Returns
 
@@ -28,15 +28,15 @@ Defined in: archive.ts:15
 
 > **urlCache**: `Record`\<`string`, `string`\>
 
-Defined in: archive.ts:13
+Defined in: src/archive.ts:15
 
 ***
 
 ### zip
 
-> **zip**: `JSZip`
+> **zip**: `JSZip` \| `undefined`
 
-Defined in: archive.ts:12
+Defined in: src/archive.ts:14
 
 ## Methods
 
@@ -44,7 +44,7 @@ Defined in: archive.ts:12
 
 > **createUrl**(`url`, `options?`): `Promise`\<`string`\>
 
-Defined in: archive.ts:188
+Defined in: src/archive.ts:160
 
 Create a Url from an unarchived item
 
@@ -74,7 +74,7 @@ url promise with Url string
 
 > **destroy**(): `void`
 
-Defined in: archive.ts:250
+Defined in: src/archive.ts:196
 
 #### Returns
 
@@ -86,7 +86,7 @@ Defined in: archive.ts:250
 
 > **getBase64**(`url`, `mimeType?`): `Promise`\<`string`\> \| `undefined`
 
-Defined in: archive.ts:169
+Defined in: src/archive.ts:141
 
 Get a base64 encoded result from Archive by Url
 
@@ -112,7 +112,7 @@ base64 encoded
 
 > **getBlob**(`url`, `mimeType?`): `Promise`\<`Blob`\> \| `undefined`
 
-Defined in: archive.ts:132
+Defined in: src/archive.ts:104
 
 Get a Blob from Archive by Url
 
@@ -136,7 +136,7 @@ Get a Blob from Archive by Url
 
 > **getText**(`url`, `_encoding?`): `Promise`\<`string`\> \| `undefined`
 
-Defined in: archive.ts:151
+Defined in: src/archive.ts:123
 
 Get Text from Archive by Url
 
@@ -162,7 +162,7 @@ text content
 
 > **open**(`input`, `isBase64?`): `Promise`\<`JSZip`\>
 
-Defined in: archive.ts:42
+Defined in: src/archive.ts:44
 
 Open an archive
 
@@ -170,7 +170,7 @@ Open an archive
 
 ##### input
 
-`string` | `ArrayBuffer` | `Blob`
+`string` | `Blob` | `ArrayBuffer`
 
 ##### isBase64?
 
@@ -190,7 +190,7 @@ zipfile
 
 > **openUrl**(`zipUrl`, `isBase64?`): `Promise`\<`JSZip`\>
 
-Defined in: archive.ts:52
+Defined in: src/archive.ts:54
 
 Load and Open an archive
 
@@ -216,9 +216,9 @@ zipfile
 
 ### request()
 
-> **request**(`url`, `type?`): `Promise`\<`any`\>
+> **request**(`url`, `type?`): `Promise`\<`unknown`\>
 
-Defined in: archive.ts:65
+Defined in: src/archive.ts:67
 
 Request a url from the archive
 
@@ -238,7 +238,7 @@ specify the type of the returned result
 
 #### Returns
 
-`Promise`\<`any`\>
+`Promise`\<`unknown`\>
 
 ***
 
@@ -246,7 +246,7 @@ specify the type of the returned result
 
 > **revokeUrl**(`url`): `void`
 
-Defined in: archive.ts:244
+Defined in: src/archive.ts:191
 
 Revoke Temp Url for a archive item
 

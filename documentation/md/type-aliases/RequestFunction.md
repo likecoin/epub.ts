@@ -6,9 +6,9 @@
 
 # Type Alias: RequestFunction()
 
-> **RequestFunction** = (`url`, `type?`, `withCredentials?`, `headers?`) => `Promise`\<`any`\>
+> **RequestFunction** = (`url`, `type?`, `withCredentials?`, `headers?`) => `Promise`\<`unknown`\>
 
-Defined in: types.ts:226
+Defined in: src/types.ts:234
 
 ## Parameters
 
@@ -30,4 +30,4 @@ Defined in: types.ts:226
 
 ## Returns
 
-`Promise`\<`any`\>
+`Promise`\<`unknown`\>

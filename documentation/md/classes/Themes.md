@@ -6,7 +6,7 @@
 
 # Class: Themes
 
-Defined in: themes.ts:11
+Defined in: src/themes.ts:11
 
 Themes to apply to displayed content
 
@@ -18,7 +18,7 @@ Themes to apply to displayed content
 
 > **new Themes**(`rendition`): `Themes`
 
-Defined in: themes.ts:18
+Defined in: src/themes.ts:18
 
 #### Parameters
 
@@ -34,41 +34,41 @@ Defined in: themes.ts:18
 
 ### \_current
 
-> **\_current**: `string`
+> **\_current**: `string` \| `undefined`
 
-Defined in: themes.ts:15
+Defined in: src/themes.ts:15
 
 ***
 
 ### \_injected
 
-> **\_injected**: `string`[]
+> **\_injected**: `string`[] \| `undefined`
 
-Defined in: themes.ts:16
+Defined in: src/themes.ts:16
 
 ***
 
 ### \_overrides
 
-> **\_overrides**: `Record`\<`string`, \{ `priority`: `boolean`; `value`: `string`; \}\>
+> **\_overrides**: `Record`\<`string`, \{ `priority`: `boolean`; `value`: `string`; \}\> \| `undefined`
 
-Defined in: themes.ts:14
+Defined in: src/themes.ts:14
 
 ***
 
 ### \_themes
 
-> **\_themes**: `Record`\<`string`, [`ThemeEntry`](../interfaces/ThemeEntry.md)\>
+> **\_themes**: `Record`\<`string`, [`ThemeEntry`](../interfaces/ThemeEntry.md)\> \| `undefined`
 
-Defined in: themes.ts:13
+Defined in: src/themes.ts:13
 
 ***
 
 ### rendition
 
-> **rendition**: [`Rendition`](Rendition.md)
+> **rendition**: [`Rendition`](Rendition.md) \| `undefined`
 
-Defined in: themes.ts:12
+Defined in: src/themes.ts:12
 
 ## Methods
 
@@ -76,7 +76,7 @@ Defined in: themes.ts:12
 
 > **add**(`name`, `contents`): `void`
 
-Defined in: themes.ts:189
+Defined in: src/themes.ts:189
 
 Add Theme to contents
 
@@ -100,7 +100,7 @@ Add Theme to contents
 
 > **default**(`theme`): `void`
 
-Defined in: themes.ts:65
+Defined in: src/themes.ts:65
 
 Add a default theme to be used by a rendition
 
@@ -130,7 +130,7 @@ themes.register({ "body": { "color": "purple"}})
 
 > **destroy**(): `void`
 
-Defined in: themes.ts:266
+Defined in: src/themes.ts:266
 
 #### Returns
 
@@ -142,7 +142,7 @@ Defined in: themes.ts:266
 
 > **font**(`f`): `void`
 
-Defined in: themes.ts:262
+Defined in: src/themes.ts:262
 
 Adjust the font-family of a rendition
 
@@ -162,7 +162,7 @@ Adjust the font-family of a rendition
 
 > **fontSize**(`size`): `void`
 
-Defined in: themes.ts:254
+Defined in: src/themes.ts:254
 
 Adjust the font size of a rendition
 
@@ -182,7 +182,7 @@ Adjust the font size of a rendition
 
 > **inject**(`contents`): `void`
 
-Defined in: themes.ts:164
+Defined in: src/themes.ts:164
 
 Inject all themes into contents
 
@@ -202,7 +202,7 @@ Inject all themes into contents
 
 > **override**(`name`, `value`, `priority?`): `void`
 
-Defined in: themes.ts:213
+Defined in: src/themes.ts:213
 
 Add override
 
@@ -230,7 +230,7 @@ Add override
 
 > **overrides**(`contents`): `void`
 
-Defined in: themes.ts:240
+Defined in: src/themes.ts:240
 
 Add all overrides
 
@@ -250,17 +250,17 @@ contents to apply overrides to
 
 ### register()
 
-> **register**(...`_args`): `void`
+> **register**(...`args`): `void`
 
-Defined in: themes.ts:41
+Defined in: src/themes.ts:41
 
 Add themes to be used by a rendition
 
 #### Parameters
 
-##### \_args
+##### args
 
-...`any`[]
+...(`string` \| `Record`\<`string`, `string` \| `Record`\<`string`, `Record`\<`string`, `string`\>\>\>)[]
 
 #### Returns
 
@@ -286,7 +286,7 @@ themes.register({ "light" : {...}, "dark" : {...}})
 
 > **registerCss**(`name`, `css`): `void`
 
-Defined in: themes.ts:99
+Defined in: src/themes.ts:99
 
 Register a theme by passing its css as string
 
@@ -310,7 +310,7 @@ Register a theme by passing its css as string
 
 > **registerRules**(`name`, `rules`): `void`
 
-Defined in: themes.ts:124
+Defined in: src/themes.ts:124
 
 Register rule
 
@@ -334,7 +334,7 @@ Register rule
 
 > **registerThemes**(`themes`): `void`
 
-Defined in: themes.ts:81
+Defined in: src/themes.ts:81
 
 Register themes object
 
@@ -354,7 +354,7 @@ Register themes object
 
 > **registerUrl**(`name`, `input`): `void`
 
-Defined in: themes.ts:111
+Defined in: src/themes.ts:111
 
 Register a url
 
@@ -378,7 +378,7 @@ Register a url
 
 > **removeOverride**(`name`): `void`
 
-Defined in: themes.ts:226
+Defined in: src/themes.ts:226
 
 #### Parameters
 
@@ -396,7 +396,7 @@ Defined in: themes.ts:226
 
 > **select**(`name`): `void`
 
-Defined in: themes.ts:136
+Defined in: src/themes.ts:136
 
 Select a theme
 
@@ -416,7 +416,7 @@ Select a theme
 
 > **update**(`name`): `void`
 
-Defined in: themes.ts:153
+Defined in: src/themes.ts:153
 
 Update a theme
 

@@ -6,7 +6,7 @@
 
 # Interface: LandmarkItem
 
-Defined in: types.ts:81
+Defined in: src/types.ts:85
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: types.ts:81
 
 > `optional` **href**: `string`
 
-Defined in: types.ts:82
+Defined in: src/types.ts:86
 
 ***
 
@@ -22,7 +22,7 @@ Defined in: types.ts:82
 
 > `optional` **label**: `string`
 
-Defined in: types.ts:83
+Defined in: src/types.ts:87
 
 ***
 
@@ -30,4 +30,4 @@ Defined in: types.ts:83
 
 > `optional` **type**: `string`
 
-Defined in: types.ts:84
+Defined in: src/types.ts:88

@@ -6,7 +6,7 @@
 
 # Class: Packaging
 
-Defined in: packaging.ts:7
+Defined in: src/packaging.ts:15
 
 Open Packaging Format Parser
 
@@ -16,7 +16,7 @@ Open Packaging Format Parser
 
 > **new Packaging**(`packageDocument?`): `Packaging`
 
-Defined in: packaging.ts:18
+Defined in: src/packaging.ts:26
 
 #### Parameters
 
@@ -34,7 +34,7 @@ Defined in: packaging.ts:18
 
 > **coverPath**: `string`
 
-Defined in: packaging.ts:11
+Defined in: src/packaging.ts:19
 
 ***
 
@@ -42,7 +42,7 @@ Defined in: packaging.ts:11
 
 > **manifest**: [`PackagingManifestObject`](../interfaces/PackagingManifestObject.md)
 
-Defined in: packaging.ts:8
+Defined in: src/packaging.ts:16
 
 ***
 
@@ -50,7 +50,7 @@ Defined in: packaging.ts:8
 
 > **metadata**: [`PackagingMetadataObject`](../interfaces/PackagingMetadataObject.md)
 
-Defined in: packaging.ts:14
+Defined in: src/packaging.ts:22
 
 ***
 
@@ -58,7 +58,7 @@ Defined in: packaging.ts:14
 
 > **navPath**: `string`
 
-Defined in: packaging.ts:9
+Defined in: src/packaging.ts:17
 
 ***
 
@@ -66,7 +66,7 @@ Defined in: packaging.ts:9
 
 > **ncxPath**: `string`
 
-Defined in: packaging.ts:10
+Defined in: src/packaging.ts:18
 
 ***
 
@@ -74,7 +74,7 @@ Defined in: packaging.ts:10
 
 > **spine**: [`PackagingSpineItem`](../interfaces/PackagingSpineItem.md)[]
 
-Defined in: packaging.ts:13
+Defined in: src/packaging.ts:21
 
 ***
 
@@ -82,7 +82,7 @@ Defined in: packaging.ts:13
 
 > **spineNodeIndex**: `number`
 
-Defined in: packaging.ts:12
+Defined in: src/packaging.ts:20
 
 ***
 
@@ -90,7 +90,7 @@ Defined in: packaging.ts:12
 
 > **toc**: [`NavItem`](../interfaces/NavItem.md)[]
 
-Defined in: packaging.ts:16
+Defined in: src/packaging.ts:24
 
 ***
 
@@ -98,7 +98,7 @@ Defined in: packaging.ts:16
 
 > **uniqueIdentifier**: `string`
 
-Defined in: packaging.ts:15
+Defined in: src/packaging.ts:23
 
 ## Methods
 
@@ -106,7 +106,7 @@ Defined in: packaging.ts:15
 
 > **destroy**(): `void`
 
-Defined in: packaging.ts:368
+Defined in: src/packaging.ts:383
 
 #### Returns
 
@@ -118,7 +118,7 @@ Defined in: packaging.ts:368
 
 > **load**(`json`): [`PackagingObject`](../interfaces/PackagingObject.md) & `object`
 
-Defined in: packaging.ts:331
+Defined in: src/packaging.ts:346
 
 Load JSON Manifest
 
@@ -126,7 +126,7 @@ Load JSON Manifest
 
 ##### json
 
-`Record`\<`string`, `any`\>
+`WebPubManifest`
 
 JSON manifest data
 
@@ -142,7 +142,7 @@ parsed package parts
 
 > **parse**(`packageDocument`): [`PackagingObject`](../interfaces/PackagingObject.md)
 
-Defined in: packaging.ts:37
+Defined in: src/packaging.ts:45
 
 Parse OPF XML
 

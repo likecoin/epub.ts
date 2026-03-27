@@ -39,10 +39,15 @@ All formats are single-file bundles. `preserveModules` was considered for ESM bu
 ## Known Limitations
 
 - **Node.js parsing-only support** — `@likecoin/epub-ts/node` entry point provides metadata, spine, navigation, and section rendering via `linkedom`; no browser rendering
-- **~14 `any` types remain** — intentionally kept: 7 in `annotations.ts` (public API `Record<string, any>` for user data), 7 in event emitter infrastructure (`EventMap`, mixin implementation)
+- **~6 `any` types remain** — intentionally kept: 3 in event emitter infrastructure, 2 in `EventMap` type definition, 1 in `HookCallback`
 - **0 `Function` types in code** — all 33 replaced with `HookCallback`, `ViewManagerConstructor`, `ViewConstructor`, `EventListener`, or typed function signatures
 
 ---
 
 ## Next Steps
+
+- **Test coverage for `InlineView`** — `src/managers/views/inline.ts` (480 lines) has no test file; largest untested module
+- **Annotation rendering** — `highlight()`, `underline()`, `mark()` in `annotations.ts` have TODO stubs needing View/Contents integration
+- **14 inherited TODOs** — across 8 files, mostly from original epubjs (see `grep -r TODO src/`)
+- **Logger abstraction** — 9 `eslint-disable no-console` suppressions could be replaced with a pluggable logger
 

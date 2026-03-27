@@ -6,29 +6,21 @@
 
 # Interface: Deferred\<T\>
 
-Defined in: types.ts:8
+Defined in: src/types.ts:9
 
 ## Type Parameters
 
 ### T
 
-`T` = `any`
+`T` = `unknown`
 
 ## Properties
-
-### id
-
-> **id**: `string`
-
-Defined in: types.ts:9
-
-***
 
 ### promise
 
 > **promise**: `Promise`\<`T`\>
 
-Defined in: types.ts:12
+Defined in: src/types.ts:12
 
 ***
 
@@ -36,13 +28,13 @@ Defined in: types.ts:12
 
 > **reject**: (`reason?`) => `void`
 
-Defined in: types.ts:11
+Defined in: src/types.ts:11
 
 #### Parameters
 
 ##### reason?
 
-`any`
+`unknown`
 
 #### Returns
 
@@ -52,13 +44,13 @@ Defined in: types.ts:11
 
 ### resolve()
 
-> **resolve**: (`value?`) => `void`
+> **resolve**: (`value`) => `void`
 
-Defined in: types.ts:10
+Defined in: src/types.ts:10
 
 #### Parameters
 
-##### value?
+##### value
 
 `T` | `PromiseLike`\<`T`\>
 

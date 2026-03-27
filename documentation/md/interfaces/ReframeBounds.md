@@ -6,7 +6,7 @@
 
 # Interface: ReframeBounds
 
-Defined in: types.ts:230
+Defined in: src/types.ts:241
 
 ## Extends
 
@@ -18,7 +18,7 @@ Defined in: types.ts:230
 
 > **height**: `number`
 
-Defined in: types.ts:229
+Defined in: src/types.ts:240
 
 #### Inherited from
 
@@ -30,7 +30,7 @@ Defined in: types.ts:229
 
 > **heightDelta**: `number`
 
-Defined in: types.ts:230
+Defined in: src/types.ts:241
 
 ***
 
@@ -38,7 +38,7 @@ Defined in: types.ts:230
 
 > **width**: `number`
 
-Defined in: types.ts:229
+Defined in: src/types.ts:240
 
 #### Inherited from
 
@@ -50,4 +50,4 @@ Defined in: types.ts:229
 
 > **widthDelta**: `number`
 
-Defined in: types.ts:230
+Defined in: src/types.ts:241

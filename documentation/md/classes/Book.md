@@ -6,7 +6,7 @@
 
 # Class: Book
 
-Defined in: book.ts:75
+Defined in: src/book.ts:80
 
 An Epub representation with methods for the loading, parsing and manipulation
 of its contents.
@@ -59,7 +59,7 @@ new Book({ replacements: "blobUrl" })
 
 ## Implements
 
-- [`IEventEmitter`](../interfaces/IEventEmitter.md)
+- [`IEventEmitter`](../interfaces/IEventEmitter.md)\<[`BookEvents`](../interfaces/BookEvents.md)\>
 
 ## Constructors
 
@@ -67,13 +67,13 @@ new Book({ replacements: "blobUrl" })
 
 > **new Book**(`url?`, `options?`): `Book`
 
-Defined in: book.ts:106
+Defined in: src/book.ts:117
 
 #### Parameters
 
 ##### url?
 
-`string` | `ArrayBuffer` | `Blob` | [`BookOptions`](../interfaces/BookOptions.md)
+`string` | `Blob` | `ArrayBuffer` | [`BookOptions`](../interfaces/BookOptions.md)
 
 ##### options?
 
@@ -89,7 +89,7 @@ Defined in: book.ts:106
 
 > **archive**: [`Archive`](Archive.md) \| `undefined`
 
-Defined in: book.ts:92
+Defined in: src/book.ts:103
 
 ***
 
@@ -97,15 +97,15 @@ Defined in: book.ts:92
 
 > **archived**: `boolean`
 
-Defined in: book.ts:91
+Defined in: src/book.ts:102
 
 ***
 
 ### container
 
-> **container**: `Container` \| `undefined`
+> **container**: [`Container`](Container.md) \| `undefined`
 
-Defined in: book.ts:96
+Defined in: src/book.ts:107
 
 ***
 
@@ -113,7 +113,7 @@ Defined in: book.ts:96
 
 > **cover**: `string`
 
-Defined in: book.ts:100
+Defined in: src/book.ts:111
 
 ***
 
@@ -121,25 +121,31 @@ Defined in: book.ts:100
 
 > **displayOptions**: [`DisplayOptions`](DisplayOptions.md) \| `undefined`
 
-Defined in: book.ts:98
+Defined in: src/book.ts:109
 
 ***
 
 ### emit()
 
-> **emit**: (`type`, ...`args`) => `void`
+> **emit**: \<`K`\>(`type`, ...`args`) => `void`
 
-Defined in: book.ts:104
+Defined in: src/book.ts:115
+
+#### Type Parameters
+
+##### K
+
+`K` *extends* `string`
 
 #### Parameters
 
 ##### type
 
-`string`
+`K`
 
 ##### args
 
-...`any`[]
+...[`BookEvents`](../interfaces/BookEvents.md)\[`K`\]
 
 #### Returns
 
@@ -155,7 +161,7 @@ Defined in: book.ts:104
 
 > **isOpen**: `boolean`
 
-Defined in: book.ts:79
+Defined in: src/book.ts:84
 
 ***
 
@@ -163,53 +169,59 @@ Defined in: book.ts:79
 
 > **isRendered**: `boolean`
 
-Defined in: book.ts:83
+Defined in: src/book.ts:94
 
 ***
 
 ### loaded
 
-> **loaded**: `BookLoadedState` \| `undefined`
+> **loaded**: `BookLoadedState`
 
-Defined in: book.ts:81
+Defined in: src/book.ts:86
 
 ***
 
 ### loading
 
-> **loading**: `BookLoadingState` \| `undefined`
+> **loading**: `BookLoadingState`
 
-Defined in: book.ts:80
+Defined in: src/book.ts:85
 
 ***
 
 ### locations
 
-> **locations**: [`Locations`](Locations.md) \| `undefined`
+> **locations**: [`Locations`](Locations.md)
 
-Defined in: book.ts:86
+Defined in: src/book.ts:97
 
 ***
 
 ### navigation
 
-> **navigation**: [`Navigation`](Navigation.md) \| `undefined`
+> **navigation**: [`Navigation`](Navigation.md)
 
-Defined in: book.ts:87
+Defined in: src/book.ts:98
 
 ***
 
 ### off()
 
-> **off**: (`type`, `fn?`) => `any`
+> **off**: \<`K`\>(`type`, `fn?`) => `void`
 
-Defined in: book.ts:103
+Defined in: src/book.ts:114
+
+#### Type Parameters
+
+##### K
+
+`K` *extends* `string`
 
 #### Parameters
 
 ##### type
 
-`string`
+`K`
 
 ##### fn?
 
@@ -217,7 +229,7 @@ Defined in: book.ts:103
 
 #### Returns
 
-`any`
+`void`
 
 #### Implementation of
 
@@ -227,15 +239,21 @@ Defined in: book.ts:103
 
 ### on()
 
-> **on**: (`type`, `fn`) => `any`
+> **on**: \<`K`\>(`type`, `fn`) => `void`
 
-Defined in: book.ts:102
+Defined in: src/book.ts:113
+
+#### Type Parameters
+
+##### K
+
+`K` *extends* `string`
 
 #### Parameters
 
 ##### type
 
-`string`
+`K`
 
 ##### fn
 
@@ -243,7 +261,7 @@ Defined in: book.ts:102
 
 #### Returns
 
-`any`
+`void`
 
 #### Implementation of
 
@@ -253,17 +271,17 @@ Defined in: book.ts:102
 
 ### opened
 
-> **opened**: `Promise`\<`Book`\> \| `undefined`
+> **opened**: `Promise`\<`Book`\>
 
-Defined in: book.ts:78
+Defined in: src/book.ts:83
 
 ***
 
 ### opening
 
-> **opening**: `defer`
+> **opening**: `defer`\<`Book`\>
 
-Defined in: book.ts:77
+Defined in: src/book.ts:82
 
 ***
 
@@ -271,23 +289,23 @@ Defined in: book.ts:77
 
 > **package**: [`Packaging`](Packaging.md) \| `undefined`
 
-Defined in: book.ts:99
+Defined in: src/book.ts:110
 
 ***
 
 ### packaging
 
-> **packaging**: [`Packaging`](Packaging.md) \| `undefined`
+> **packaging**: [`Packaging`](Packaging.md)
 
-Defined in: book.ts:97
+Defined in: src/book.ts:108
 
 ***
 
 ### pageList
 
-> **pageList**: [`PageList`](PageList.md) \| `undefined`
+> **pageList**: [`PageList`](PageList.md)
 
-Defined in: book.ts:88
+Defined in: src/book.ts:99
 
 ***
 
@@ -295,15 +313,15 @@ Defined in: book.ts:88
 
 > **path**: `Path` \| `undefined`
 
-Defined in: book.ts:90
+Defined in: src/book.ts:101
 
 ***
 
 ### ready
 
-> **ready**: `Promise`\<\[[`PackagingManifestObject`](../interfaces/PackagingManifestObject.md), [`Spine`](Spine.md), [`PackagingMetadataObject`](../interfaces/PackagingMetadataObject.md), `string`, [`Navigation`](Navigation.md), [`Resources`](Resources.md), [`DisplayOptions`](DisplayOptions.md)\]\> \| `undefined`
+> **ready**: `Promise`\<\[[`PackagingManifestObject`](../interfaces/PackagingManifestObject.md), [`Spine`](Spine.md), [`PackagingMetadataObject`](../interfaces/PackagingMetadataObject.md), `string`, [`Navigation`](Navigation.md), [`Resources`](Resources.md), [`DisplayOptions`](DisplayOptions.md)\]\>
 
-Defined in: book.ts:82
+Defined in: src/book.ts:87
 
 ***
 
@@ -311,7 +329,21 @@ Defined in: book.ts:82
 
 > **rendition**: [`Rendition`](Rendition.md) \| `undefined`
 
-Defined in: book.ts:95
+Defined in: src/book.ts:106
+
+***
+
+### replacementsReady
+
+> **replacementsReady**: `Promise`\<`void`\> \| `undefined`
+
+Defined in: src/book.ts:93
+
+#### Member
+
+replacementsReady resolves when all resource
+replacement URLs (blob/base64) have been created. Undefined for
+unarchived books or when replacements are "none".
 
 ***
 
@@ -319,31 +351,31 @@ Defined in: book.ts:95
 
 > **request**: [`RequestFunction`](../type-aliases/RequestFunction.md)
 
-Defined in: book.ts:84
+Defined in: src/book.ts:95
 
 ***
 
 ### resources
 
-> **resources**: [`Resources`](Resources.md) \| `undefined`
+> **resources**: [`Resources`](Resources.md)
 
-Defined in: book.ts:94
+Defined in: src/book.ts:105
 
 ***
 
 ### settings
 
-> **settings**: [`BookOptions`](../interfaces/BookOptions.md) & `Record`\<`string`, `any`\>
+> **settings**: [`BookOptions`](../interfaces/BookOptions.md)
 
-Defined in: book.ts:76
+Defined in: src/book.ts:81
 
 ***
 
 ### spine
 
-> **spine**: [`Spine`](Spine.md) \| `undefined`
+> **spine**: [`Spine`](Spine.md)
 
-Defined in: book.ts:85
+Defined in: src/book.ts:96
 
 ***
 
@@ -351,15 +383,15 @@ Defined in: book.ts:85
 
 > **storage**: [`Store`](Store.md) \| `undefined`
 
-Defined in: book.ts:93
+Defined in: src/book.ts:104
 
 ***
 
 ### url
 
-> **url**: `Url` \| `undefined`
+> **url**: `Url`
 
-Defined in: book.ts:89
+Defined in: src/book.ts:100
 
 ## Methods
 
@@ -367,7 +399,7 @@ Defined in: book.ts:89
 
 > **canonical**(`path`): `string`
 
-Defined in: book.ts:443
+Defined in: src/book.ts:454
 
 Get a canonical link to a path
 
@@ -389,7 +421,7 @@ the canonical path string
 
 > **coverUrl**(): `Promise`\<`string` \| `null`\>
 
-Defined in: book.ts:722
+Defined in: src/book.ts:732
 
 Get the cover url
 
@@ -405,7 +437,7 @@ coverUrl
 
 > **destroy**(): `void`
 
-Defined in: book.ts:785
+Defined in: src/book.ts:798
 
 Destroy the Book and all associated objects
 
@@ -419,7 +451,7 @@ Destroy the Book and all associated objects
 
 > **getRange**(`cfiRange`): `Promise`\<`Range`\>
 
-Defined in: book.ts:757
+Defined in: src/book.ts:770
 
 Find a DOM Range for a given CFI Range
 
@@ -441,7 +473,7 @@ a epub cfi range
 
 > **key**(`identifier?`): `string`
 
-Defined in: book.ts:777
+Defined in: src/book.ts:790
 
 Generates the Book Key using the identifier in the manifest or other string provided
 
@@ -463,9 +495,9 @@ key
 
 ### load()
 
-> **load**(`path`, `_type?`): `Promise`\<`any`\>
+> **load**(`path`, `_type?`): `Promise`\<`unknown`\>
 
-Defined in: book.ts:401
+Defined in: src/book.ts:412
 
 Load a resource from the Book
 
@@ -483,7 +515,7 @@ path to the resource to load
 
 #### Returns
 
-`Promise`\<`any`\>
+`Promise`\<`unknown`\>
 
 returns a promise with the requested resource
 
@@ -493,7 +525,7 @@ returns a promise with the requested resource
 
 > **open**(`input`, `what?`): `Promise`\<`void`\>
 
-Defined in: book.ts:302
+Defined in: src/book.ts:313
 
 Open a epub or url
 
@@ -503,7 +535,7 @@ Open a epub or url
 
 Url, Path or ArrayBuffer
 
-`string` | `ArrayBuffer` | `Blob`
+`string` | `Blob` | `ArrayBuffer`
 
 ##### what?
 
@@ -529,7 +561,7 @@ book.open("/path/to/book.epub")
 
 > **renderTo**(`element`, `options?`): [`Rendition`](Rendition.md)
 
-Defined in: book.ts:628
+Defined in: src/book.ts:636
 
 Sugar to render a book to an element
 
@@ -555,7 +587,7 @@ element or string to add a rendition to
 
 > **resolve**(`path`, `absolute?`): `string`
 
-Defined in: book.ts:416
+Defined in: src/book.ts:427
 
 Resolve a path to it's absolute position in the Book
 
@@ -583,7 +615,7 @@ the resolved path string
 
 > **section**(`target`): [`Section`](Section.md) \| `null`
 
-Defined in: book.ts:618
+Defined in: src/book.ts:626
 
 Gets a Section of the Book from the Spine
 Alias for `book.spine.get`
@@ -604,7 +636,7 @@ Alias for `book.spine.get`
 
 > **setRequestCredentials**(`credentials`): `void`
 
-Defined in: book.ts:639
+Defined in: src/book.ts:647
 
 Set if request should use withCredentials
 
@@ -624,7 +656,7 @@ Set if request should use withCredentials
 
 > **setRequestHeaders**(`headers`): `void`
 
-Defined in: book.ts:647
+Defined in: src/book.ts:655
 
 Set headers request should use
 

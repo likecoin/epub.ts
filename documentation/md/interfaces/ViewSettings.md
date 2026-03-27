@@ -6,7 +6,7 @@
 
 # Interface: ViewSettings
 
-Defined in: types.ts:236
+Defined in: src/types.ts:247
 
 ## Extended by
 
@@ -18,7 +18,7 @@ Defined in: types.ts:236
 
 > `optional` **allowPopups**: `boolean`
 
-Defined in: types.ts:248
+Defined in: src/types.ts:259
 
 ***
 
@@ -26,7 +26,7 @@ Defined in: types.ts:248
 
 > `optional` **allowScriptedContent**: `boolean`
 
-Defined in: types.ts:247
+Defined in: src/types.ts:258
 
 ***
 
@@ -34,7 +34,7 @@ Defined in: types.ts:247
 
 > `optional` **axis**: `string`
 
-Defined in: types.ts:238
+Defined in: src/types.ts:249
 
 ***
 
@@ -42,7 +42,7 @@ Defined in: types.ts:238
 
 > `optional` **direction**: `string`
 
-Defined in: types.ts:239
+Defined in: src/types.ts:250
 
 ***
 
@@ -50,7 +50,7 @@ Defined in: types.ts:239
 
 > `optional` **flow**: `string`
 
-Defined in: types.ts:240
+Defined in: src/types.ts:251
 
 ***
 
@@ -58,7 +58,7 @@ Defined in: types.ts:240
 
 > `optional` **forceEvenPages**: `boolean`
 
-Defined in: types.ts:245
+Defined in: src/types.ts:256
 
 ***
 
@@ -66,7 +66,7 @@ Defined in: types.ts:245
 
 > `optional` **forceRight**: `boolean`
 
-Defined in: types.ts:246
+Defined in: src/types.ts:257
 
 ***
 
@@ -74,7 +74,7 @@ Defined in: types.ts:246
 
 > `optional` **globalLayoutProperties**: [`GlobalLayout`](GlobalLayout.md)
 
-Defined in: types.ts:249
+Defined in: src/types.ts:260
 
 ***
 
@@ -82,7 +82,7 @@ Defined in: types.ts:249
 
 > `optional` **height**: `number`
 
-Defined in: types.ts:244
+Defined in: src/types.ts:255
 
 ***
 
@@ -90,7 +90,7 @@ Defined in: types.ts:244
 
 > `optional` **ignoreClass**: `string`
 
-Defined in: types.ts:237
+Defined in: src/types.ts:248
 
 ***
 
@@ -98,7 +98,7 @@ Defined in: types.ts:237
 
 > `optional` **layout**: [`LayoutProps`](LayoutProps.md)
 
-Defined in: types.ts:241
+Defined in: src/types.ts:252
 
 ***
 
@@ -106,7 +106,7 @@ Defined in: types.ts:241
 
 > `optional` **method**: `string`
 
-Defined in: types.ts:242
+Defined in: src/types.ts:253
 
 ***
 
@@ -114,4 +114,4 @@ Defined in: types.ts:242
 
 > `optional` **width**: `number`
 
-Defined in: types.ts:243
+Defined in: src/types.ts:254

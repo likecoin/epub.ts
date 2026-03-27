@@ -6,29 +6,11 @@
 
 # Class: Contents
 
-Defined in: contents.ts:26
-
-Handles DOM manipulation, queries and events for View contents
-
-## Param
-
-Document
-
-## Param
-
-Parent Element (typically Body)
-
-## Param
-
-Section component of CFIs
-
-## Param
-
-Index in Spine of Conntent's Section
+Defined in: src/contents.ts:34
 
 ## Implements
 
-- [`IEventEmitter`](../interfaces/IEventEmitter.md)
+- [`IEventEmitter`](../interfaces/IEventEmitter.md)\<[`ContentsEvents`](../interfaces/ContentsEvents.md)\>
 
 ## Constructors
 
@@ -36,7 +18,7 @@ Index in Spine of Conntent's Section
 
 > **new Contents**(`doc`, `content?`, `cfiBase?`, `sectionIndex?`): `Contents`
 
-Defined in: contents.ts:51
+Defined in: src/contents.ts:60
 
 #### Parameters
 
@@ -62,11 +44,23 @@ Defined in: contents.ts:51
 
 ## Properties
 
+### \_\_listeners
+
+> **\_\_listeners**: `Record`\<`string`, (...`args`) => `void`[]\> \| `undefined`
+
+Defined in: src/contents.ts:38
+
+#### Implementation of
+
+[`IEventEmitter`](../interfaces/IEventEmitter.md).[`__listeners`](../interfaces/IEventEmitter.md#__listeners)
+
+***
+
 ### \_expanding
 
 > **\_expanding**: `boolean`
 
-Defined in: contents.ts:44
+Defined in: src/contents.ts:52
 
 ***
 
@@ -74,7 +68,33 @@ Defined in: contents.ts:44
 
 > **\_layoutStyle**: `string`
 
-Defined in: contents.ts:49
+Defined in: src/contents.ts:58
+
+***
+
+### \_mediaQueryHandlers
+
+> **\_mediaQueryHandlers**: `object`[]
+
+Defined in: src/contents.ts:56
+
+#### handler()
+
+> **handler**: (`e`) => `void`
+
+##### Parameters
+
+###### e
+
+`MediaQueryListEvent`
+
+##### Returns
+
+`void`
+
+#### mql
+
+> **mql**: `MediaQueryList`
 
 ***
 
@@ -82,7 +102,7 @@ Defined in: contents.ts:49
 
 > **\_onSelectionChange**: (`e`) => `void` \| `undefined`
 
-Defined in: contents.ts:47
+Defined in: src/contents.ts:55
 
 ***
 
@@ -90,7 +110,7 @@ Defined in: contents.ts:47
 
 > **\_resizeCheck**: () => `void` \| `undefined`
 
-Defined in: contents.ts:45
+Defined in: src/contents.ts:53
 
 ***
 
@@ -98,7 +118,7 @@ Defined in: contents.ts:45
 
 > **\_size**: `object`
 
-Defined in: contents.ts:36
+Defined in: src/contents.ts:45
 
 #### height
 
@@ -114,7 +134,7 @@ Defined in: contents.ts:36
 
 > **\_triggerEvent**: (`e`) => `void` \| `undefined`
 
-Defined in: contents.ts:46
+Defined in: src/contents.ts:54
 
 ***
 
@@ -122,7 +142,7 @@ Defined in: contents.ts:46
 
 > **active**: `boolean`
 
-Defined in: contents.ts:40
+Defined in: src/contents.ts:49
 
 ***
 
@@ -130,7 +150,7 @@ Defined in: contents.ts:40
 
 > **called**: `number`
 
-Defined in: contents.ts:39
+Defined in: src/contents.ts:48
 
 ***
 
@@ -138,7 +158,7 @@ Defined in: contents.ts:39
 
 > **cfiBase**: `string`
 
-Defined in: contents.ts:38
+Defined in: src/contents.ts:47
 
 ***
 
@@ -146,7 +166,7 @@ Defined in: contents.ts:38
 
 > **content**: `HTMLElement`
 
-Defined in: contents.ts:34
+Defined in: src/contents.ts:43
 
 ***
 
@@ -154,7 +174,7 @@ Defined in: contents.ts:34
 
 > **document**: `Document`
 
-Defined in: contents.ts:32
+Defined in: src/contents.ts:41
 
 ***
 
@@ -162,25 +182,31 @@ Defined in: contents.ts:32
 
 > **documentElement**: `HTMLElement`
 
-Defined in: contents.ts:33
+Defined in: src/contents.ts:42
 
 ***
 
 ### emit()
 
-> **emit**: (`type`, ...`args`) => `void`
+> **emit**: \<`K`\>(`type`, ...`args`) => `void`
 
-Defined in: contents.ts:29
+Defined in: src/contents.ts:37
+
+#### Type Parameters
+
+##### K
+
+`K` *extends* `string`
 
 #### Parameters
 
 ##### type
 
-`string`
+`K`
 
 ##### args
 
-...`any`[]
+...[`ContentsEvents`](../interfaces/ContentsEvents.md)\[`K`\]
 
 #### Returns
 
@@ -196,15 +222,7 @@ Defined in: contents.ts:29
 
 > **epubcfi**: [`EpubCFI`](EpubCFI.md)
 
-Defined in: contents.ts:31
-
-***
-
-### expanding
-
-> **expanding**: `Timeout` \| `undefined`
-
-Defined in: contents.ts:42
+Defined in: src/contents.ts:40
 
 ***
 
@@ -212,21 +230,27 @@ Defined in: contents.ts:42
 
 > **observer**: `ResizeObserver` \| `MutationObserver` \| `undefined`
 
-Defined in: contents.ts:41
+Defined in: src/contents.ts:50
 
 ***
 
 ### off()
 
-> **off**: (`type`, `fn?`) => `this`
+> **off**: \<`K`\>(`type`, `fn?`) => `void`
 
-Defined in: contents.ts:28
+Defined in: src/contents.ts:36
+
+#### Type Parameters
+
+##### K
+
+`K` *extends* `string`
 
 #### Parameters
 
 ##### type
 
-`string`
+`K`
 
 ##### fn?
 
@@ -234,7 +258,7 @@ Defined in: contents.ts:28
 
 #### Returns
 
-`this`
+`void`
 
 #### Implementation of
 
@@ -244,15 +268,21 @@ Defined in: contents.ts:28
 
 ### on()
 
-> **on**: (`type`, `fn`) => `this`
+> **on**: \<`K`\>(`type`, `fn`) => `void`
 
-Defined in: contents.ts:27
+Defined in: src/contents.ts:35
+
+#### Type Parameters
+
+##### K
+
+`K` *extends* `string`
 
 #### Parameters
 
 ##### type
 
-`string`
+`K`
 
 ##### fn
 
@@ -260,7 +290,7 @@ Defined in: contents.ts:27
 
 #### Returns
 
-`this`
+`void`
 
 #### Implementation of
 
@@ -272,7 +302,7 @@ Defined in: contents.ts:27
 
 > **onResize**: (`size`) => `void` \| `undefined`
 
-Defined in: contents.ts:43
+Defined in: src/contents.ts:51
 
 ***
 
@@ -280,7 +310,7 @@ Defined in: contents.ts:43
 
 > **sectionIndex**: `number`
 
-Defined in: contents.ts:37
+Defined in: src/contents.ts:46
 
 ***
 
@@ -288,7 +318,7 @@ Defined in: contents.ts:37
 
 > **selectionEndTimeout**: `Timeout` \| `undefined`
 
-Defined in: contents.ts:48
+Defined in: src/contents.ts:57
 
 ***
 
@@ -296,7 +326,7 @@ Defined in: contents.ts:48
 
 > **window**: `Window`
 
-Defined in: contents.ts:35
+Defined in: src/contents.ts:44
 
 ## Accessors
 
@@ -304,15 +334,15 @@ Defined in: contents.ts:35
 
 #### Get Signature
 
-> **get** `static` **listenedEvents**(): readonly \[`"keydown"`, `"keyup"`, `"keypress"`, `"mouseup"`, `"mousedown"`, `"mousemove"`, `"click"`, `"touchend"`, `"touchstart"`, `"touchmove"`\]
+> **get** `static` **listenedEvents**(): readonly \[`"keydown"`, `"keyup"`, `"keypress"`, `"mouseup"`, `"mousedown"`, `"mousemove"`, `"click"`, `"dblclick"`, `"touchend"`, `"touchstart"`, `"touchmove"`\]
 
-Defined in: contents.ts:77
+Defined in: src/contents.ts:87
 
 Get DOM events that are listened for and passed along
 
 ##### Returns
 
-readonly \[`"keydown"`, `"keyup"`, `"keypress"`, `"mouseup"`, `"mousedown"`, `"mousemove"`, `"click"`, `"touchend"`, `"touchstart"`, `"touchmove"`\]
+readonly \[`"keydown"`, `"keyup"`, `"keypress"`, `"mouseup"`, `"mousedown"`, `"mousemove"`, `"click"`, `"dblclick"`, `"touchend"`, `"touchstart"`, `"touchmove"`\]
 
 ## Methods
 
@@ -320,7 +350,7 @@ readonly \[`"keydown"`, `"keyup"`, `"keypress"`, `"mouseup"`, `"mousedown"`, `"m
 
 > **\_getStylesheetNode**(`key?`): `false` \| `HTMLStyleElement`
 
-Defined in: contents.ts:753
+Defined in: src/contents.ts:759
 
 #### Parameters
 
@@ -338,7 +368,7 @@ Defined in: contents.ts:753
 
 > **addClass**(`className`): `void`
 
-Defined in: contents.ts:877
+Defined in: src/contents.ts:883
 
 Add a class to the contents container
 
@@ -358,7 +388,7 @@ Add a class to the contents container
 
 > **addScript**(`src`): `Promise`\<`boolean`\>
 
-Defined in: contents.ts:845
+Defined in: src/contents.ts:851
 
 Append a script tag to the document head
 
@@ -382,7 +412,7 @@ loaded
 
 > **addStylesheet**(`src`): `Promise`\<`boolean`\>
 
-Defined in: contents.ts:717
+Defined in: src/contents.ts:723
 
 Append a stylesheet link to the document head
 
@@ -404,7 +434,7 @@ url
 
 > **addStylesheetCss**(`serializedCss`, `key?`): `boolean`
 
-Defined in: contents.ts:775
+Defined in: src/contents.ts:781
 
 Append stylesheet css
 
@@ -430,7 +460,7 @@ If the key is the same, the CSS will be replaced instead of inserted
 
 > **addStylesheetRules**(`rules`, `key?`): `void`
 
-Defined in: contents.ts:792
+Defined in: src/contents.ts:798
 
 Append stylesheet rules to a generate stylesheet
 Array: https://developer.mozilla.org/en-US/docs/Web/API/CSSStyleSheet/insertRule
@@ -458,7 +488,7 @@ If the key is the same, the CSS will be replaced instead of inserted
 
 > **cfiFromNode**(`node`, `ignoreClass?`): `string`
 
-Defined in: contents.ts:1027
+Defined in: src/contents.ts:1033
 
 Get an EpubCFI from a Dom node
 
@@ -484,7 +514,7 @@ cfi
 
 > **cfiFromRange**(`range`, `ignoreClass?`): `string`
 
-Defined in: contents.ts:1017
+Defined in: src/contents.ts:1023
 
 Get an EpubCFI from a Dom Range
 
@@ -510,7 +540,7 @@ cfi
 
 > **columns**(`width`, `height`, `columnWidth`, `gap`, `dir?`): `void`
 
-Defined in: contents.ts:1072
+Defined in: src/contents.ts:1076
 
 Apply columns to the contents for pagination
 
@@ -546,7 +576,7 @@ Apply columns to the contents for pagination
 
 > **contentHeight**(`h?`): `number`
 
-Defined in: contents.ts:153
+Defined in: src/contents.ts:163
 
 Get or Set height of the contents
 
@@ -568,7 +598,7 @@ height
 
 > **contentWidth**(`w?`): `number`
 
-Defined in: contents.ts:131
+Defined in: src/contents.ts:141
 
 Get or Set width of the contents
 
@@ -590,7 +620,7 @@ width
 
 > **css**(`property`, `value?`, `priority?`): `string`
 
-Defined in: contents.ts:274
+Defined in: src/contents.ts:284
 
 Set Css styles on the contents element (typically Body)
 
@@ -620,7 +650,7 @@ set as "important"
 
 > **destroy**(): `void`
 
-Defined in: contents.ts:1279
+Defined in: src/contents.ts:1287
 
 #### Returns
 
@@ -632,7 +662,7 @@ Defined in: contents.ts:1279
 
 > **direction**(`dir?`): `void`
 
-Defined in: contents.ts:1195
+Defined in: src/contents.ts:1206
 
 Set the direction of the text
 
@@ -654,7 +684,7 @@ Set the direction of the text
 
 > **fit**(`width`, `height`, `section?`): `void`
 
-Defined in: contents.ts:1154
+Defined in: src/contents.ts:1161
 
 Fit contents into a fixed width and height
 
@@ -682,7 +712,7 @@ Fit contents into a fixed width and height
 
 > **height**(`h?`): `number`
 
-Defined in: contents.ts:109
+Defined in: src/contents.ts:119
 
 Get or Set height
 
@@ -704,7 +734,7 @@ height
 
 > **locationOf**(`target`, `ignoreClass?`): `object`
 
-Defined in: contents.ts:623
+Defined in: src/contents.ts:629
 
 Get the location offset of a EpubCFI or an #id
 
@@ -734,29 +764,11 @@ for the cfi
 
 ***
 
-### map()
-
-> **map**(`layout`): [`EpubCFIPair`](../interfaces/EpubCFIPair.md)[]
-
-Defined in: contents.ts:1032
-
-#### Parameters
-
-##### layout
-
-[`LayoutProps`](../interfaces/LayoutProps.md)
-
-#### Returns
-
-[`EpubCFIPair`](../interfaces/EpubCFIPair.md)[]
-
-***
-
 ### mapPage()
 
 > **mapPage**(`cfiBase`, `layout`, `start`, `end`, `dev?`): [`EpubCFIPair`](../interfaces/EpubCFIPair.md) \| `undefined`
 
-Defined in: contents.ts:1201
+Defined in: src/contents.ts:1212
 
 #### Parameters
 
@@ -790,7 +802,7 @@ Defined in: contents.ts:1201
 
 > **overflow**(`overflow?`): `string`
 
-Defined in: contents.ts:233
+Defined in: src/contents.ts:243
 
 Set overflow css style of the contents
 
@@ -810,7 +822,7 @@ Set overflow css style of the contents
 
 > **overflowX**(`overflow?`): `string`
 
-Defined in: contents.ts:246
+Defined in: src/contents.ts:256
 
 Set overflowX css style of the documentElement
 
@@ -830,7 +842,7 @@ Set overflowX css style of the documentElement
 
 > **overflowY**(`overflow?`): `string`
 
-Defined in: contents.ts:259
+Defined in: src/contents.ts:269
 
 Set overflowY css style of the documentElement
 
@@ -850,7 +862,7 @@ Set overflowY css style of the documentElement
 
 > **range**(`_cfi`, `ignoreClass?`): `Range`
 
-Defined in: contents.ts:1006
+Defined in: src/contents.ts:1012
 
 Get a Dom Range from EpubCFI
 
@@ -876,7 +888,7 @@ range
 
 > **removeClass**(`className`): `void`
 
-Defined in: contents.ts:892
+Defined in: src/contents.ts:898
 
 Remove a class from the contents container
 
@@ -898,7 +910,7 @@ class name to remove
 
 > **root**(): `HTMLElement` \| `null`
 
-Defined in: contents.ts:612
+Defined in: src/contents.ts:618
 
 Get the documentElement
 
@@ -914,7 +926,7 @@ documentElement
 
 > **scaler**(`scale`, `offsetX?`, `offsetY?`): `void`
 
-Defined in: contents.ts:1136
+Defined in: src/contents.ts:1143
 
 Scale contents from center
 
@@ -942,7 +954,7 @@ Scale contents from center
 
 > **scrollHeight**(): `number`
 
-Defined in: contents.ts:223
+Defined in: src/contents.ts:233
 
 Get documentElement scrollHeight
 
@@ -958,7 +970,7 @@ height
 
 > **scrollWidth**(): `number`
 
-Defined in: contents.ts:213
+Defined in: src/contents.ts:223
 
 Get documentElement scrollWidth
 
@@ -974,7 +986,7 @@ width
 
 > **size**(`width?`, `height?`): `void`
 
-Defined in: contents.ts:1042
+Defined in: src/contents.ts:1042
 
 Size the contents to a given width and height
 
@@ -998,7 +1010,7 @@ Size the contents to a given width and height
 
 > **textHeight**(): `number`
 
-Defined in: contents.ts:197
+Defined in: src/contents.ts:207
 
 Get the height of the text using Range
 
@@ -1014,7 +1026,7 @@ height
 
 > **textWidth**(): `number`
 
-Defined in: contents.ts:173
+Defined in: src/contents.ts:183
 
 Get the width of the text using Range
 
@@ -1030,7 +1042,7 @@ width
 
 > **viewport**(`options?`): [`ViewportSettings`](../interfaces/ViewportSettings.md)
 
-Defined in: contents.ts:296
+Defined in: src/contents.ts:323
 
 Get or Set the viewport element
 
@@ -1050,7 +1062,7 @@ Get or Set the viewport element
 
 > **width**(`w?`): `number`
 
-Defined in: contents.ts:86
+Defined in: src/contents.ts:96
 
 Get or Set width
 
@@ -1072,7 +1084,7 @@ width
 
 > **writingMode**(`mode?`): `string`
 
-Defined in: contents.ts:1221
+Defined in: src/contents.ts:1232
 
 Set the writingMode of the text
 

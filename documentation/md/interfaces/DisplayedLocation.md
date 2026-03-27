@@ -6,7 +6,7 @@
 
 # Interface: DisplayedLocation
 
-Defined in: types.ts:144
+Defined in: src/types.ts:152
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: types.ts:144
 
 > **cfi**: `string`
 
-Defined in: types.ts:147
+Defined in: src/types.ts:155
 
 ***
 
@@ -22,7 +22,7 @@ Defined in: types.ts:147
 
 > **displayed**: `object`
 
-Defined in: types.ts:151
+Defined in: src/types.ts:159
 
 #### page
 
@@ -38,7 +38,7 @@ Defined in: types.ts:151
 
 > **href**: `string`
 
-Defined in: types.ts:146
+Defined in: src/types.ts:154
 
 ***
 
@@ -46,7 +46,7 @@ Defined in: types.ts:146
 
 > **index**: `number`
 
-Defined in: types.ts:145
+Defined in: src/types.ts:153
 
 ***
 
@@ -54,7 +54,7 @@ Defined in: types.ts:145
 
 > `optional` **location**: `number`
 
-Defined in: types.ts:148
+Defined in: src/types.ts:156
 
 ***
 
@@ -62,7 +62,7 @@ Defined in: types.ts:148
 
 > `optional` **page**: `number`
 
-Defined in: types.ts:150
+Defined in: src/types.ts:158
 
 ***
 
@@ -70,4 +70,4 @@ Defined in: types.ts:150
 
 > `optional` **percentage**: `number`
 
-Defined in: types.ts:149
+Defined in: src/types.ts:157

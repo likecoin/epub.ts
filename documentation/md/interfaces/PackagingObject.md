@@ -6,7 +6,7 @@
 
 # Interface: PackagingObject
 
-Defined in: types.ts:62
+Defined in: src/types.ts:66
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: types.ts:62
 
 > **coverPath**: `string`
 
-Defined in: types.ts:68
+Defined in: src/types.ts:72
 
 ***
 
@@ -22,7 +22,7 @@ Defined in: types.ts:68
 
 > **manifest**: [`PackagingManifestObject`](PackagingManifestObject.md)
 
-Defined in: types.ts:65
+Defined in: src/types.ts:69
 
 ***
 
@@ -30,7 +30,7 @@ Defined in: types.ts:65
 
 > **metadata**: [`PackagingMetadataObject`](PackagingMetadataObject.md)
 
-Defined in: types.ts:63
+Defined in: src/types.ts:67
 
 ***
 
@@ -38,7 +38,7 @@ Defined in: types.ts:63
 
 > **navPath**: `string`
 
-Defined in: types.ts:66
+Defined in: src/types.ts:70
 
 ***
 
@@ -46,7 +46,7 @@ Defined in: types.ts:66
 
 > **ncxPath**: `string`
 
-Defined in: types.ts:67
+Defined in: src/types.ts:71
 
 ***
 
@@ -54,7 +54,7 @@ Defined in: types.ts:67
 
 > **spine**: [`PackagingSpineItem`](PackagingSpineItem.md)[]
 
-Defined in: types.ts:64
+Defined in: src/types.ts:68
 
 ***
 
@@ -62,4 +62,4 @@ Defined in: types.ts:64
 
 > **spineNodeIndex**: `number`
 
-Defined in: types.ts:69
+Defined in: src/types.ts:73

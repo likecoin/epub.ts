@@ -6,7 +6,7 @@
 
 # Interface: GlobalLayout
 
-Defined in: types.ts:290
+Defined in: src/types.ts:309
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: types.ts:290
 
 > **direction**: `string`
 
-Defined in: types.ts:297
+Defined in: src/types.ts:316
 
 ***
 
@@ -22,7 +22,7 @@ Defined in: types.ts:297
 
 > **flow**: `string`
 
-Defined in: types.ts:294
+Defined in: src/types.ts:313
 
 ***
 
@@ -30,7 +30,7 @@ Defined in: types.ts:294
 
 > **layout**: `string`
 
-Defined in: types.ts:291
+Defined in: src/types.ts:310
 
 ***
 
@@ -38,7 +38,7 @@ Defined in: types.ts:291
 
 > **minSpreadWidth**: `number`
 
-Defined in: types.ts:296
+Defined in: src/types.ts:315
 
 ***
 
@@ -46,7 +46,7 @@ Defined in: types.ts:296
 
 > **orientation**: `string`
 
-Defined in: types.ts:293
+Defined in: src/types.ts:312
 
 ***
 
@@ -54,7 +54,7 @@ Defined in: types.ts:293
 
 > **spread**: `string`
 
-Defined in: types.ts:292
+Defined in: src/types.ts:311
 
 ***
 
@@ -62,4 +62,4 @@ Defined in: types.ts:292
 
 > **viewport**: `string`
 
-Defined in: types.ts:295
+Defined in: src/types.ts:314

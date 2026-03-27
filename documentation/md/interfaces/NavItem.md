@@ -6,7 +6,7 @@
 
 # Interface: NavItem
 
-Defined in: types.ts:73
+Defined in: src/types.ts:77
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: types.ts:73
 
 > **href**: `string`
 
-Defined in: types.ts:75
+Defined in: src/types.ts:79
 
 ***
 
@@ -22,7 +22,7 @@ Defined in: types.ts:75
 
 > **id**: `string`
 
-Defined in: types.ts:74
+Defined in: src/types.ts:78
 
 ***
 
@@ -30,7 +30,7 @@ Defined in: types.ts:74
 
 > **label**: `string`
 
-Defined in: types.ts:76
+Defined in: src/types.ts:80
 
 ***
 
@@ -38,7 +38,7 @@ Defined in: types.ts:76
 
 > `optional` **parent**: `string`
 
-Defined in: types.ts:78
+Defined in: src/types.ts:82
 
 ***
 
@@ -46,4 +46,4 @@ Defined in: types.ts:78
 
 > `optional` **subitems**: `NavItem`[]
 
-Defined in: types.ts:77
+Defined in: src/types.ts:81

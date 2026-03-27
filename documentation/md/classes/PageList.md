@@ -6,7 +6,7 @@
 
 # Class: PageList
 
-Defined in: pagelist.ts:15
+Defined in: src/pagelist.ts:15
 
 Page List Parser
 
@@ -18,7 +18,7 @@ Page List Parser
 
 > **new PageList**(`xml?`): `PageList`
 
-Defined in: pagelist.ts:26
+Defined in: src/pagelist.ts:26
 
 #### Parameters
 
@@ -34,9 +34,9 @@ Defined in: pagelist.ts:26
 
 ### epubcfi
 
-> **epubcfi**: [`EpubCFI`](EpubCFI.md)
+> **epubcfi**: [`EpubCFI`](EpubCFI.md) \| `undefined`
 
-Defined in: pagelist.ts:18
+Defined in: src/pagelist.ts:18
 
 ***
 
@@ -44,7 +44,7 @@ Defined in: pagelist.ts:18
 
 > **firstPage**: `number`
 
-Defined in: pagelist.ts:19
+Defined in: src/pagelist.ts:19
 
 ***
 
@@ -52,15 +52,15 @@ Defined in: pagelist.ts:19
 
 > **lastPage**: `number`
 
-Defined in: pagelist.ts:20
+Defined in: src/pagelist.ts:20
 
 ***
 
 ### locations
 
-> **locations**: `string`[]
+> **locations**: `string`[] \| `undefined`
 
-Defined in: pagelist.ts:17
+Defined in: src/pagelist.ts:17
 
 ***
 
@@ -68,23 +68,23 @@ Defined in: pagelist.ts:17
 
 > **ncx**: `Document` \| `undefined`
 
-Defined in: pagelist.ts:23
+Defined in: src/pagelist.ts:23
 
 ***
 
 ### pageList
 
-> **pageList**: [`PageListItem`](../interfaces/PageListItem.md)[]
+> **pageList**: [`PageListItem`](../interfaces/PageListItem.md)[] \| `undefined`
 
-Defined in: pagelist.ts:24
+Defined in: src/pagelist.ts:24
 
 ***
 
 ### pages
 
-> **pages**: `number`[]
+> **pages**: `number`[] \| `undefined`
 
-Defined in: pagelist.ts:16
+Defined in: src/pagelist.ts:16
 
 ***
 
@@ -92,7 +92,7 @@ Defined in: pagelist.ts:16
 
 > **toc**: `Document` \| `undefined`
 
-Defined in: pagelist.ts:22
+Defined in: src/pagelist.ts:22
 
 ***
 
@@ -100,7 +100,7 @@ Defined in: pagelist.ts:22
 
 > **totalPages**: `number`
 
-Defined in: pagelist.ts:21
+Defined in: src/pagelist.ts:21
 
 ## Methods
 
@@ -108,7 +108,7 @@ Defined in: pagelist.ts:21
 
 > **cfiFromPage**(`pg`): `string` \| `number`
 
-Defined in: pagelist.ts:221
+Defined in: src/pagelist.ts:221
 
 Get an EpubCFI from a Page List Item
 
@@ -130,7 +130,7 @@ cfi
 
 > **destroy**(): `void`
 
-Defined in: pagelist.ts:272
+Defined in: src/pagelist.ts:272
 
 Destroy
 
@@ -144,7 +144,7 @@ Destroy
 
 > **ncxItem**(`item`): [`PageListItem`](../interfaces/PageListItem.md)
 
-Defined in: pagelist.ts:112
+Defined in: src/pagelist.ts:112
 
 #### Parameters
 
@@ -162,7 +162,7 @@ Defined in: pagelist.ts:112
 
 > **pageFromCfi**(`cfi`): `number`
 
-Defined in: pagelist.ts:183
+Defined in: src/pagelist.ts:183
 
 Get a PageList result from a EpubCFI
 
@@ -186,7 +186,7 @@ page
 
 > **pageFromPercentage**(`percent`): `number`
 
-Defined in: pagelist.ts:243
+Defined in: src/pagelist.ts:243
 
 Get a Page from Book percentage
 
@@ -208,7 +208,7 @@ page
 
 > **parse**(`xml`): [`PageListItem`](../interfaces/PageListItem.md)[]
 
-Defined in: pagelist.ts:51
+Defined in: src/pagelist.ts:51
 
 Parse PageList Xml
 
@@ -228,7 +228,7 @@ Parse PageList Xml
 
 > **parseNcx**(`navXml`): [`PageListItem`](../interfaces/PageListItem.md)[]
 
-Defined in: pagelist.ts:88
+Defined in: src/pagelist.ts:88
 
 #### Parameters
 
@@ -246,7 +246,7 @@ Defined in: pagelist.ts:88
 
 > **percentageFromCfi**(`cfi`): `number`
 
-Defined in: pagelist.ts:263
+Defined in: src/pagelist.ts:263
 
 Returns a value between 0 - 1 corresponding to the location of a cfi
 
@@ -270,7 +270,7 @@ percentage
 
 > **percentageFromPage**(`pg`): `number`
 
-Defined in: pagelist.ts:253
+Defined in: src/pagelist.ts:253
 
 Returns a value between 0 - 1 corresponding to the location of a page
 

@@ -6,7 +6,7 @@
 
 # Class: Annotations
 
-Defined in: annotations.ts:22
+Defined in: src/annotations.ts:23
 
 Handles managing adding & removing Annotations
 
@@ -18,7 +18,7 @@ Handles managing adding & removing Annotations
 
 > **new Annotations**(`rendition`): `Annotations`
 
-Defined in: annotations.ts:30
+Defined in: src/annotations.ts:31
 
 #### Parameters
 
@@ -36,7 +36,7 @@ Defined in: annotations.ts:30
 
 > **\_annotations**: `Record`\<`string`, `Annotation`\>
 
-Defined in: annotations.ts:27
+Defined in: src/annotations.ts:28
 
 ***
 
@@ -44,7 +44,7 @@ Defined in: annotations.ts:27
 
 > **\_annotationsBySectionIndex**: `Record`\<`number`, `string`[]\>
 
-Defined in: annotations.ts:28
+Defined in: src/annotations.ts:29
 
 ***
 
@@ -52,7 +52,7 @@ Defined in: annotations.ts:28
 
 > **highlights**: `Annotation`[]
 
-Defined in: annotations.ts:24
+Defined in: src/annotations.ts:25
 
 ***
 
@@ -60,7 +60,7 @@ Defined in: annotations.ts:24
 
 > **marks**: `Annotation`[]
 
-Defined in: annotations.ts:26
+Defined in: src/annotations.ts:27
 
 ***
 
@@ -68,7 +68,7 @@ Defined in: annotations.ts:26
 
 > **rendition**: [`Rendition`](Rendition.md)
 
-Defined in: annotations.ts:23
+Defined in: src/annotations.ts:24
 
 ***
 
@@ -76,7 +76,7 @@ Defined in: annotations.ts:23
 
 > **underlines**: `Annotation`[]
 
-Defined in: annotations.ts:25
+Defined in: src/annotations.ts:26
 
 ## Methods
 
@@ -84,7 +84,7 @@ Defined in: annotations.ts:25
 
 > **add**(`type`, `cfiRange`, `data?`, `cb?`, `className?`, `styles?`): `Annotation`
 
-Defined in: annotations.ts:52
+Defined in: src/annotations.ts:53
 
 Add an annotation to store
 
@@ -110,7 +110,7 @@ Data to assign to annotation
 
 ##### cb?
 
-`Function`
+`EventListener`
 
 Callback after annotation is added
 
@@ -138,7 +138,7 @@ annotation
 
 > **each**(`fn`): `void`
 
-Defined in: annotations.ts:166
+Defined in: src/annotations.ts:167
 
 iterate over annotations in the store
 
@@ -158,7 +158,7 @@ iterate over annotations in the store
 
 > **hide**(): `void`
 
-Defined in: annotations.ts:218
+Defined in: src/annotations.ts:219
 
 [Not Implemented] Hide annotations
 @TODO: needs implementation in View
@@ -173,7 +173,7 @@ Defined in: annotations.ts:218
 
 > **highlight**(`cfiRange`, `data?`, `cb?`, `className?`, `styles?`): `Annotation`
 
-Defined in: annotations.ts:137
+Defined in: src/annotations.ts:138
 
 Add a highlight to the store
 
@@ -193,7 +193,7 @@ Data to assign to annotation
 
 ##### cb?
 
-`Function`
+`EventListener`
 
 Callback after annotation is clicked
 
@@ -219,7 +219,7 @@ CSS styles to assign to annotation
 
 > **mark**(`cfiRange`, `data?`, `cb?`): `Annotation`
 
-Defined in: annotations.ts:159
+Defined in: src/annotations.ts:160
 
 Add a mark to the store
 
@@ -239,7 +239,7 @@ Data to assign to annotation
 
 ##### cb?
 
-`Function`
+`EventListener`
 
 Callback after annotation is clicked
 
@@ -253,7 +253,7 @@ Callback after annotation is clicked
 
 > **remove**(`cfiRange`, `type?`): `void`
 
-Defined in: annotations.ts:90
+Defined in: src/annotations.ts:91
 
 Remove an annotation from store
 
@@ -281,7 +281,7 @@ Type of annotation to add: "highlight", "underline", "mark"
 
 > **show**(): `void`
 
-Defined in: annotations.ts:210
+Defined in: src/annotations.ts:211
 
 [Not Implemented] Show annotations
 @TODO: needs implementation in View
@@ -296,7 +296,7 @@ Defined in: annotations.ts:210
 
 > **underline**(`cfiRange`, `data?`, `cb?`, `className?`, `styles?`): `Annotation`
 
-Defined in: annotations.ts:149
+Defined in: src/annotations.ts:150
 
 Add a underline to the store
 
@@ -316,7 +316,7 @@ Data to assign to annotation
 
 ##### cb?
 
-`Function`
+`EventListener`
 
 Callback after annotation is clicked
 

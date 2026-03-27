@@ -6,7 +6,7 @@
 
 # Class: Section
 
-Defined in: section.ts:17
+Defined in: src/section.ts:15
 
 Represents a Section of the Book
 
@@ -26,7 +26,7 @@ hooks for serialize and content
 
 > **new Section**(`item`, `hooks?`): `Section`
 
-Defined in: section.ts:34
+Defined in: src/section.ts:32
 
 #### Parameters
 
@@ -54,15 +54,15 @@ Defined in: section.ts:34
 
 > **canonical**: `string`
 
-Defined in: section.ts:24
+Defined in: src/section.ts:22
 
 ***
 
 ### cfiBase
 
-> **cfiBase**: `string`
+> **cfiBase**: `string` \| `undefined`
 
-Defined in: section.ts:27
+Defined in: src/section.ts:25
 
 ***
 
@@ -70,7 +70,7 @@ Defined in: section.ts:27
 
 > **contents**: `Element` \| `undefined`
 
-Defined in: section.ts:30
+Defined in: src/section.ts:28
 
 ***
 
@@ -78,67 +78,55 @@ Defined in: section.ts:30
 
 > **document**: `Document` \| `undefined`
 
-Defined in: section.ts:29
+Defined in: src/section.ts:27
 
 ***
 
 ### hooks
 
-> **hooks**: `object`
+> **hooks**: \{ `content`: `Hook`; `serialize`: `Hook`; \} \| `undefined`
 
-Defined in: section.ts:28
-
-#### content
-
-> **content**: `Hook`
-
-#### serialize
-
-> **serialize**: `Hook`
+Defined in: src/section.ts:26
 
 ***
 
 ### href
 
-> **href**: `string`
+> **href**: `string` \| `undefined`
 
-Defined in: section.ts:22
+Defined in: src/section.ts:20
 
 ***
 
 ### idref
 
-> **idref**: `string`
+> **idref**: `string` \| `undefined`
 
-Defined in: section.ts:18
+Defined in: src/section.ts:16
 
 ***
 
 ### index
 
-> **index**: `number`
+> **index**: `number` \| `undefined`
 
-Defined in: section.ts:21
+Defined in: src/section.ts:19
 
 ***
 
 ### linear
 
-> **linear**: `boolean`
+> **linear**: `boolean` \| `undefined`
 
-Defined in: section.ts:19
+Defined in: src/section.ts:17
 
 ***
 
-### next()
+### next
 
-> **next**: () => `Section` \| `undefined`
+> **next**: () => `Section` \| `undefined` \| `undefined`
 
-Defined in: section.ts:25
-
-#### Returns
-
-`Section` \| `undefined`
+Defined in: src/section.ts:23
 
 ***
 
@@ -146,27 +134,23 @@ Defined in: section.ts:25
 
 > **output**: `string` \| `undefined`
 
-Defined in: section.ts:31
+Defined in: src/section.ts:29
 
 ***
 
-### prev()
+### prev
 
-> **prev**: () => `Section` \| `undefined`
+> **prev**: () => `Section` \| `undefined` \| `undefined`
 
-Defined in: section.ts:26
-
-#### Returns
-
-`Section` \| `undefined`
+Defined in: src/section.ts:24
 
 ***
 
 ### properties
 
-> **properties**: `string`[]
+> **properties**: `string`[] \| `undefined`
 
-Defined in: section.ts:20
+Defined in: src/section.ts:18
 
 ***
 
@@ -174,15 +158,15 @@ Defined in: section.ts:20
 
 > **request**: [`RequestFunction`](../type-aliases/RequestFunction.md)
 
-Defined in: section.ts:32
+Defined in: src/section.ts:30
 
 ***
 
 ### url
 
-> **url**: `string`
+> **url**: `string` \| `undefined`
 
-Defined in: section.ts:23
+Defined in: src/section.ts:21
 
 ## Methods
 
@@ -190,7 +174,7 @@ Defined in: section.ts:23
 
 > **cfiFromElement**(`el`): `string`
 
-Defined in: section.ts:307
+Defined in: src/section.ts:267
 
 Get a CFI from an Element in the Section
 
@@ -212,7 +196,7 @@ cfi an EpubCFI string
 
 > **cfiFromRange**(`_range`): `string`
 
-Defined in: section.ts:298
+Defined in: src/section.ts:258
 
 Get a CFI from a Range in the Section
 
@@ -234,7 +218,7 @@ cfi an EpubCFI string
 
 > **destroy**(): `void`
 
-Defined in: section.ts:320
+Defined in: src/section.ts:280
 
 #### Returns
 
@@ -246,7 +230,7 @@ Defined in: section.ts:320
 
 > **find**(`_query`): [`SearchResult`](../interfaces/SearchResult.md)[]
 
-Defined in: section.ts:143
+Defined in: src/section.ts:106
 
 Find a string in a section
 
@@ -270,7 +254,7 @@ A list of matches, with form {cfi, excerpt}
 
 > **load**(`_request?`): `Promise`\<`Element`\>
 
-Defined in: section.ts:65
+Defined in: src/section.ts:63
 
 Load the section from its url
 
@@ -294,7 +278,7 @@ a promise with the xml document
 
 > **reconcileLayoutSettings**(`globalLayout`): `Record`\<`string`, `string`\>
 
-Defined in: section.ts:269
+Defined in: src/section.ts:229
 
 Reconciles the current chapters layout properties with
 the global layout properties.
@@ -319,7 +303,7 @@ layoutProperties Object with layout properties
 
 > **render**(`_request?`): `Promise`\<`string`\>
 
-Defined in: section.ts:106
+Defined in: src/section.ts:92
 
 Render the contents of a section
 
@@ -343,9 +327,9 @@ output a serialized XML Document
 
 > **search**(`_query`, `maxSeqEle?`): [`SearchResult`](../interfaces/SearchResult.md)[]
 
-Defined in: section.ts:202
+Defined in: src/section.ts:165
 
-Search a string in multiple sequential Element of the section. If the document.createTreeWalker api is missed(eg: IE8), use `find` as a fallback.
+Search a string in multiple sequential Element of the section.
 
 #### Parameters
 
@@ -373,7 +357,7 @@ A list of matches, with form {cfi, excerpt}
 
 > **unload**(): `void`
 
-Defined in: section.ts:314
+Defined in: src/section.ts:274
 
 Unload the section document
 

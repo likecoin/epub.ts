@@ -6,7 +6,7 @@
 
 # Interface: SpineItem
 
-Defined in: types.ts:88
+Defined in: src/types.ts:92
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: types.ts:88
 
 > **canonical**: `string`
 
-Defined in: types.ts:94
+Defined in: src/types.ts:98
 
 ***
 
@@ -22,7 +22,7 @@ Defined in: types.ts:94
 
 > **cfiBase**: `string`
 
-Defined in: types.ts:90
+Defined in: src/types.ts:94
 
 ***
 
@@ -30,7 +30,7 @@ Defined in: types.ts:90
 
 > **href**: `string`
 
-Defined in: types.ts:92
+Defined in: src/types.ts:96
 
 ***
 
@@ -38,7 +38,7 @@ Defined in: types.ts:92
 
 > `optional` **id**: `string`
 
-Defined in: types.ts:97
+Defined in: src/types.ts:101
 
 ***
 
@@ -46,7 +46,7 @@ Defined in: types.ts:97
 
 > **idref**: `string`
 
-Defined in: types.ts:91
+Defined in: src/types.ts:95
 
 ***
 
@@ -54,7 +54,7 @@ Defined in: types.ts:91
 
 > **index**: `number`
 
-Defined in: types.ts:89
+Defined in: src/types.ts:93
 
 ***
 
@@ -62,7 +62,7 @@ Defined in: types.ts:89
 
 > **linear**: `string`
 
-Defined in: types.ts:96
+Defined in: src/types.ts:100
 
 ***
 
@@ -70,7 +70,7 @@ Defined in: types.ts:96
 
 > **next**: () => [`Section`](../classes/Section.md) \| `undefined`
 
-Defined in: types.ts:98
+Defined in: src/types.ts:102
 
 #### Returns
 
@@ -82,7 +82,7 @@ Defined in: types.ts:98
 
 > **prev**: () => [`Section`](../classes/Section.md) \| `undefined`
 
-Defined in: types.ts:99
+Defined in: src/types.ts:103
 
 #### Returns
 
@@ -94,7 +94,7 @@ Defined in: types.ts:99
 
 > **properties**: `string`[]
 
-Defined in: types.ts:95
+Defined in: src/types.ts:99
 
 ***
 
@@ -102,4 +102,4 @@ Defined in: types.ts:95
 
 > **url**: `string`
 
-Defined in: types.ts:93
+Defined in: src/types.ts:97

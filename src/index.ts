@@ -16,6 +16,7 @@ import DisplayOptions from "./displayoptions";
 import Annotations from "./annotations";
 import Themes from "./themes";
 import Mapping from "./mapping";
+import Container from "./container";
 import { EpubError } from "./utils/core";
 import ePub from "./epub";
 
@@ -37,6 +38,7 @@ export {
 	Archive,
 	Store,
 	DisplayOptions,
+	Container,
 	Annotations,
 	Themes,
 	Mapping,

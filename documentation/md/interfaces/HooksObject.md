@@ -6,8 +6,8 @@
 
 # Interface: HooksObject
 
-Defined in: types.ts:272
+Defined in: src/types.ts:291
 
 ## Indexable
 
-\[`key`: `string`\]: `any`
+\[`key`: `string`\]: `unknown`

@@ -6,7 +6,7 @@
 
 # Interface: ParsedPath
 
-Defined in: types.ts:307
+Defined in: src/types.ts:326
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: types.ts:307
 
 > **base**: `string`
 
-Defined in: types.ts:310
+Defined in: src/types.ts:329
 
 ***
 
@@ -22,7 +22,7 @@ Defined in: types.ts:310
 
 > **dir**: `string`
 
-Defined in: types.ts:309
+Defined in: src/types.ts:328
 
 ***
 
@@ -30,7 +30,7 @@ Defined in: types.ts:309
 
 > **ext**: `string`
 
-Defined in: types.ts:311
+Defined in: src/types.ts:330
 
 ***
 
@@ -38,7 +38,7 @@ Defined in: types.ts:311
 
 > **name**: `string`
 
-Defined in: types.ts:312
+Defined in: src/types.ts:331
 
 ***
 
@@ -46,4 +46,4 @@ Defined in: types.ts:312
 
 > **root**: `string`
 
-Defined in: types.ts:308
+Defined in: src/types.ts:327
