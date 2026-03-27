@@ -4,11 +4,11 @@
 
 | Format | File | Size | Notes |
 |--------|------|------|-------|
-| ESM | `dist/epub.js` | ~343KB | Primary import for modern bundlers |
-| CJS | `dist/epub.cjs` | ~211KB | `require()` support |
-| UMD | `dist/epub.umd.js` | ~211KB | `<script>` tag / CDN usage |
-| Node ESM | `dist/epub.node.js` | ~233KB | `@likecoin/epub-ts/node` for Node.js |
-| Node CJS | `dist/epub.node.cjs` | ~150KB | `require("@likecoin/epub-ts/node")` |
+| ESM | `dist/epub.js` | ~235KB | Primary import for modern bundlers |
+| CJS | `dist/epub.cjs` | ~151KB | `require()` support |
+| UMD | `dist/epub.umd.js` | ~151KB | `<script>` tag / CDN usage |
+| Node ESM | `dist/epub.node.js` | ~232KB | `@likecoin/epub-ts/node` for Node.js |
+| Node CJS | `dist/epub.node.cjs` | ~149KB | `require("@likecoin/epub-ts/node")` |
 | Types | `dist/*.d.ts` | — | Generated from source via `vite-plugin-dts` |
 
 All formats are single-file bundles. `preserveModules` was considered for ESM but provides minimal benefit since `Book` imports nearly the entire dependency graph.

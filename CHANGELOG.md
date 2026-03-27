@@ -1,5 +1,29 @@
 # Changelog
 
+## 0.5.0 (2026-03-28)
+
+### Modernization
+
+- Replace `XMLHttpRequest` with `fetch` across Archive, Store, and request utilities — drops the last browser-era XHR dependency
+- Extract `handleResponse` helper and add `EpubError` class for structured error handling
+- Replace trivial `defer()` usage with native `async`/`await`
+- Simplify `requestAnimationFrame` export (direct re-export instead of wrapper)
+- Normalize `setTimeout(fn, 1)` → `setTimeout(fn, 0)` for consistency
+- Enforce strict equality (`===`/`!==`) throughout
+
+### Removed
+
+- Remove `prefixed()` CSS vendor-prefix helper (all target browsers support unprefixed properties)
+- Remove `webkitURL`/`mozURL` fallbacks (standard `URL` is universally available)
+- Remove `ResizeObserver` polyfill fallback path (supported in all modern browsers)
+- Remove iOS 10.3 orientation change workaround
+- Remove other dead code and obsolete polyfills
+
+### Bug fixes
+
+- Include response body text in fetch error messages for easier debugging
+- Fix review findings from modernization commits
+
 ## 0.4.9 (2026-03-03)
 
 ### Performance
