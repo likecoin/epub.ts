@@ -46,6 +46,7 @@ class IframeView implements IEventEmitter<IframeViewEvents> {
 	_textHeight: number | undefined;
 	_contentWidth: number | undefined;
 	_contentHeight: number | undefined;
+	_contentDirty!: boolean;
 	_needsReframe!: boolean;
 	_expanding!: boolean;
 	elementBounds!: { width: number; height: number };
@@ -283,6 +284,7 @@ class IframeView implements IEventEmitter<IframeViewEvents> {
 			this._textHeight = undefined;
 			this._contentHeight = undefined;
 		}
+		this._contentDirty = true;
 		this._needsReframe = true;
 	}
 
@@ -349,8 +351,6 @@ class IframeView implements IEventEmitter<IframeViewEvents> {
 		let height = this.lockedHeight;
 		let columns;
 
-		let _textWidth, _textHeight;
-
 		if(!this.iframe || this._expanding) return;
 
 		this._expanding = true;
@@ -361,8 +361,14 @@ class IframeView implements IEventEmitter<IframeViewEvents> {
 		}
 		// Expand Horizontally
 		else if(this.settings.axis === "horizontal") {
-			// Get the width of the text
-			width = this.contents!.textWidth();
+			// Use cached text width when content hasn't changed (avoids synchronous reflow)
+			if (!this._contentDirty && this._textWidth !== undefined) {
+				width = this._textWidth;
+			} else {
+				width = this.contents!.textWidth();
+				this._textWidth = width;
+				this._contentDirty = false;
+			}
 
 			if (width % this.layout.pageWidth > 0) {
 				width = Math.ceil(width / this.layout.pageWidth) * this.layout.pageWidth;
@@ -380,7 +386,15 @@ class IframeView implements IEventEmitter<IframeViewEvents> {
 
 		} // Expand Vertically
 		else if(this.settings.axis === "vertical") {
-			height = this.contents!.textHeight();
+			// Use cached text height when content hasn't changed (avoids synchronous reflow)
+			if (!this._contentDirty && this._textHeight !== undefined) {
+				height = this._textHeight;
+			} else {
+				height = this.contents!.textHeight();
+				this._textHeight = height;
+				this._contentDirty = false;
+			}
+
 			if (this.settings.flow === "paginated" &&
 				height % this.layout.height > 0) {
 				height = Math.ceil(height / this.layout.height) * this.layout.height;
@@ -505,6 +519,7 @@ class IframeView implements IEventEmitter<IframeViewEvents> {
 
 		this.contents.on(EVENTS.CONTENTS.EXPAND, () => {
 			if(this.displayed && this.iframe) {
+				this._contentDirty = true;
 				this.expand();
 				if (this.contents) {
 					this.layout.format(this.contents);
@@ -512,8 +527,13 @@ class IframeView implements IEventEmitter<IframeViewEvents> {
 			}
 		});
 
-		this.contents.on(EVENTS.CONTENTS.RESIZE, (_e: { width: number; height: number }) => {
+		this.contents.on(EVENTS.CONTENTS.RESIZE, (e: { width: number; height: number }) => {
 			if(this.displayed && this.iframe) {
+				// Pre-populate cache with values already measured by resizeCheck(),
+				// avoiding a redundant reflow when expand() runs next
+				this._textWidth = e.width;
+				this._textHeight = e.height;
+				this._contentDirty = false;
 				this.expand();
 				if (this.contents) {
 					this.layout.format(this.contents);
@@ -529,6 +549,7 @@ class IframeView implements IEventEmitter<IframeViewEvents> {
 
 		if (this.contents) {
 			this.layout.format(this.contents);
+			this._contentDirty = true;
 			this.expand();
 		}
 	}

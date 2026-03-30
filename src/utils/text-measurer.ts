@@ -1,0 +1,278 @@
+/**
+ * Canvas-based text measurement utility.
+ *
+ * Applies pretext's prepare/layout pattern: expensive measurement is done once
+ * via CanvasRenderingContext2D.measureText(), then layout queries (finding the
+ * character offset at a pixel position) are pure binary-search arithmetic with
+ * zero DOM reflow.
+ *
+ * Browser-only — not imported by the Node.js entry point.
+ */
+
+export interface TextSegment {
+	/** The text node this segment belongs to */
+	node: Text;
+	/** Character offset within the text node where this segment starts */
+	charOffset: number;
+	/** The segment text content */
+	text: string;
+	/** Measured width of this segment in pixels */
+	width: number;
+	/** Cumulative width from the start of the parent element */
+	cumWidth: number;
+}
+
+export interface PreparedNode {
+	node: Text;
+	segments: TextSegment[];
+	totalWidth: number;
+	font: string;
+}
+
+type SegmenterLike = { segment(text: string): Iterable<{ segment: string; index: number }> };
+
+// CJK Unicode ranges for per-character segmentation fallback
+const CJK_RE = /[\u2E80-\u9FFF\uF900-\uFAFF\uFE30-\uFE4F\u{20000}-\u{2FA1F}]/u;
+
+/**
+ * Determine if a CSS property value is "exotic" (non-default), meaning
+ * canvas measureText() would not account for it.
+ */
+function hasExoticTextCSS(style: CSSStyleDeclaration): boolean {
+	const letterSpacing = style.letterSpacing;
+	if (letterSpacing && letterSpacing !== "normal" && letterSpacing !== "0px") return true;
+
+	const wordSpacing = style.wordSpacing;
+	if (wordSpacing && wordSpacing !== "normal" && wordSpacing !== "0px") return true;
+
+	const textIndent = style.textIndent;
+	if (textIndent && textIndent !== "0px") return true;
+
+	return false;
+}
+
+class TextMeasurer {
+	private _canvas: OffscreenCanvas | HTMLCanvasElement | null = null;
+	private _ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D | null = null;
+	/** font string → (text → width) */
+	private _widthCache: Map<string, Map<string, number>> = new Map();
+	/** parent element → prepared nodes */
+	private _preparedCache: WeakMap<Element, PreparedNode[]> = new WeakMap();
+	/** shared Intl.Segmenter instance (lazy) */
+	private _segmenter: SegmenterLike | null = null;
+
+	private getCanvas(): CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D {
+		if (this._ctx) return this._ctx;
+
+		if (typeof OffscreenCanvas !== "undefined") {
+			this._canvas = new OffscreenCanvas(1, 1);
+			this._ctx = this._canvas.getContext("2d")!;
+		} else {
+			this._canvas = document.createElement("canvas");
+			this._ctx = this._canvas.getContext("2d")!;
+		}
+		return this._ctx;
+	}
+
+	private getSegmenter(): SegmenterLike | null {
+		if (this._segmenter) return this._segmenter;
+		if (typeof Intl !== "undefined" && "Segmenter" in Intl) {
+			this._segmenter = new (Intl as typeof Intl & { Segmenter: new (locale?: string, options?: { granularity: string }) => SegmenterLike }).Segmenter(undefined, { granularity: "word" });
+			return this._segmenter;
+		}
+		return null;
+	}
+
+	/**
+	 * Measure a text string with a given CSS font, returning its width in pixels.
+	 * Results are cached per font+text pair.
+	 */
+	measureText(text: string, font: string): number {
+		let fontMap = this._widthCache.get(font);
+		if (fontMap) {
+			const cached = fontMap.get(text);
+			if (cached !== undefined) return cached;
+		} else {
+			fontMap = new Map();
+			this._widthCache.set(font, fontMap);
+		}
+
+		const ctx = this.getCanvas();
+		ctx.font = font;
+		const width = ctx.measureText(text).width;
+		fontMap.set(text, width);
+		return width;
+	}
+
+	/**
+	 * Segment text into word-level pieces suitable for measurement.
+	 * Uses Intl.Segmenter when available, falls back to space-splitting
+	 * (with per-character splitting for CJK).
+	 */
+	segmentText(text: string): { text: string; index: number }[] {
+		const segmenter = this.getSegmenter();
+		if (segmenter) {
+			const result: { text: string; index: number }[] = [];
+			for (const seg of segmenter.segment(text)) {
+				result.push({ text: seg.segment, index: seg.index });
+			}
+			return result;
+		}
+
+		// Fallback: split on spaces, but split CJK characters individually
+		const result: { text: string; index: number }[] = [];
+		let current = "";
+		let currentStart = 0;
+
+		for (let i = 0; i < text.length; i++) {
+			const ch = text[i]!;
+			if (ch === " ") {
+				if (current) {
+					result.push({ text: current, index: currentStart });
+				}
+				result.push({ text: " ", index: i });
+				current = "";
+				currentStart = i + 1;
+			} else if (CJK_RE.test(ch)) {
+				if (current) {
+					result.push({ text: current, index: currentStart });
+					current = "";
+				}
+				result.push({ text: ch, index: i });
+				currentStart = i + 1;
+			} else {
+				if (!current) currentStart = i;
+				current += ch;
+			}
+		}
+		if (current) {
+			result.push({ text: current, index: currentStart });
+		}
+		return result;
+	}
+
+	/**
+	 * Prepare phase: measure all text nodes under a root element.
+	 * Returns PreparedNode[] with cumulative widths for binary search.
+	 *
+	 * Skips subtrees with exotic CSS (letter-spacing, word-spacing, text-indent)
+	 * by returning null for those — the caller should fall back to DOM Range measurement.
+	 *
+	 * @param root The container element (usually document.body)
+	 * @param win The window object for getComputedStyle
+	 * @returns PreparedNode[] with entries for measurable text nodes (may be empty)
+	 */
+	prepare(root: Element, win: Window): PreparedNode[] {
+		const cached = this._preparedCache.get(root);
+		if (cached) return cached;
+
+		const result: PreparedNode[] = [];
+		const styleCache = new Map<Element, CSSStyleDeclaration>();
+		const walker = root.ownerDocument.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+			acceptNode(node: Node): number {
+				return (node as Text).data.trim().length > 0
+					? NodeFilter.FILTER_ACCEPT
+					: NodeFilter.FILTER_REJECT;
+			}
+		});
+
+		let textNode: Text | null;
+		while ((textNode = walker.nextNode() as Text | null)) {
+			const parent = textNode.parentElement;
+			if (!parent) continue;
+
+			let style = styleCache.get(parent);
+			if (!style) {
+				style = win.getComputedStyle(parent);
+				styleCache.set(parent, style);
+			}
+			if (hasExoticTextCSS(style)) continue;
+
+			const font = style.font;
+			if (!font) continue;
+
+			const text = textNode.data;
+			const segments = this.segmentText(text);
+			const measured: TextSegment[] = [];
+			let cumWidth = 0;
+
+			for (const seg of segments) {
+				const w = this.measureText(seg.text, font);
+				measured.push({
+					node: textNode,
+					charOffset: seg.index,
+					text: seg.text,
+					width: w,
+					cumWidth: cumWidth + w,
+				});
+				cumWidth += w;
+			}
+
+			result.push({
+				node: textNode,
+				segments: measured,
+				totalWidth: cumWidth,
+				font,
+			});
+		}
+
+		this._preparedCache.set(root, result);
+		return result;
+	}
+
+	/**
+	 * Layout phase: find the character offset within a text node at a given
+	 * pixel position using binary search on cumulative widths.
+	 *
+	 * @param segments The TextSegment[] from a PreparedNode
+	 * @param position Target position in pixels (relative to text node start)
+	 * @returns Character offset within the text node
+	 */
+	findOffsetAtPosition(segments: TextSegment[], position: number): number {
+		if (segments.length === 0) return 0;
+
+		// Binary search for the segment whose cumulative width crosses the position
+		let lo = 0;
+		let hi = segments.length - 1;
+
+		while (lo < hi) {
+			const mid = (lo + hi) >>> 1;
+			if (segments[mid]!.cumWidth < position) {
+				lo = mid + 1;
+			} else {
+				hi = mid;
+			}
+		}
+
+		const seg = segments[lo]!;
+		return seg.charOffset;
+	}
+
+	/**
+	 * Check if a text node's parent has exotic CSS that prevents canvas measurement.
+	 */
+	hasExoticCSS(node: Text, win: Window): boolean {
+		const parent = node.parentElement;
+		if (!parent) return true;
+		return hasExoticTextCSS(win.getComputedStyle(parent));
+	}
+
+	/**
+	 * Invalidate cached preparation for a root element.
+	 */
+	invalidate(root: Element): void {
+		this._preparedCache.delete(root);
+	}
+
+	/**
+	 * Destroy the measurer, releasing the canvas and all caches.
+	 */
+	destroy(): void {
+		this._widthCache.clear();
+		this._ctx = null;
+		this._canvas = null;
+		this._segmenter = null;
+	}
+}
+
+export default TextMeasurer;

@@ -44,9 +44,25 @@ All formats are single-file bundles. `preserveModules` was considered for ESM bu
 
 ---
 
+## Performance Optimizations
+
+### Dirty-flag dimension caching (Layer 1)
+`IframeView.expand()` now caches `textWidth()`/`textHeight()` results and only re-measures when content actually changes (RESIZE/EXPAND events). This eliminates redundant synchronous reflows during page navigation, font size changes, and layout recalculations. The RESIZE event handler pre-populates the cache from `resizeCheck()` measurements, cutting the resize chain from 4 reflows to 2.
+
+### Canvas-based text measurement (Layers 2–3)
+`TextMeasurer` (`src/utils/text-measurer.ts`) measures text widths via `CanvasRenderingContext2D.measureText()` instead of DOM Range + `getBoundingClientRect()`. `Mapping.findTextStartRange()` and `findTextEndRange()` use binary search on pre-measured cumulative widths, reducing per-word reflow loops from O(N) to O(1) for text-heavy content. Falls back to DOM measurement for content with exotic CSS (`letter-spacing`, `word-spacing`, `text-indent`).
+
+### Browser requirements for optimizations
+- `OffscreenCanvas`: Chrome 69+, Firefox 105+, Safari 16.4+ (fallback: `HTMLCanvasElement`)
+- `Intl.Segmenter`: Chrome 87+, Firefox 125+, Safari 15.4+ (fallback: space/CJK splitting)
+- Older browsers get the same behavior as before — all optimizations are transparent fallbacks
+
+---
+
 ## Next Steps
 
 - **Annotation rendering** — `highlight()`, `underline()`, `mark()` in `annotations.ts` have TODO stubs needing View/Contents integration
 - **3 remaining TODOs** — CFI range validation (`epubcfi.ts`), CFI validity check and page list fallback (`pagelist.ts`)
 - **Logger abstraction** — 9 `eslint-disable no-console` suppressions could be replaced with a pluggable logger
+- **Canvas page estimation (Layer 4)** — Optional: estimate page counts from text metrics for instant progress display before full `Locations.generate()` completes
 

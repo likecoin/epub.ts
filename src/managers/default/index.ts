@@ -5,6 +5,7 @@ import Mapping from "../../mapping";
 import Queue from "../../utils/queue";
 import Stage from "../helpers/stage";
 import Views from "../helpers/views";
+import TextMeasurer from "../../utils/text-measurer";
 import { EVENTS } from "../../utils/constants";
 import type Layout from "../../layout";
 import type Section from "../../section";
@@ -40,6 +41,7 @@ class DefaultViewManager implements IEventEmitter<DefaultManagerEvents> {
 	overflow!: string;
 	layout!: Layout;
 	mapping!: Mapping;
+	_measurer!: TextMeasurer;
 	location!: ViewLocation[];
 	isPaginated!: boolean;
 	scrollLeft!: number;
@@ -96,6 +98,7 @@ class DefaultViewManager implements IEventEmitter<DefaultManagerEvents> {
 			allowPopups: this.settings.allowPopups
 		};
 
+		this._measurer = new TextMeasurer();
 		this.rendered = false;
 
 	}
@@ -207,6 +210,10 @@ class DefaultViewManager implements IEventEmitter<DefaultManagerEvents> {
 		this.removeEventListeners();
 
 		this.stage.destroy();
+
+		if (this._measurer) {
+			this._measurer.destroy();
+		}
 
 		this.rendered = false;
 
@@ -750,6 +757,14 @@ class DefaultViewManager implements IEventEmitter<DefaultManagerEvents> {
 		// this.q.clear();
 
 		if (this.views) {
+			// Invalidate canvas measurement caches for views being removed
+			if (this._measurer) {
+				this.views.forEach((view: IframeView) => {
+					if (view?.document?.body) {
+						this._measurer.invalidate(view.document.body);
+					}
+				});
+			}
 			this.views.hide();
 			this.scrollTo(0,0, true);
 			this.views.clear();
@@ -1070,7 +1085,7 @@ class DefaultViewManager implements IEventEmitter<DefaultManagerEvents> {
 
 		this.viewSettings.layout = layout;
 
-		this.mapping = new Mapping(layout.props, this.settings.direction, this.settings.axis);
+		this.mapping = new Mapping(layout.props, this.settings.direction, this.settings.axis, false, this._measurer);
 
 		if(this.views) {
 
@@ -1101,7 +1116,7 @@ class DefaultViewManager implements IEventEmitter<DefaultManagerEvents> {
 		this.viewSettings.axis = axis;
 
 		if (this.mapping) {
-			this.mapping = new Mapping(this.layout.props, this.settings.direction, this.settings.axis);
+			this.mapping = new Mapping(this.layout.props, this.settings.direction, this.settings.axis, false, this._measurer);
 		}
 
 		if (this.layout) {
