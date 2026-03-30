@@ -51,26 +51,31 @@ function hasExoticTextCSS(style: CSSStyleDeclaration): boolean {
 	return false;
 }
 
+/** Max number of font entries in the width cache before eviction */
+const MAX_WIDTH_CACHE_FONTS = 32;
+
 class TextMeasurer {
 	private _canvas: OffscreenCanvas | HTMLCanvasElement | null = null;
 	private _ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D | null = null;
-	/** font string → (text → width) */
+	/** font string → (text → width), bounded to MAX_WIDTH_CACHE_FONTS entries */
 	private _widthCache: Map<string, Map<string, number>> = new Map();
 	/** parent element → prepared nodes */
 	private _preparedCache: WeakMap<Element, PreparedNode[]> = new WeakMap();
+	/** text node → prepared node, for O(1) lookup in _canvasPrepare */
+	private _nodeIndex: WeakMap<Text, PreparedNode> = new WeakMap();
 	/** shared Intl.Segmenter instance (lazy) */
 	private _segmenter: SegmenterLike | null = null;
 
-	private getCanvas(): CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D {
+	private getCanvas(): CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D | null {
 		if (this._ctx) return this._ctx;
 
 		if (typeof OffscreenCanvas !== "undefined") {
 			this._canvas = new OffscreenCanvas(1, 1);
-			this._ctx = this._canvas.getContext("2d")!;
-		} else {
-			this._canvas = document.createElement("canvas");
-			this._ctx = this._canvas.getContext("2d")!;
+			this._ctx = this._canvas.getContext("2d");
+			if (this._ctx) return this._ctx;
 		}
+		this._canvas = document.createElement("canvas");
+		this._ctx = this._canvas.getContext("2d");
 		return this._ctx;
 	}
 
@@ -93,11 +98,17 @@ class TextMeasurer {
 			const cached = fontMap.get(text);
 			if (cached !== undefined) return cached;
 		} else {
+			// Evict oldest font entry if cache is full
+			if (this._widthCache.size >= MAX_WIDTH_CACHE_FONTS) {
+				const oldest = this._widthCache.keys().next().value;
+				if (oldest !== undefined) this._widthCache.delete(oldest);
+			}
 			fontMap = new Map();
 			this._widthCache.set(font, fontMap);
 		}
 
 		const ctx = this.getCanvas();
+		if (!ctx) return 0;
 		ctx.font = font;
 		const width = ctx.measureText(text).width;
 		fontMap.set(text, width);
@@ -155,8 +166,9 @@ class TextMeasurer {
 	 * Prepare phase: measure all text nodes under a root element.
 	 * Returns PreparedNode[] with cumulative widths for binary search.
 	 *
-	 * Skips subtrees with exotic CSS (letter-spacing, word-spacing, text-indent)
-	 * by returning null for those — the caller should fall back to DOM Range measurement.
+	 * Text nodes whose parent has exotic CSS (letter-spacing, word-spacing,
+	 * text-indent) are skipped — the caller should fall back to DOM Range
+	 * measurement for those.
 	 *
 	 * @param root The container element (usually document.body)
 	 * @param win The window object for getComputedStyle
@@ -208,12 +220,14 @@ class TextMeasurer {
 				cumWidth += w;
 			}
 
-			result.push({
+			const preparedNode: PreparedNode = {
 				node: textNode,
 				segments: measured,
 				totalWidth: cumWidth,
 				font,
-			});
+			};
+			result.push(preparedNode);
+			this._nodeIndex.set(textNode, preparedNode);
 		}
 
 		this._preparedCache.set(root, result);
@@ -221,17 +235,16 @@ class TextMeasurer {
 	}
 
 	/**
-	 * Layout phase: find the character offset within a text node at a given
-	 * pixel position using binary search on cumulative widths.
+	 * Layout phase: find the segment index at a given pixel position
+	 * using binary search on cumulative widths.
 	 *
 	 * @param segments The TextSegment[] from a PreparedNode
 	 * @param position Target position in pixels (relative to text node start)
-	 * @returns Character offset within the text node
+	 * @returns Index into the segments array
 	 */
-	findOffsetAtPosition(segments: TextSegment[], position: number): number {
+	findSegmentIndex(segments: TextSegment[], position: number): number {
 		if (segments.length === 0) return 0;
 
-		// Binary search for the segment whose cumulative width crosses the position
 		let lo = 0;
 		let hi = segments.length - 1;
 
@@ -244,8 +257,15 @@ class TextMeasurer {
 			}
 		}
 
-		const seg = segments[lo]!;
-		return seg.charOffset;
+		return lo;
+	}
+
+	/**
+	 * Look up a previously prepared text node in O(1).
+	 * Returns null if the node was not prepared (exotic CSS, not yet prepared, etc.).
+	 */
+	getPreparedNode(node: Text): PreparedNode | null {
+		return this._nodeIndex.get(node) || null;
 	}
 
 	/**

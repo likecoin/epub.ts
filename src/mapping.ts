@@ -301,6 +301,11 @@ class Mapping {
 		if (!this._measurer || node.nodeType !== Node.TEXT_NODE) return null;
 
 		const textNode = node as Text;
+
+		// O(1) lookup if already prepared
+		const indexed = this._measurer.getPreparedNode(textNode);
+		if (indexed) return indexed;
+
 		const root = textNode.parentElement;
 		if (!root) return null;
 
@@ -309,8 +314,9 @@ class Mapping {
 
 		if (this._measurer.hasExoticCSS(textNode, win)) return null;
 
-		return this._measurer.prepare(root.ownerDocument.body, win)
-			.find(p => p.node === textNode) || null;
+		// Prepare the entire document body (populates _nodeIndex for all text nodes)
+		this._measurer.prepare(root.ownerDocument.body, win);
+		return this._measurer.getPreparedNode(textNode);
 	}
 
 	/**
@@ -333,12 +339,17 @@ class Mapping {
 
 		if (relativeTarget < 0) return null;
 
-		const offset = this._measurer!.findOffsetAtPosition(prepared.segments, relativeTarget);
+		const segIdx = this._measurer!.findSegmentIndex(prepared.segments, relativeTarget);
+		const seg = prepared.segments[segIdx]!;
+		const nextSeg = prepared.segments[segIdx + 1];
+		const segEnd = nextSeg ? nextSeg.charOffset : textNode.data.length;
+
 		const doc = textNode.ownerDocument!;
 		const range = doc.createRange();
-		const safeOffset = Math.min(offset, textNode.data.length);
-		range.setStart(textNode, safeOffset);
-		range.setEnd(textNode, Math.min(safeOffset + 1, textNode.data.length));
+		const safeStart = Math.min(seg.charOffset, textNode.data.length);
+		const safeEnd = Math.min(segEnd, textNode.data.length);
+		range.setStart(textNode, safeStart);
+		range.setEnd(textNode, safeEnd);
 
 		const pos = range.getBoundingClientRect();
 		return verifyFn(pos) ? range : null;

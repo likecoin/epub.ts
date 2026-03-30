@@ -128,11 +128,9 @@ Key classes:
 
 | Environment | Import | Notes |
 |-------------|--------|-------|
-| Modern browsers | `@likecoin/epub-ts` | Chrome 64+, Firefox 69+, Safari 13.1+, Edge 79+ |
+| Modern browsers | `@likecoin/epub-ts` | Chrome, Firefox, Safari, Edge |
 | Vite / webpack | `@likecoin/epub-ts` | ESM or CJS |
 | Node.js 18+ | `@likecoin/epub-ts/node` | Parsing only (no rendering); requires `linkedom` peer dep |
-
-The minimum browser floor is set by `ResizeObserver`. Canvas-based text measurement optimizations additionally use `OffscreenCanvas` and `Intl.Segmenter` when available, with automatic fallbacks for older browsers.
 
 ## What's Changed from epubjs
 
