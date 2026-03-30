@@ -335,7 +335,9 @@ class Mapping {
 		const nodeStart = this.horizontal
 			? (this.direction === "rtl" ? nodePos.right : nodePos.left)
 			: nodePos.top;
-		const relativeTarget = this.direction === "rtl" ? nodeStart - target : target - nodeStart;
+		const relativeTarget = (this.horizontal && this.direction === "rtl")
+			? nodeStart - target
+			: target - nodeStart;
 
 		if (relativeTarget < 0) return null;
 

@@ -42,6 +42,20 @@ describe("TextMeasurer", () => {
 		it("should handle empty string", () => {
 			expect(measurer.segmentText("")).toEqual([]);
 		});
+
+		it("should handle astral-plane CJK (surrogate pairs) with correct UTF-16 offsets", () => {
+			// U+20000 is 𠀀 (CJK Unified Ideographs Extension B), encoded as 2 UTF-16 code units
+			const text = "a𠀀b";
+			const segments = measurer.segmentText(text);
+			const joined = segments.map(s => s.text).join("");
+			expect(joined).toBe(text);
+			// "a" starts at UTF-16 index 0
+			expect(segments[0]!.index).toBe(0);
+			// 𠀀 is 2 code units, so "b" should start at index 3
+			const lastSeg = segments[segments.length - 1]!;
+			expect(lastSeg.text).toContain("b");
+			expect(lastSeg.index).toBe(3);
+		});
 	});
 
 	describe("findSegmentIndex()", () => {

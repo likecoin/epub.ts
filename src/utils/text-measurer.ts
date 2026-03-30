@@ -130,31 +130,34 @@ class TextMeasurer {
 			return result;
 		}
 
-		// Fallback: split on spaces, but split CJK characters individually
+		// Fallback: split on spaces, but split CJK characters individually.
+		// Iterate by code point (for...of) to handle surrogate pairs correctly,
+		// while tracking UTF-16 index for DOM Range offsets.
 		const result: { text: string; index: number }[] = [];
 		let current = "";
 		let currentStart = 0;
+		let i = 0;
 
-		for (let i = 0; i < text.length; i++) {
-			const ch = text[i]!;
+		for (const ch of text) {
 			if (ch === " ") {
 				if (current) {
 					result.push({ text: current, index: currentStart });
 				}
 				result.push({ text: " ", index: i });
 				current = "";
-				currentStart = i + 1;
+				currentStart = i + ch.length;
 			} else if (CJK_RE.test(ch)) {
 				if (current) {
 					result.push({ text: current, index: currentStart });
 					current = "";
 				}
 				result.push({ text: ch, index: i });
-				currentStart = i + 1;
+				currentStart = i + ch.length;
 			} else {
 				if (!current) currentStart = i;
 				current += ch;
 			}
+			i += ch.length;
 		}
 		if (current) {
 			result.push({ text: current, index: currentStart });
@@ -278,10 +281,17 @@ class TextMeasurer {
 	}
 
 	/**
-	 * Invalidate cached preparation for a root element.
+	 * Invalidate cached preparation for a root element,
+	 * including all per-node index entries under it.
 	 */
 	invalidate(root: Element): void {
-		this._preparedCache.delete(root);
+		const cached = this._preparedCache.get(root);
+		if (cached) {
+			for (const p of cached) {
+				this._nodeIndex.delete(p.node);
+			}
+			this._preparedCache.delete(root);
+		}
 	}
 
 	/**
@@ -289,6 +299,8 @@ class TextMeasurer {
 	 */
 	destroy(): void {
 		this._widthCache.clear();
+		this._preparedCache = new WeakMap();
+		this._nodeIndex = new WeakMap();
 		this._ctx = null;
 		this._canvas = null;
 		this._segmenter = null;
