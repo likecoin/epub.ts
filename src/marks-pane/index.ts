@@ -313,7 +313,7 @@ export class Underline extends Highlight {
 			rect.setAttribute("y", String(r.top - offset.top + container.top));
 			rect.setAttribute("height", String(r.height));
 			rect.setAttribute("width", String(r.width));
-			rect.setAttribute("fill", "none");
+			rect.setAttribute("fill", this.attributes.fill || "none");
 
 			const line = svgCreate("line");
 			line.setAttribute("x1", String(r.left - offset.left + container.left));
@@ -321,9 +321,9 @@ export class Underline extends Highlight {
 			line.setAttribute("y1", String(r.top - offset.top + container.top + r.height - 1));
 			line.setAttribute("y2", String(r.top - offset.top + container.top + r.height - 1));
 
-			line.setAttribute("stroke-width", "1");
-			line.setAttribute("stroke", "black");
-			line.setAttribute("stroke-linecap", "square");
+			line.setAttribute("stroke-width", this.attributes["stroke-width"] || "1");
+			line.setAttribute("stroke", this.attributes.stroke || "black");
+			line.setAttribute("stroke-linecap", this.attributes["stroke-linecap"] || "square");
 
 			docFrag.appendChild(rect);
 			docFrag.appendChild(line);
