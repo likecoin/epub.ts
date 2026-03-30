@@ -17,7 +17,7 @@ All formats are single-file bundles. `preserveModules` was considered for ESM bu
 
 ## Test Status
 
-**Total: 884 tests passing (38 test files)**
+**Total: 953 tests passing (39 test files)**
 
 ---
 

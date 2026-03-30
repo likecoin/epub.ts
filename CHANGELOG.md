@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.5.1 (2026-03-30)
+
+### Refactor
+
+- Export `Container` class, fix `ContinuousViewManager` type mismatch, regenerate API docs
+
+### Tests
+
+- Add 69 InlineView tests with extracted shared view mocks
+
+### Cleanup
+
+- Remove 13 stale TODO comments inherited from epubjs
+
 ## 0.5.0 (2026-03-28)
 
 ### Modernization
