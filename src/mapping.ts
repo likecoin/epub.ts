@@ -314,8 +314,10 @@ class Mapping {
 
 		if (this._measurer.hasExoticCSS(textNode, win)) return null;
 
-		// Prepare the entire document body (populates _nodeIndex for all text nodes)
-		this._measurer.prepare(root.ownerDocument.body, win);
+		const body = root.ownerDocument?.body;
+		if (!body) return null;
+
+		this._measurer.prepare(body, win);
 		return this._measurer.getPreparedNode(textNode);
 	}
 
@@ -342,19 +344,24 @@ class Mapping {
 		if (relativeTarget < 0) return null;
 
 		const segIdx = this._measurer!.findSegmentIndex(prepared.segments, relativeTarget);
-		const seg = prepared.segments[segIdx]!;
-		const nextSeg = prepared.segments[segIdx + 1];
-		const segEnd = nextSeg ? nextSeg.charOffset : textNode.data.length;
-
+		const segments = prepared.segments;
 		const doc = textNode.ownerDocument!;
-		const range = doc.createRange();
-		const safeStart = Math.min(seg.charOffset, textNode.data.length);
-		const safeEnd = Math.min(segEnd, textNode.data.length);
-		range.setStart(textNode, safeStart);
-		range.setEnd(textNode, safeEnd);
+		const len = textNode.data.length;
 
-		const pos = range.getBoundingClientRect();
-		return verifyFn(pos) ? range : null;
+		// Try the found segment, then the next one (target may fall mid-segment
+		// due to CSS column breaks or justification shifting the boundary)
+		for (let i = segIdx; i < segments.length && i <= segIdx + 1; i++) {
+			const seg = segments[i]!;
+			const nextSeg = segments[i + 1];
+
+			const range = doc.createRange();
+			range.setStart(textNode, Math.min(seg.charOffset, len));
+			range.setEnd(textNode, Math.min(nextSeg ? nextSeg.charOffset : len, len));
+
+			if (verifyFn(range.getBoundingClientRect())) return range;
+		}
+
+		return null;
 	}
 
 	/**
