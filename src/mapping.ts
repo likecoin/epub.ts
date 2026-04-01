@@ -152,8 +152,8 @@ class Mapping {
 
 				if (this.horizontal && this.direction === "ltr") {
 
-					left = this.horizontal ? elPos.left : elPos.top;
-					right = this.horizontal ? elPos.right : elPos.bottom;
+					left = elPos.left;
+					right = elPos.right;
 
 					if( left >= start && left <= end ) {
 						return node;
@@ -222,6 +222,7 @@ class Mapping {
 		let $prev = root;
 		let found;
 		let lastElPos: DOMRect | undefined;
+		let prevElPos: DOMRect | undefined;
 
 		while (stack.length) {
 
@@ -245,13 +246,14 @@ class Mapping {
 						return node;
 					} else {
 						$prev = node;
+						prevElPos = elPos;
 						stack.push(node);
 					}
 
 				} else if (this.horizontal && this.direction === "rtl") {
 
-					left = Math.round(this.horizontal ? elPos.left : elPos.top);
-					right = Math.round(this.horizontal ? elPos.right : elPos.bottom);
+					left = Math.round(elPos.left);
+					right = Math.round(elPos.right);
 
 					if(right < start && $prev) {
 						return $prev;
@@ -259,6 +261,7 @@ class Mapping {
 						return node;
 					} else {
 						$prev = node;
+						prevElPos = elPos;
 						stack.push(node);
 					}
 
@@ -273,6 +276,7 @@ class Mapping {
 						return node;
 					} else {
 						$prev = node;
+						prevElPos = elPos;
 						stack.push(node);
 					}
 
@@ -283,13 +287,14 @@ class Mapping {
 
 
 			if(found){
-				return this.findTextEndRange(found, start, end, lastElPos);
+				const pos = (found === $prev) ? prevElPos : lastElPos;
+				return this.findTextEndRange(found, start, end, pos);
 			}
 
 		}
 
 		// end of chapter
-		return this.findTextEndRange($prev, start, end, lastElPos);
+		return this.findTextEndRange($prev, start, end, prevElPos);
 	}
 
 	/**
@@ -380,7 +385,9 @@ class Mapping {
 	findTextStartRange(node: Node, start: number, end: number, nodePos?: DOMRect): Range {
 		// Canvas fast path: reuse nodePos from findStart to avoid a second reflow
 		if (nodePos) {
-			const canvasRange = this._canvasFindRange(node, nodePos, start, (pos) => {
+			// RTL: reading-order start is at the right column edge (end)
+			const target = (this.horizontal && this.direction === "rtl") ? end : start;
+			const canvasRange = this._canvasFindRange(node, nodePos, target, (pos) => {
 				const check = this.horizontal
 					? (this.direction === "rtl" ? pos.right : pos.left)
 					: pos.top;
@@ -441,7 +448,9 @@ class Mapping {
 	findTextEndRange(node: Node, start: number, end: number, nodePos?: DOMRect): Range {
 		// Canvas fast path: reuse nodePos from findEnd to avoid a second reflow
 		if (nodePos) {
-			const canvasRange = this._canvasFindRange(node, nodePos, end, (pos) => {
+			// RTL: reading-order end is at the left column edge (start)
+			const target = (this.horizontal && this.direction === "rtl") ? start : end;
+			const canvasRange = this._canvasFindRange(node, nodePos, target, (pos) => {
 				if (this.horizontal && this.direction === "ltr") return pos.left <= end && pos.right >= end;
 				if (this.horizontal && this.direction === "rtl") return pos.right >= start && pos.left <= start;
 				return pos.top <= end && pos.bottom >= end;
