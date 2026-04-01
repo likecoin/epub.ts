@@ -46,9 +46,9 @@ class IframeView implements IEventEmitter<IframeViewEvents> {
 	_textHeight: number | undefined;
 	_contentWidth: number | undefined;
 	_contentHeight: number | undefined;
-	_contentDirty!: boolean;
-	_needsReframe!: boolean;
-	_expanding!: boolean;
+	_contentDirty: boolean = true;
+	_needsReframe: boolean = false;
+	_expanding: boolean = false;
 	elementBounds!: { width: number; height: number };
 	supportsSrcdoc!: boolean;
 	sectionRender!: Promise<string>;

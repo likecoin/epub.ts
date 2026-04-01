@@ -301,20 +301,22 @@ class Mapping {
 		if (!this._measurer || node.nodeType !== Node.TEXT_NODE) return null;
 
 		const textNode = node as Text;
+		const parent = textNode.parentElement;
+		if (!parent) return null;
 
-		// O(1) lookup if already prepared
-		const indexed = this._measurer.getPreparedNode(textNode);
-		if (indexed) return indexed;
-
-		const root = textNode.parentElement;
-		if (!root) return null;
-
-		const win = root.ownerDocument?.defaultView;
+		const win = parent.ownerDocument?.defaultView;
 		if (!win) return null;
+
+		const indexed = this._measurer.getPreparedNode(textNode);
+		if (indexed) {
+			const currentFont = win.getComputedStyle(parent).font;
+			if (currentFont && currentFont !== indexed.font) return null;
+			return indexed;
+		}
 
 		if (this._measurer.hasExoticCSS(textNode, win)) return null;
 
-		const body = root.ownerDocument?.body;
+		const body = parent.ownerDocument.body;
 		if (!body) return null;
 
 		this._measurer.prepare(body, win);
