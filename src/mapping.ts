@@ -310,8 +310,10 @@ class Mapping {
 		const indexed = this._measurer.getPreparedNode(textNode);
 		if (indexed) {
 			const currentFont = win.getComputedStyle(parent).font;
-			if (currentFont && currentFont !== indexed.font) return null;
-			return indexed;
+			if (!currentFont || currentFont === indexed.font) return indexed;
+			// Font changed — invalidate so the shared tail re-prepares
+			const body = parent.ownerDocument.body;
+			if (body) this._measurer.invalidate(body);
 		}
 
 		if (this._measurer.hasExoticCSS(textNode, win)) return null;

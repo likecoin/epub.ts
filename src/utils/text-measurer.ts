@@ -18,7 +18,7 @@ export interface TextSegment {
 	text: string;
 	/** Measured width of this segment in pixels */
 	width: number;
-	/** Cumulative width from the start of the parent element */
+	/** Cumulative width from the start of this text node's segment list */
 	cumWidth: number;
 }
 
