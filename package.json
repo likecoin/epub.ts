@@ -76,6 +76,10 @@
       "optional": true
     }
   },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "dependencies": {
     "jszip": "^3.10.1"
   }
