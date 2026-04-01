@@ -3,6 +3,8 @@ import { nodeBounds } from "./utils/core";
 import type { EpubCFIPair, RangePair, LayoutProps } from "./types";
 import type IframeView from "./managers/views/iframe";
 import type Contents from "./contents";
+import type TextMeasurer from "./utils/text-measurer";
+import type { PreparedNode } from "./utils/text-measurer";
 
 /**
  * Map text locations to CFI ranges
@@ -17,12 +19,14 @@ class Mapping {
 	horizontal: boolean;
 	direction: string;
 	_dev: boolean;
+	_measurer: TextMeasurer | null;
 
-	constructor(layout: LayoutProps, direction?: string, axis?: string, dev: boolean = false) {
+	constructor(layout: LayoutProps, direction?: string, axis?: string, dev: boolean = false, measurer?: TextMeasurer) {
 		this.layout = layout;
 		this.horizontal = (axis === "horizontal") ? true : false;
 		this.direction = direction || "ltr";
 		this._dev = dev;
+		this._measurer = measurer || null;
 	}
 
 	/**
@@ -133,6 +137,7 @@ class Mapping {
 		let $el;
 		let found;
 		let $prev = root;
+		let lastElPos: DOMRect | undefined;
 
 		while (stack.length) {
 
@@ -143,11 +148,12 @@ class Mapping {
 
 
 				const elPos = nodeBounds(node);
+				lastElPos = elPos;
 
 				if (this.horizontal && this.direction === "ltr") {
 
-					left = this.horizontal ? elPos.left : elPos.top;
-					right = this.horizontal ? elPos.right : elPos.bottom;
+					left = elPos.left;
+					right = elPos.right;
 
 					if( left >= start && left <= end ) {
 						return node;
@@ -193,13 +199,13 @@ class Mapping {
 			});
 
 			if(found) {
-				return this.findTextStartRange(found, start, end);
+				return this.findTextStartRange(found, start, end, lastElPos);
 			}
 
 		}
 
 		// Return last element
-		return this.findTextStartRange($prev, start, end);
+		return this.findTextStartRange($prev, start, end, lastElPos);
 	}
 
 	/**
@@ -215,6 +221,8 @@ class Mapping {
 		let $el;
 		let $prev = root;
 		let found;
+		let lastElPos: DOMRect | undefined;
+		let prevElPos: DOMRect | undefined;
 
 		while (stack.length) {
 
@@ -225,6 +233,7 @@ class Mapping {
 				let left, right, top, bottom;
 
 				const elPos = nodeBounds(node);
+				lastElPos = elPos;
 
 				if (this.horizontal && this.direction === "ltr") {
 
@@ -237,13 +246,14 @@ class Mapping {
 						return node;
 					} else {
 						$prev = node;
+						prevElPos = elPos;
 						stack.push(node);
 					}
 
 				} else if (this.horizontal && this.direction === "rtl") {
 
-					left = Math.round(this.horizontal ? elPos.left : elPos.top);
-					right = Math.round(this.horizontal ? elPos.right : elPos.bottom);
+					left = Math.round(elPos.left);
+					right = Math.round(elPos.right);
 
 					if(right < start && $prev) {
 						return $prev;
@@ -251,6 +261,7 @@ class Mapping {
 						return node;
 					} else {
 						$prev = node;
+						prevElPos = elPos;
 						stack.push(node);
 					}
 
@@ -265,6 +276,7 @@ class Mapping {
 						return node;
 					} else {
 						$prev = node;
+						prevElPos = elPos;
 						stack.push(node);
 					}
 
@@ -275,24 +287,117 @@ class Mapping {
 
 
 			if(found){
-				return this.findTextEndRange(found, start, end);
+				const pos = (found === $prev) ? prevElPos : lastElPos;
+				return this.findTextEndRange(found, start, end, pos);
 			}
 
 		}
 
 		// end of chapter
-		return this.findTextEndRange($prev, start, end);
+		return this.findTextEndRange($prev, start, end, prevElPos);
+	}
+
+	/**
+	 * Try to prepare a text node's root for canvas-based measurement.
+	 * Returns the PreparedNode for this text node, or null if not available.
+	 * @private
+	 */
+	private _canvasPrepare(node: Node): PreparedNode | null {
+		if (!this._measurer || node.nodeType !== Node.TEXT_NODE) return null;
+
+		const textNode = node as Text;
+		const parent = textNode.parentElement;
+		if (!parent) return null;
+
+		const win = parent.ownerDocument?.defaultView;
+		if (!win) return null;
+
+		const indexed = this._measurer.getPreparedNode(textNode);
+		if (indexed) {
+			const currentFont = win.getComputedStyle(parent).font;
+			if (!currentFont || currentFont === indexed.font) return indexed;
+			// Font changed — invalidate so the shared tail re-prepares
+			const body = parent.ownerDocument.body;
+			if (body) this._measurer.invalidate(body);
+		}
+
+		if (this._measurer.hasExoticCSS(textNode, win)) return null;
+
+		const body = parent.ownerDocument.body;
+		if (!body) return null;
+
+		this._measurer.prepare(body, win);
+		return this._measurer.getPreparedNode(textNode);
+	}
+
+	/**
+	 * Canvas fast path: use binary search on pre-measured cumulative widths
+	 * to find a Range at the target position, then verify with one getBoundingClientRect.
+	 * Returns the Range if verification passes, or null to fall through to DOM loop.
+	 * @private
+	 */
+	private _canvasFindRange(
+		node: Node, nodePos: DOMRect, target: number, verifyFn: (pos: DOMRect) => boolean
+	): Range | null {
+		const prepared = this._canvasPrepare(node);
+		if (!prepared || prepared.segments.length === 0) return null;
+
+		const textNode = node as Text;
+		const nodeStart = this.horizontal
+			? (this.direction === "rtl" ? nodePos.right : nodePos.left)
+			: nodePos.top;
+		const relativeTarget = (this.horizontal && this.direction === "rtl")
+			? nodeStart - target
+			: target - nodeStart;
+
+		if (relativeTarget < 0) return null;
+
+		const segIdx = this._measurer!.findSegmentIndex(prepared.segments, relativeTarget);
+		const segments = prepared.segments;
+		const doc = textNode.ownerDocument!;
+		const len = textNode.data.length;
+
+		// Try the found segment, then the next one (target may fall mid-segment
+		// due to CSS column breaks or justification shifting the boundary)
+		for (let i = segIdx; i < segments.length && i <= segIdx + 1; i++) {
+			const seg = segments[i]!;
+			const nextSeg = segments[i + 1];
+
+			const range = doc.createRange();
+			range.setStart(textNode, Math.min(seg.charOffset, len));
+			range.setEnd(textNode, Math.min(nextSeg ? nextSeg.charOffset : len, len));
+
+			if (verifyFn(range.getBoundingClientRect())) return range;
+		}
+
+		return null;
 	}
 
 	/**
 	 * Find Text Start Range
 	 * @private
-	 * @param {Node} root root node
+	 * @param {Node} node text node
 	 * @param {number} start position to start at
 	 * @param {number} end position to end at
+	 * @param {DOMRect} [nodePos] pre-computed node bounds from findStart (avoids redundant reflow)
 	 * @return {Range}
 	 */
-	findTextStartRange(node: Node, start: number, end: number): Range {
+	findTextStartRange(node: Node, start: number, end: number, nodePos?: DOMRect): Range {
+		// Canvas fast path: reuse nodePos from findStart to avoid a second reflow
+		if (nodePos) {
+			// RTL: reading-order start is at the right column edge (end)
+			const target = (this.horizontal && this.direction === "rtl") ? end : start;
+			const canvasRange = this._canvasFindRange(node, nodePos, target, (pos) => {
+				const check = this.horizontal
+					? (this.direction === "rtl" ? pos.right : pos.left)
+					: pos.top;
+				if (this.horizontal && this.direction === "ltr") return check >= start;
+				if (this.horizontal && this.direction === "rtl") return check <= end;
+				return check >= start;
+			});
+			if (canvasRange) return canvasRange;
+		}
+
 		const ranges = this.splitTextNodeIntoRanges(node);
 		let range;
 		let pos;
@@ -326,8 +431,6 @@ class Mapping {
 
 			}
 
-			// prev = range;
-
 		}
 
 		return ranges[0]!;
@@ -336,12 +439,25 @@ class Mapping {
 	/**
 	 * Find Text End Range
 	 * @private
-	 * @param {Node} root root node
+	 * @param {Node} node text node
 	 * @param {number} start position to start at
 	 * @param {number} end position to end at
+	 * @param {DOMRect} [nodePos] pre-computed node bounds from findEnd (avoids redundant reflow)
 	 * @return {Range}
 	 */
-	findTextEndRange(node: Node, start: number, end: number): Range {
+	findTextEndRange(node: Node, start: number, end: number, nodePos?: DOMRect): Range {
+		// Canvas fast path: reuse nodePos from findEnd to avoid a second reflow
+		if (nodePos) {
+			// RTL: reading-order end is at the left column edge (start)
+			const target = (this.horizontal && this.direction === "rtl") ? start : end;
+			const canvasRange = this._canvasFindRange(node, nodePos, target, (pos) => {
+				if (this.horizontal && this.direction === "ltr") return pos.left <= end && pos.right >= end;
+				if (this.horizontal && this.direction === "rtl") return pos.right >= start && pos.left <= start;
+				return pos.top <= end && pos.bottom >= end;
+			});
+			if (canvasRange) return canvasRange;
+		}
+
 		const ranges = this.splitTextNodeIntoRanges(node);
 		let prev;
 		let range;

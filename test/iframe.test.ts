@@ -363,6 +363,93 @@ describe("IframeView", () => {
 			expect(view._contentHeight).toBeUndefined();
 			expect(view._needsReframe).toBe(true);
 		});
+
+		it("should set _contentDirty to true", () => {
+			const view = createView();
+			view.create();
+			view._contentDirty = false;
+			view.reset();
+			expect(view._contentDirty).toBe(true);
+		});
+	});
+
+	describe("expand()", () => {
+		it("should use cached _textWidth when _contentDirty is false (horizontal)", () => {
+			const view = createView(undefined, { axis: "horizontal" });
+			view.create();
+			view.displayed = true;
+			view._contentDirty = false;
+			view._textWidth = 1200;
+			view.contents = {
+				textWidth: vi.fn().mockReturnValue(999),
+				textHeight: vi.fn().mockReturnValue(999),
+			} as any;
+			view.expand();
+			// Should use cached value, not call textWidth()
+			expect(view.contents!.textWidth).not.toHaveBeenCalled();
+			expect(view._width).toBe(1200);
+		});
+
+		it("should measure and cache when _contentDirty is true (horizontal)", () => {
+			const view = createView(undefined, { axis: "horizontal" });
+			view.create();
+			view.displayed = true;
+			view._contentDirty = true;
+			view.contents = {
+				textWidth: vi.fn().mockReturnValue(1200),
+				textHeight: vi.fn().mockReturnValue(600),
+			} as any;
+			view.expand();
+			expect(view.contents!.textWidth).toHaveBeenCalledOnce();
+			expect(view._textWidth).toBe(1200);
+			expect(view._contentDirty).toBe(false);
+		});
+
+		it("should use cached _textHeight when _contentDirty is false (vertical)", () => {
+			const view = createView(undefined, { axis: "vertical" });
+			view.create();
+			view.displayed = true;
+			view._contentDirty = false;
+			view._textHeight = 2000;
+			view.contents = {
+				textWidth: vi.fn().mockReturnValue(999),
+				textHeight: vi.fn().mockReturnValue(999),
+			} as any;
+			view.expand();
+			expect(view.contents!.textHeight).not.toHaveBeenCalled();
+		});
+
+		it("should measure and cache when _contentDirty is true (vertical)", () => {
+			const view = createView(undefined, { axis: "vertical" });
+			view.create();
+			view.displayed = true;
+			view._contentDirty = true;
+			view.contents = {
+				textWidth: vi.fn().mockReturnValue(800),
+				textHeight: vi.fn().mockReturnValue(2000),
+			} as any;
+			view.expand();
+			expect(view.contents!.textHeight).toHaveBeenCalledOnce();
+			expect(view._textHeight).toBe(2000);
+			expect(view._contentDirty).toBe(false);
+		});
+	});
+
+	describe("setLayout()", () => {
+		it("should mark _contentDirty before expand", () => {
+			const view = createView();
+			view.create();
+			view.displayed = true;
+			view._contentDirty = false;
+			view.contents = {
+				textWidth: vi.fn().mockReturnValue(800),
+				textHeight: vi.fn().mockReturnValue(600),
+			} as any;
+			const layout = createMockLayout();
+			view.setLayout(layout as any);
+			// setLayout marks dirty, so expand should re-measure
+			expect(view.contents!.textWidth).toHaveBeenCalled();
+		});
 	});
 
 	describe("reframe()", () => {
