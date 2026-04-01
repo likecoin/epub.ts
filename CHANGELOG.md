@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.6.0 (2026-04-02)
+
+### Features
+
+- Allow custom underline styles
+- Add canvas-based text measurement and dirty-flag dimension caching
+
+### Docs
+
+- Rewrite docs with value-focused messaging for developers
+
+### CI
+
+- Add npm Trusted Publishing workflow with OIDC provenance
+
 ## 0.5.1 (2026-03-30)
 
 ### Refactor
