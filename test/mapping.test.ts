@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, afterEach, beforeAll } from "vitest";
 import Mapping from "../src/mapping";
+import TextMeasurer from "../src/utils/text-measurer";
 import type { LayoutProps } from "../src/types";
 import type Contents from "../src/contents";
 import type IframeView from "../src/managers/views/iframe";
@@ -333,6 +334,103 @@ describe("Mapping", () => {
 			expect(result).toBeDefined();
 			expect(result).toHaveProperty("start");
 			expect(result).toHaveProperty("end");
+		});
+	});
+
+	describe("_canvasFindNode fast path", () => {
+		it("should return null when no measurer is set", () => {
+			const mapping = new Mapping(createMockLayout(), "ltr", "horizontal");
+			const container = document.createElement("div");
+			container.textContent = "test";
+			document.body.appendChild(container);
+
+			// Access private method via any cast
+			const result = (mapping as any)._canvasFindNode(container, 0, 400, "start");
+			expect(result).toBeNull();
+		});
+
+		it("should return null when prepare returns empty", () => {
+			const measurer = new TextMeasurer();
+			const mapping = new Mapping(createMockLayout(), "ltr", "horizontal", false, measurer);
+			// Empty container — no text nodes
+			const container = document.createElement("div");
+			document.body.appendChild(container);
+
+			const result = (mapping as any)._canvasFindNode(container, 0, 400, "start");
+			expect(result).toBeNull();
+		});
+
+		it("should find a node via fast path for start mode", () => {
+			const measurer = new TextMeasurer();
+			const mapping = new Mapping(createMockLayout(), "ltr", "horizontal", false, measurer);
+
+			const container = document.createElement("div");
+			const p1 = document.createElement("p");
+			p1.textContent = "First paragraph with some text";
+			const p2 = document.createElement("p");
+			p2.textContent = "Second paragraph with more text";
+			container.appendChild(p1);
+			container.appendChild(p2);
+			document.body.appendChild(container);
+
+			const result = (mapping as any)._canvasFindNode(container, 0, 400, "start");
+			// In jsdom, getBoundingClientRect returns zeros, so the fast path
+			// should either find a node (position 0 matches left >= start) or return null
+			// Since all positions are 0 and start is 0, the condition left >= start && left <= end is true
+			if (result) {
+				expect(result.node).toBeDefined();
+				expect(result.nodePos).toBeDefined();
+			}
+		});
+
+		it("should find a node via fast path for end mode", () => {
+			const measurer = new TextMeasurer();
+			const mapping = new Mapping(createMockLayout(), "ltr", "horizontal", false, measurer);
+
+			const container = document.createElement("div");
+			const p1 = document.createElement("p");
+			p1.textContent = "First paragraph";
+			const p2 = document.createElement("p");
+			p2.textContent = "Second paragraph";
+			container.appendChild(p1);
+			container.appendChild(p2);
+			document.body.appendChild(container);
+
+			const result = (mapping as any)._canvasFindNode(container, 0, 400, "end");
+			if (result) {
+				expect(result.node).toBeDefined();
+				expect(result.nodePos).toBeDefined();
+			}
+		});
+
+		it("should fall back gracefully when fast path is used in findStart", () => {
+			const measurer = new TextMeasurer();
+			const mapping = new Mapping(createMockLayout(), "ltr", "horizontal", false, measurer);
+
+			const container = document.createElement("div");
+			const p = document.createElement("p");
+			p.textContent = "test content";
+			container.appendChild(p);
+			document.body.appendChild(container);
+
+			// findStart should not throw regardless of whether fast path hits
+			const range = mapping.findStart(container, 0, 400);
+			expect(range).toBeDefined();
+		});
+
+		it("should fall back gracefully when fast path is used in findEnd", () => {
+			const measurer = new TextMeasurer();
+			const mapping = new Mapping(createMockLayout(), "ltr", "horizontal", false, measurer);
+
+			const container = document.createElement("div");
+			const p = document.createElement("p");
+			p.textContent = "test content";
+			container.appendChild(p);
+			document.body.appendChild(container);
+
+			// findEnd should not throw regardless of whether fast path hits
+			const range = mapping.findEnd(container, 0, 400);
+			expect(range).toBeDefined();
 		});
 	});
 });

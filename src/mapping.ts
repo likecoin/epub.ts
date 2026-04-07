@@ -133,6 +133,12 @@ class Mapping {
 	 * @return {Range}
 	 */
 	findStart(root: Node, start: number, end: number): Range {
+		// Canvas fast path: binary search on cumulative document widths
+		if (root.nodeType === Node.ELEMENT_NODE) {
+			const fast = this._canvasFindNode(root as Element, start, end, "start");
+			if (fast) return this.findTextStartRange(fast.node, start, end, fast.nodePos);
+		}
+
 		const stack = [root];
 		let $el;
 		let found;
@@ -217,6 +223,12 @@ class Mapping {
 	 * @return {Range}
 	 */
 	findEnd(root: Node, start: number, end: number): Range {
+		// Canvas fast path: binary search on cumulative document widths
+		if (root.nodeType === Node.ELEMENT_NODE) {
+			const fast = this._canvasFindNode(root as Element, start, end, "end");
+			if (fast) return this.findTextEndRange(fast.node, start, end, fast.nodePos);
+		}
+
 		const stack = [root];
 		let $el;
 		let $prev = root;
@@ -368,6 +380,104 @@ class Mapping {
 			range.setEnd(textNode, Math.min(nextSeg ? nextSeg.charOffset : len, len));
 
 			if (verifyFn(range.getBoundingClientRect())) return range;
+		}
+
+		return null;
+	}
+
+	/**
+	 * Canvas fast path for node-level search: binary search on cumulative
+	 * document-level text widths to estimate which text node falls at a target
+	 * pixel position, then verify with 1-2 getBoundingClientRect calls.
+	 * Returns the node and its verified bounds, or null to fall through to the DOM walk.
+	 * @private
+	 */
+	private _canvasFindNode(
+		root: Element, start: number, end: number, mode: "start" | "end"
+	): { node: Node; nodePos: DOMRect } | null {
+		if (!this._measurer) return null;
+
+		const win = root.ownerDocument?.defaultView;
+		if (!win) return null;
+
+		const prepared = this._measurer.prepare(root, win);
+		if (prepared.length === 0) return null;
+
+		const totalDocWidth = prepared[prepared.length - 1]!.cumDocWidth;
+		if (totalDocWidth === 0) return null;
+
+		const docEl = root.ownerDocument.documentElement;
+		const scrollDimension = this.horizontal ? docEl.scrollWidth : docEl.scrollHeight;
+		if (scrollDimension === 0) return null;
+
+		const target = mode === "start" ? start : end;
+		const adjustedTarget = (this.horizontal && this.direction === "rtl")
+			? scrollDimension - target
+			: target;
+		const targetCumWidth = (adjustedTarget / scrollDimension) * totalDocWidth;
+
+		const idx = this._measurer.findNodeIndex(prepared, targetCumWidth);
+
+		// Try candidate and its immediate neighbors (estimate may be off due to
+		// images, block elements, or CSS column breaks between text nodes)
+		const candidates = [idx];
+		if (mode === "start") {
+			if (idx > 0) candidates.unshift(idx - 1);
+			if (idx + 1 < prepared.length) candidates.push(idx + 1);
+		} else {
+			if (idx + 1 < prepared.length) candidates.push(idx + 1);
+			if (idx > 0) candidates.unshift(idx - 1);
+		}
+
+		// Resolve axis-dependent edge accessors: leadEdge is the edge in reading
+		// direction (left for LTR, right for RTL, top for vertical), trailEdge
+		// is the opposite edge. near/far map start/end to the correct bounds.
+		let leadKey: "left" | "right" | "top";
+		let trailKey: "right" | "left" | "bottom";
+		let near: number;
+		let far: number;
+		if (this.horizontal && this.direction === "ltr") {
+			leadKey = "left";
+			trailKey = "right";
+			near = start;
+			far = end;
+		} else if (this.horizontal && this.direction === "rtl") {
+			leadKey = "right";
+			trailKey = "left";
+			near = end;
+			far = start;
+		} else {
+			leadKey = "top";
+			trailKey = "bottom";
+			near = start;
+			far = end;
+		}
+
+		let prevNode: Text | null = null;
+		let prevElPos: DOMRect | null = null;
+
+		for (const ci of candidates) {
+			const candidate = prepared[ci]!;
+			const elPos = nodeBounds(candidate.node);
+			const lead = elPos[leadKey];
+			const trail = elPos[trailKey];
+
+			if (mode === "start") {
+				if ((lead >= near && lead <= far) || trail > near) {
+					return { node: candidate.node, nodePos: elPos };
+				}
+			} else {
+				if (lead > far) {
+					if (prevNode && prevElPos) {
+						return { node: prevNode, nodePos: prevElPos };
+					}
+				} else if (trail > far) {
+					return { node: candidate.node, nodePos: elPos };
+				}
+			}
+
+			prevNode = candidate.node;
+			prevElPos = elPos;
 		}
 
 		return null;

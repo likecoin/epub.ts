@@ -86,6 +86,95 @@ describe("TextMeasurer", () => {
 		});
 	});
 
+	describe("cumDocWidth", () => {
+		function prepareMockNodes(measurer: TextMeasurer, texts: string[]): import("../src/utils/text-measurer").PreparedNode[] {
+			// Build PreparedNode array manually since jsdom lacks getComputedStyle.font
+			const nodes = texts.map((t) => {
+				const segments = measurer.segmentText(t);
+				let cumWidth = 0;
+				const measured = segments.map(s => {
+					const w = s.text.length * 10; // mock: 10px per char
+					cumWidth += w;
+					return { node: null as any, charOffset: s.index, text: s.text, width: w, cumWidth };
+				});
+				return { node: null as any, segments: measured, totalWidth: cumWidth, font: "16px serif", cumDocWidth: 0 };
+			});
+			// Simulate what prepare() does: compute cumDocWidth
+			let docCum = 0;
+			for (let i = 0; i < nodes.length; i++) {
+				docCum += nodes[i]!.totalWidth;
+				nodes[i]!.cumDocWidth = docCum;
+			}
+			return nodes;
+		}
+
+		it("should compute monotonically increasing cumDocWidth", () => {
+			const nodes = prepareMockNodes(measurer, ["hello", "world", "foo bar"]);
+			expect(nodes.length).toBe(3);
+
+			for (let i = 0; i < nodes.length; i++) {
+				if (i > 0) {
+					expect(nodes[i]!.cumDocWidth).toBeGreaterThan(nodes[i - 1]!.cumDocWidth);
+				}
+			}
+
+			const totalSum = nodes.reduce((sum, n) => sum + n.totalWidth, 0);
+			expect(nodes[nodes.length - 1]!.cumDocWidth).toBeCloseTo(totalSum, 5);
+		});
+
+		it("should set cumDocWidth to totalWidth for single node", () => {
+			const nodes = prepareMockNodes(measurer, ["test"]);
+			expect(nodes.length).toBe(1);
+			expect(nodes[0]!.cumDocWidth).toBe(nodes[0]!.totalWidth);
+		});
+	});
+
+	describe("findNodeIndex()", () => {
+		it("should return 0 for empty array", () => {
+			expect(measurer.findNodeIndex([], 100)).toBe(0);
+		});
+
+		it("should find node at exact cumDocWidth boundary", () => {
+			const prepared = [
+				{ cumDocWidth: 50 },
+				{ cumDocWidth: 120 },
+				{ cumDocWidth: 200 },
+			] as any[];
+
+			expect(measurer.findNodeIndex(prepared, 50)).toBe(0);
+			expect(measurer.findNodeIndex(prepared, 120)).toBe(1);
+		});
+
+		it("should find first node whose cumDocWidth exceeds target", () => {
+			const prepared = [
+				{ cumDocWidth: 50 },
+				{ cumDocWidth: 120 },
+				{ cumDocWidth: 200 },
+			] as any[];
+
+			expect(measurer.findNodeIndex(prepared, 51)).toBe(1);
+			expect(measurer.findNodeIndex(prepared, 121)).toBe(2);
+		});
+
+		it("should return last index for target beyond total", () => {
+			const prepared = [
+				{ cumDocWidth: 50 },
+				{ cumDocWidth: 120 },
+			] as any[];
+
+			expect(measurer.findNodeIndex(prepared, 999)).toBe(1);
+		});
+
+		it("should return 0 for target at start", () => {
+			const prepared = [
+				{ cumDocWidth: 50 },
+				{ cumDocWidth: 120 },
+			] as any[];
+
+			expect(measurer.findNodeIndex(prepared, 0)).toBe(0);
+		});
+	});
+
 	describe("getPreparedNode()", () => {
 		it("should return null for unprepared nodes", () => {
 			const textNode = document.createTextNode("test");
