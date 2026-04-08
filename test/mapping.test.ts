@@ -493,6 +493,33 @@ describe("Mapping", () => {
 			}
 		});
 
+		it("should fall back to DOM walk when match lands at window left edge", () => {
+			// Construct a scenario where the ratio-based estimate is distorted:
+			// scrollWidth=2000 but actual rects live in a smaller range, so the
+			// estimate for a column near pixel 900 lands at prepared index 4,
+			// with window [1, 7]. An earlier node (idx 0) would also match in
+			// the DOM walk, so the fast path must return null (fall back) rather
+			// than returning the window-edge match and silently dropping idx 0.
+			const { mapping, container, restore } = setupFastPath("ltr", [
+				{ text: "n0", left: 850, right: 950 },
+				{ text: "n1", left: 910, right: 990 },
+				{ text: "n2", left: 920, right: 980 },
+				{ text: "n3", left: 930, right: 970 },
+				{ text: "n4", left: 940, right: 960 },
+				{ text: "n5", left: 950, right: 955 },
+				{ text: "n6", left: 960, right: 970 },
+				{ text: "n7", left: 970, right: 980 },
+				{ text: "n8", left: 980, right: 990 },
+				{ text: "n9", left: 990, right: 1000 },
+			], 2000);
+			try {
+				const result = (mapping as any)._canvasFindNode(container, 900, 1000, "start");
+				expect(result).toBeNull();
+			} finally {
+				restore();
+			}
+		});
+
 		it("should fall back gracefully when fast path is used in findStart", () => {
 			const measurer = new TextMeasurer();
 			const mapping = new Mapping(createMockLayout(), "ltr", "horizontal", false, measurer);

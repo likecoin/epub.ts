@@ -141,6 +141,9 @@ class Mapping {
 	 * @param {Node} root root node
 	 * @param {number} start position to start at
 	 * @param {number} end position to end at
+	 * @param {number} [scrollDimension] total scrollable dimension in CSS pixels
+	 *   (scrollWidth for horizontal, scrollHeight for vertical). Hoisted reads
+	 *   avoid forced reflows in the canvas fast path; omit to read lazily.
 	 * @return {Range}
 	 */
 	findStart(root: Node, start: number, end: number, scrollDimension?: number): Range {
@@ -231,6 +234,9 @@ class Mapping {
 	 * @param {Node} root root node
 	 * @param {number} start position to start at
 	 * @param {number} end position to end at
+	 * @param {number} [scrollDimension] total scrollable dimension in CSS pixels
+	 *   (scrollWidth for horizontal, scrollHeight for vertical). Hoisted reads
+	 *   avoid forced reflows in the canvas fast path; omit to read lazily.
 	 * @return {Range}
 	 */
 	findEnd(root: Node, start: number, end: number, scrollDimension?: number): Range {
@@ -440,27 +446,36 @@ class Mapping {
 
 		const idx = this._measurer.findNodeIndex(prepared, targetCumWidth);
 
-		// Try candidate and its immediate neighbors (estimate may be off due to
-		// images, block elements, or CSS column breaks between text nodes)
-		const candidates = [idx];
-		if (mode === "start") {
-			if (idx > 0) candidates.unshift(idx - 1);
-			if (idx + 1 < prepared.length) candidates.push(idx + 1);
-		} else {
-			if (idx + 1 < prepared.length) candidates.push(idx + 1);
-			if (idx > 0) candidates.unshift(idx - 1);
-		}
+		// Scan a bounded window around the estimate in document order. The
+		// ratio-based estimate can miss by a handful of nodes when images,
+		// block gaps, wrapping, or column breaks distort the text-width-to-
+		// visual-position mapping. Iterating in document order mirrors the
+		// walk in findStart/findEnd, so first-match semantics are preserved.
+		//
+		// Edge guard: if the match lands at the window boundary on the side
+		// we haven't explored past (left edge for "start", right edge for
+		// "end"), we can't prove there isn't an earlier/later correct node
+		// outside the window. Return null to trigger the DOM walk fallback.
+		const WINDOW_RADIUS = 3;
+		const lo = Math.max(0, idx - WINDOW_RADIUS);
+		const hi = Math.min(prepared.length - 1, idx + WINDOW_RADIUS);
 
 		let prevNode: Text | null = null;
 		let prevElPos: DOMRect | null = null;
 
-		for (const ci of candidates) {
+		for (let ci = lo; ci <= hi; ci++) {
 			const candidate = prepared[ci]!;
 			const elPos = nodeBounds(candidate.node);
+
+			// Edge guard: match at the left edge of the window with lo > 0
+			// means we cannot invoke monotonicity to rule out an earlier
+			// match outside the window — fall back to the DOM walk.
+			const atLeftEdge = ci === lo && lo > 0;
 
 			if (this.horizontal && this.direction === "ltr") {
 				if (mode === "start") {
 					if ((elPos.left >= start && elPos.left <= end) || elPos.right > start) {
+						if (atLeftEdge) return null;
 						return { node: candidate.node, nodePos: elPos };
 					}
 				} else {
@@ -468,7 +483,9 @@ class Mapping {
 						if (prevNode && prevElPos) {
 							return { node: prevNode, nodePos: prevElPos };
 						}
+						return null;
 					} else if (elPos.right > end) {
+						if (atLeftEdge) return null;
 						return { node: candidate.node, nodePos: elPos };
 					} else {
 						prevNode = candidate.node;
@@ -478,6 +495,7 @@ class Mapping {
 			} else if (this.horizontal && this.direction === "rtl") {
 				if (mode === "start") {
 					if ((elPos.right <= end && elPos.right >= start) || elPos.left < end) {
+						if (atLeftEdge) return null;
 						return { node: candidate.node, nodePos: elPos };
 					}
 				} else {
@@ -485,7 +503,9 @@ class Mapping {
 						if (prevNode && prevElPos) {
 							return { node: prevNode, nodePos: prevElPos };
 						}
+						return null;
 					} else if (elPos.left < start) {
+						if (atLeftEdge) return null;
 						return { node: candidate.node, nodePos: elPos };
 					} else {
 						prevNode = candidate.node;
@@ -495,6 +515,7 @@ class Mapping {
 			} else {
 				if (mode === "start") {
 					if ((elPos.top >= start && elPos.top <= end) || elPos.bottom > start) {
+						if (atLeftEdge) return null;
 						return { node: candidate.node, nodePos: elPos };
 					}
 				} else {
@@ -502,7 +523,9 @@ class Mapping {
 						if (prevNode && prevElPos) {
 							return { node: prevNode, nodePos: prevElPos };
 						}
+						return null;
 					} else if (elPos.bottom > end) {
+						if (atLeftEdge) return null;
 						return { node: candidate.node, nodePos: elPos };
 					} else {
 						prevNode = candidate.node;
@@ -510,6 +533,14 @@ class Mapping {
 					}
 				}
 			}
+		}
+
+		// Loop ended without a match. For end mode, if every node in the
+		// window was fully before end AND the window reaches the last
+		// prepared node, the last prev is the correct answer (the column
+		// contains the rest of the document). Otherwise fall back.
+		if (mode === "end" && prevNode && prevElPos && hi === prepared.length - 1) {
+			return { node: prevNode, nodePos: prevElPos };
 		}
 
 		return null;

@@ -248,8 +248,10 @@ class TextMeasurer {
 	}
 
 	/**
-	 * Generic lower-bound binary search: find the first index where
-	 * getValue(arr[index]) >= target.
+	 * Clamped lower-bound binary search: returns the first index where
+	 * getValue(arr[index]) >= target, or the last index when target exceeds
+	 * all values (callers expect a valid in-range index even for overshoot).
+	 * Returns 0 for empty arrays.
 	 */
 	private _lowerBound<T>(arr: T[], target: number, getValue: (item: T) => number): number {
 		if (arr.length === 0) return 0;
