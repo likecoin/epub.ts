@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.6.1 (2026-04-08)
+
+### Performance
+
+- Add node-level canvas binary search to `Mapping.findStart`/`findEnd` — extends the canvas optimization from 0.6.0 to the node-finding walk. Cumulative document-level text widths power a ratio-based binary search that replaces the O(N) `nodeBounds()` reflow walk, eliminating up to ~19 forced reflows per `findRanges` pass. Hoists and measurer-gates `scrollWidth`/`scrollHeight` reads so the DOM-walk fallback pays no extra reflow cost. Correctly handles RTL, subpixel rounding, and wide candidate windows; falls back to the DOM walk when monotonicity can't rule out an earlier match.
+
 ## 0.6.0 (2026-04-02)
 
 ### Features
