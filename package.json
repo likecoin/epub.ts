@@ -42,7 +42,12 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint src/",
     "lint:fix": "eslint src/ --fix",
-    "docs": "typedoc --out documentation/html --entryPoints src/index.ts --tsconfig tsconfig.json --excludePrivate --excludeInternal && typedoc --plugin typedoc-plugin-markdown --out documentation/md --entryPoints src/index.ts --tsconfig tsconfig.json --excludePrivate --excludeInternal --readme none"
+    "docs": "typedoc --out documentation/html --entryPoints src/index.ts --tsconfig tsconfig.json --excludePrivate --excludeInternal && typedoc --plugin typedoc-plugin-markdown --out documentation/md --entryPoints src/index.ts --tsconfig tsconfig.json --excludePrivate --excludeInternal --readme none",
+    "bench": "npm run bench:size && npm run bench:browser",
+    "bench:fixtures": "node bench/fixtures/download.mjs",
+    "bench:size": "node bench/size/measure.mjs",
+    "bench:browser": "node bench/harness/driver.mjs",
+    "bench:serve": "node bench/harness/server.mjs"
   },
   "author": "William Chong <me@williamchong.cloud>",
   "contributors": [
@@ -56,10 +61,12 @@
   "license": "BSD-2-Clause",
   "devDependencies": {
     "@eslint/js": "^9.39.2",
+    "epubjs": "^0.3.93",
     "eslint": "^9.39.2",
     "fake-indexeddb": "^6.2.5",
     "jsdom": "^28.0.0",
     "linkedom": "^0.18.0",
+    "puppeteer": "^24.40.0",
     "typedoc": "^0.28.16",
     "typedoc-plugin-markdown": "^4.10.0",
     "typescript": "^5.7.3",

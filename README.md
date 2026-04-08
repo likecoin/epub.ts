@@ -20,6 +20,46 @@ A complete TypeScript rewrite of epubjs v0.3.93 with strict mode, modern tooling
 
 > **Note**: Built at [3ook.com](https://3ook.com) and provided as-is. Forked from [epubjs](https://github.com/futurepress/epub.js) v0.3.93 by [Fred Chasen](https://github.com/fchasen) / [FuturePress](https://github.com/futurepress).
 
+## Performance
+
+Head-to-head numbers on two Project Gutenberg fixtures: a small book
+([Alice in Wonderland #11](https://www.gutenberg.org/ebooks/11.epub3.images),
+185 KB) and a large book
+([War and Peace #2600](https://www.gutenberg.org/ebooks/2600.epub3.images),
+1.7 MB). Apple M4 Pro, macOS 26.4, headless Chrome 146, Node 20,
+median of 10–15 iterations. Run the bench yourself with
+`npm run bench`; see [bench/README.md](./bench/README.md) for full
+methodology and caveats.
+
+| Metric                           | epubjs 0.3.93 | @likecoin/epub-ts |       Δ |
+| -------------------------------- | ------------: | ----------------: | ------: |
+| Bundle size (gzip, KB)           |         132.8 |              57.5 |  −56.7% |
+| **Alice (185 KB)**               |               |                   |         |
+| Cold parse (ms)                  |           2.2 |               2.2 |     ≈ 0 |
+| First display (ms)               |          96.8 |              83.4 |  −13.8% |
+| `locations.generate(1000)` (ms)  |        1760.3 |              10.4 |  −99.4% |
+| `currentLocation()` (ms / call)  |         0.106 |             0.060 |  −43.8% |
+| **War and Peace (1.7 MB)**       |               |                   |         |
+| Cold parse (ms)                  |          11.7 |               7.9 |  −33.1% |
+| First display (ms)               |          90.1 |              91.9 |     ≈ 0 |
+| `locations.generate(1000)` (ms)  |       42903.3 |             158.9 |  −99.6% |
+| `currentLocation()` (ms / call)  |         0.196 |             0.153 |  −22.1% |
+
+**43 seconds → 159 ms** on `locations.generate()` for a 1.7 MB book:
+this is the single biggest user-visible win, and it's what the
+[0.4.9 locations optimization](./CHANGELOG.md#049-2026-03-03) was
+aimed at. Both libraries produce the same output count
+(169 locations for Alice, 429 for War and Peace) — the delta is real
+work, not a short-circuit.
+
+`currentLocation()` — the pagination / CFI-range query called on every
+page turn — exercises the
+[0.6.0 canvas text measurement](./CHANGELOG.md#060-2026-04-02) and
+[0.6.1 `Mapping.findStart`/`findEnd` binary search](./CHANGELOG.md#061-2026-04-08)
+and is roughly 2× faster as a result. `next-page` timings are omitted
+from the table because both libraries converge on a frame-paced
+~33 ms, which doesn't differentiate them.
+
 ## Get started
 
 ### Install

@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>epub.ts bench harness</title>
+<style>
+	body { font: 14px/1.5 ui-monospace, Menlo, Consolas, monospace; max-width: 900px; margin: 2em auto; padding: 0 1em; }
+	h1 { font-size: 1.2em; margin: 0 0 .5em; }
+	#status { color: #666; }
+	pre { background: #f4f4f4; padding: 1em; border-radius: 4px; overflow-x: auto; white-space: pre; }
+	.viewer { width: 600px; height: 400px; border: 1px solid #ccc; margin: 1em 0; }
+	.lib-epubjs { color: #c0392b; }
+	.lib-epubts { color: #27ae60; }
+</style>
+</head>
+<body>
+<h1>epub.ts bench harness — <span id="lib-label">(loading)</span></h1>
+<div id="status">waiting for scenarios…</div>
+<div id="viewer" class="viewer"></div>
+<h2>Results</h2>
+<pre id="results">{}</pre>
+
+<script type="module" src="./runner.js"></script>
+</body>
+</html>

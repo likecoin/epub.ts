@@ -7,3 +7,5 @@ lib
 books
 documentation/html
 types/*.js
+bench/fixtures/*.epub
+bench/results/
