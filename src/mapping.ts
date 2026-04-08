@@ -54,9 +54,14 @@ class Mapping {
 		}
 
 		// Read scrollWidth/Height once to avoid redundant forced reflows across
-		// the two fast-path calls (getting scroll dimensions forces layout).
-		const docEl = contents.document.documentElement;
-		const scrollDimension = this.horizontal ? docEl.scrollWidth : docEl.scrollHeight;
+		// the two fast-path calls. Only do this when the canvas fast path can
+		// actually run (i.e. a TextMeasurer is configured) — otherwise the
+		// dimension would be computed and discarded, forcing layout for nothing.
+		let scrollDimension: number | undefined;
+		if (this._measurer) {
+			const docEl = contents.document.documentElement;
+			scrollDimension = this.horizontal ? docEl.scrollWidth : docEl.scrollHeight;
+		}
 
 		const result = this.rangePairToCfiPair(cfiBase, {
 			start: this.findStart(root, start, end, scrollDimension),
@@ -115,12 +120,14 @@ class Mapping {
 		const count = spreads * this.layout.divisor;
 		const columnWidth = this.layout.columnWidth;
 		const gap = this.layout.gap;
-		// Reuse scrollWidth for horizontal (already fetched above); read
-		// scrollHeight for vertical. Hoisted out of the loop so the fast path
-		// doesn't force a reflow per column.
+		// Reuse scrollWidth for horizontal (already fetched above, free). For
+		// vertical, only read scrollHeight when the fast path can use it —
+		// otherwise the read is a wasted forced reflow.
 		const scrollDimension = this.horizontal
 			? scrollWidth
-			: view.document.documentElement.scrollHeight;
+			: this._measurer
+				? view.document.documentElement.scrollHeight
+				: undefined;
 		let start, end;
 
 		for (let i = 0; i < count; i++) {
@@ -411,7 +418,7 @@ class Mapping {
 	 */
 	private _canvasFindNode(
 		root: Element, start: number, end: number, mode: "start" | "end", scrollDimension?: number
-	): { node: Node; nodePos: DOMRect } | null {
+	): { node: Text; nodePos: DOMRect } | null {
 		if (!this._measurer) return null;
 
 		const win = root.ownerDocument?.defaultView;
@@ -452,10 +459,12 @@ class Mapping {
 		// visual-position mapping. Iterating in document order mirrors the
 		// walk in findStart/findEnd, so first-match semantics are preserved.
 		//
-		// Edge guard: if the match lands at the window boundary on the side
-		// we haven't explored past (left edge for "start", right edge for
-		// "end"), we can't prove there isn't an earlier/later correct node
-		// outside the window. Return null to trigger the DOM walk fallback.
+		// Edge guard: if the match lands at the window's left edge with
+		// lo > 0, we cannot invoke right/bottom monotonicity to rule out an
+		// earlier match outside the window. Return null to trigger the DOM
+		// walk fallback. (For end mode, the same guard applies — by
+		// monotonicity, the first node where right > end is also the
+		// leftmost match in document order.)
 		const WINDOW_RADIUS = 3;
 		const lo = Math.max(0, idx - WINDOW_RADIUS);
 		const hi = Math.min(prepared.length - 1, idx + WINDOW_RADIUS);
@@ -479,12 +488,15 @@ class Mapping {
 						return { node: candidate.node, nodePos: elPos };
 					}
 				} else {
-					if (elPos.left > end) {
+					// Round to mirror findEnd's walk semantics on fractional pixel coords
+					const left = Math.round(elPos.left);
+					const right = Math.round(elPos.right);
+					if (left > end) {
 						if (prevNode && prevElPos) {
 							return { node: prevNode, nodePos: prevElPos };
 						}
 						return null;
-					} else if (elPos.right > end) {
+					} else if (right > end) {
 						if (atLeftEdge) return null;
 						return { node: candidate.node, nodePos: elPos };
 					} else {
@@ -499,12 +511,14 @@ class Mapping {
 						return { node: candidate.node, nodePos: elPos };
 					}
 				} else {
-					if (elPos.right < start) {
+					const left = Math.round(elPos.left);
+					const right = Math.round(elPos.right);
+					if (right < start) {
 						if (prevNode && prevElPos) {
 							return { node: prevNode, nodePos: prevElPos };
 						}
 						return null;
-					} else if (elPos.left < start) {
+					} else if (left < start) {
 						if (atLeftEdge) return null;
 						return { node: candidate.node, nodePos: elPos };
 					} else {
@@ -519,12 +533,14 @@ class Mapping {
 						return { node: candidate.node, nodePos: elPos };
 					}
 				} else {
-					if (elPos.top > end) {
+					const top = Math.round(elPos.top);
+					const bottom = Math.round(elPos.bottom);
+					if (top > end) {
 						if (prevNode && prevElPos) {
 							return { node: prevNode, nodePos: prevElPos };
 						}
 						return null;
-					} else if (elPos.bottom > end) {
+					} else if (bottom > end) {
 						if (atLeftEdge) return null;
 						return { node: candidate.node, nodePos: elPos };
 					} else {

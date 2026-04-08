@@ -27,7 +27,7 @@ export interface PreparedNode {
 	segments: TextSegment[];
 	totalWidth: number;
 	font: string;
-	/** Cumulative width from document start through end of this node */
+	/** Cumulative width from the start of the prepared root through the end of this node */
 	cumDocWidth: number;
 }
 
