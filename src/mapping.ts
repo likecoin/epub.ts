@@ -53,9 +53,14 @@ class Mapping {
 			return;
 		}
 
+		// Read scrollWidth/Height once to avoid redundant forced reflows across
+		// the two fast-path calls (getting scroll dimensions forces layout).
+		const docEl = contents.document.documentElement;
+		const scrollDimension = this.horizontal ? docEl.scrollWidth : docEl.scrollHeight;
+
 		const result = this.rangePairToCfiPair(cfiBase, {
-			start: this.findStart(root, start, end),
-			end: this.findEnd(root, start, end)
+			start: this.findStart(root, start, end, scrollDimension),
+			end: this.findEnd(root, start, end, scrollDimension)
 		});
 
 		if (this._dev === true) {
@@ -110,14 +115,20 @@ class Mapping {
 		const count = spreads * this.layout.divisor;
 		const columnWidth = this.layout.columnWidth;
 		const gap = this.layout.gap;
+		// Reuse scrollWidth for horizontal (already fetched above); read
+		// scrollHeight for vertical. Hoisted out of the loop so the fast path
+		// doesn't force a reflow per column.
+		const scrollDimension = this.horizontal
+			? scrollWidth
+			: view.document.documentElement.scrollHeight;
 		let start, end;
 
 		for (let i = 0; i < count; i++) {
 			start = (columnWidth + gap) * i;
 			end = (columnWidth * (i+1)) + (gap * i);
 			columns.push({
-				start: this.findStart(view.document.body, start, end),
-				end: this.findEnd(view.document.body, start, end)
+				start: this.findStart(view.document.body, start, end, scrollDimension),
+				end: this.findEnd(view.document.body, start, end, scrollDimension)
 			});
 		}
 
@@ -132,10 +143,10 @@ class Mapping {
 	 * @param {number} end position to end at
 	 * @return {Range}
 	 */
-	findStart(root: Node, start: number, end: number): Range {
+	findStart(root: Node, start: number, end: number, scrollDimension?: number): Range {
 		// Canvas fast path: binary search on cumulative document widths
 		if (root.nodeType === Node.ELEMENT_NODE) {
-			const fast = this._canvasFindNode(root as Element, start, end, "start");
+			const fast = this._canvasFindNode(root as Element, start, end, "start", scrollDimension);
 			if (fast) return this.findTextStartRange(fast.node, start, end, fast.nodePos);
 		}
 
@@ -222,10 +233,10 @@ class Mapping {
 	 * @param {number} end position to end at
 	 * @return {Range}
 	 */
-	findEnd(root: Node, start: number, end: number): Range {
+	findEnd(root: Node, start: number, end: number, scrollDimension?: number): Range {
 		// Canvas fast path: binary search on cumulative document widths
 		if (root.nodeType === Node.ELEMENT_NODE) {
-			const fast = this._canvasFindNode(root as Element, start, end, "end");
+			const fast = this._canvasFindNode(root as Element, start, end, "end", scrollDimension);
 			if (fast) return this.findTextEndRange(fast.node, start, end, fast.nodePos);
 		}
 
@@ -393,7 +404,7 @@ class Mapping {
 	 * @private
 	 */
 	private _canvasFindNode(
-		root: Element, start: number, end: number, mode: "start" | "end"
+		root: Element, start: number, end: number, mode: "start" | "end", scrollDimension?: number
 	): { node: Node; nodePos: DOMRect } | null {
 		if (!this._measurer) return null;
 
@@ -406,15 +417,26 @@ class Mapping {
 		const totalDocWidth = prepared[prepared.length - 1]!.cumDocWidth;
 		if (totalDocWidth === 0) return null;
 
-		const docEl = root.ownerDocument.documentElement;
-		const scrollDimension = this.horizontal ? docEl.scrollWidth : docEl.scrollHeight;
+		// Reading scrollWidth/Height forces layout. Callers in hot paths
+		// (findRanges, page) hoist this read; fall back to a one-shot read here.
+		if (scrollDimension === undefined) {
+			const docEl = root.ownerDocument.documentElement;
+			scrollDimension = this.horizontal ? docEl.scrollWidth : docEl.scrollHeight;
+		}
 		if (scrollDimension === 0) return null;
 
-		const target = mode === "start" ? start : end;
-		const adjustedTarget = (this.horizontal && this.direction === "rtl")
-			? scrollDimension - target
-			: target;
-		const targetCumWidth = (adjustedTarget / scrollDimension) * totalDocWidth;
+		// Map column boundary to a cumulative-text-width target. cumDocWidth
+		// grows in document order, which for RTL means right-to-left visually,
+		// so the RTL distance is measured from the right edge.
+		let target: number;
+		if (this.horizontal && this.direction === "rtl") {
+			// reading-order start = right column edge (end);
+			// reading-order end = left column edge (start)
+			target = scrollDimension - (mode === "start" ? end : start);
+		} else {
+			target = mode === "start" ? start : end;
+		}
+		const targetCumWidth = (target / scrollDimension) * totalDocWidth;
 
 		const idx = this._measurer.findNodeIndex(prepared, targetCumWidth);
 
@@ -429,55 +451,65 @@ class Mapping {
 			if (idx > 0) candidates.unshift(idx - 1);
 		}
 
-		// Resolve axis-dependent edge accessors: leadEdge is the edge in reading
-		// direction (left for LTR, right for RTL, top for vertical), trailEdge
-		// is the opposite edge. near/far map start/end to the correct bounds.
-		let leadKey: "left" | "right" | "top";
-		let trailKey: "right" | "left" | "bottom";
-		let near: number;
-		let far: number;
-		if (this.horizontal && this.direction === "ltr") {
-			leadKey = "left";
-			trailKey = "right";
-			near = start;
-			far = end;
-		} else if (this.horizontal && this.direction === "rtl") {
-			leadKey = "right";
-			trailKey = "left";
-			near = end;
-			far = start;
-		} else {
-			leadKey = "top";
-			trailKey = "bottom";
-			near = start;
-			far = end;
-		}
-
 		let prevNode: Text | null = null;
 		let prevElPos: DOMRect | null = null;
 
 		for (const ci of candidates) {
 			const candidate = prepared[ci]!;
 			const elPos = nodeBounds(candidate.node);
-			const lead = elPos[leadKey];
-			const trail = elPos[trailKey];
 
-			if (mode === "start") {
-				if ((lead >= near && lead <= far) || trail > near) {
-					return { node: candidate.node, nodePos: elPos };
+			if (this.horizontal && this.direction === "ltr") {
+				if (mode === "start") {
+					if ((elPos.left >= start && elPos.left <= end) || elPos.right > start) {
+						return { node: candidate.node, nodePos: elPos };
+					}
+				} else {
+					if (elPos.left > end) {
+						if (prevNode && prevElPos) {
+							return { node: prevNode, nodePos: prevElPos };
+						}
+					} else if (elPos.right > end) {
+						return { node: candidate.node, nodePos: elPos };
+					} else {
+						prevNode = candidate.node;
+						prevElPos = elPos;
+					}
+				}
+			} else if (this.horizontal && this.direction === "rtl") {
+				if (mode === "start") {
+					if ((elPos.right <= end && elPos.right >= start) || elPos.left < end) {
+						return { node: candidate.node, nodePos: elPos };
+					}
+				} else {
+					if (elPos.right < start) {
+						if (prevNode && prevElPos) {
+							return { node: prevNode, nodePos: prevElPos };
+						}
+					} else if (elPos.left < start) {
+						return { node: candidate.node, nodePos: elPos };
+					} else {
+						prevNode = candidate.node;
+						prevElPos = elPos;
+					}
 				}
 			} else {
-				if (lead > far) {
-					if (prevNode && prevElPos) {
-						return { node: prevNode, nodePos: prevElPos };
+				if (mode === "start") {
+					if ((elPos.top >= start && elPos.top <= end) || elPos.bottom > start) {
+						return { node: candidate.node, nodePos: elPos };
 					}
-				} else if (trail > far) {
-					return { node: candidate.node, nodePos: elPos };
+				} else {
+					if (elPos.top > end) {
+						if (prevNode && prevElPos) {
+							return { node: prevNode, nodePos: prevElPos };
+						}
+					} else if (elPos.bottom > end) {
+						return { node: candidate.node, nodePos: elPos };
+					} else {
+						prevNode = candidate.node;
+						prevElPos = elPos;
+					}
 				}
 			}
-
-			prevNode = candidate.node;
-			prevElPos = elPos;
 		}
 
 		return null;

@@ -360,46 +360,136 @@ describe("Mapping", () => {
 			expect(result).toBeNull();
 		});
 
-		it("should find a node via fast path for start mode", () => {
-			const measurer = new TextMeasurer();
-			const mapping = new Mapping(createMockLayout(), "ltr", "horizontal", false, measurer);
-
+		// Helper to stand up a mapping + measurer with controlled geometry in jsdom.
+		// Stubs: Range.getBoundingClientRect (returns rects from data-left/right),
+		// docEl.scrollWidth/scrollHeight (non-zero), and measurer.prepare (returns
+		// one PreparedNode per text node with monotonic cumDocWidth).
+		function setupFastPath(
+			direction: "ltr" | "rtl",
+			specs: { text: string; left: number; right: number }[],
+			scrollWidth = 1000,
+		): { mapping: Mapping; container: HTMLElement; textNodes: Text[]; restore: () => void } {
 			const container = document.createElement("div");
-			const p1 = document.createElement("p");
-			p1.textContent = "First paragraph with some text";
-			const p2 = document.createElement("p");
-			p2.textContent = "Second paragraph with more text";
-			container.appendChild(p1);
-			container.appendChild(p2);
+			const textNodes: Text[] = [];
+			for (const spec of specs) {
+				const p = document.createElement("p");
+				p.setAttribute("data-left", String(spec.left));
+				p.setAttribute("data-right", String(spec.right));
+				const t = document.createTextNode(spec.text);
+				p.appendChild(t);
+				container.appendChild(p);
+				textNodes.push(t);
+			}
 			document.body.appendChild(container);
 
-			const result = (mapping as any)._canvasFindNode(container, 0, 400, "start");
-			// In jsdom, getBoundingClientRect returns zeros, so the fast path
-			// should either find a node (position 0 matches left >= start) or return null
-			// Since all positions are 0 and start is 0, the condition left >= start && left <= end is true
-			if (result) {
-				expect(result.node).toBeDefined();
-				expect(result.nodePos).toBeDefined();
+			const rectSpy = vi.spyOn(Range.prototype, "getBoundingClientRect").mockImplementation(function (this: Range): DOMRect {
+				const node = this.startContainer;
+				const el = node.nodeType === Node.TEXT_NODE ? node.parentElement : (node as Element);
+				const left = Number(el?.getAttribute("data-left") ?? 0);
+				const right = Number(el?.getAttribute("data-right") ?? left);
+				return { x: left, y: 0, width: right - left, height: 0, top: 0, left, bottom: 0, right, toJSON: () => ({}) } as DOMRect;
+			});
+			const docEl = document.documentElement;
+			const origW = Object.getOwnPropertyDescriptor(docEl, "scrollWidth");
+			const origH = Object.getOwnPropertyDescriptor(docEl, "scrollHeight");
+			Object.defineProperty(docEl, "scrollWidth", { get: () => scrollWidth, configurable: true });
+			Object.defineProperty(docEl, "scrollHeight", { get: () => scrollWidth, configurable: true });
+
+			const measurer = new TextMeasurer();
+			const prepareSpy = vi.spyOn(measurer, "prepare").mockImplementation(() => {
+				let cum = 0;
+				return textNodes.map(node => {
+					cum += 100;
+					return { node, segments: [], totalWidth: 100, font: "16px serif", cumDocWidth: cum };
+				});
+			});
+
+			const mapping = new Mapping(createMockLayout(), direction, "horizontal", false, measurer);
+
+			return {
+				mapping, container, textNodes,
+				restore: (): void => {
+					rectSpy.mockRestore();
+					prepareSpy.mockRestore();
+					if (origW) Object.defineProperty(docEl, "scrollWidth", origW);
+					else delete (docEl as any).scrollWidth;
+					if (origH) Object.defineProperty(docEl, "scrollHeight", origH);
+					else delete (docEl as any).scrollHeight;
+				},
+			};
+		}
+
+		it("should find spanning node for LTR start mode", () => {
+			const { mapping, container, textNodes, restore } = setupFastPath("ltr", [
+				{ text: "first", left: 100, right: 180 },
+				{ text: "second", left: 500, right: 580 },
+			]);
+			try {
+				const result = (mapping as any)._canvasFindNode(container, 0, 400, "start");
+				expect(result).not.toBeNull();
+				expect(result.node).toBe(textNodes[0]);
+			} finally {
+				restore();
 			}
 		});
 
-		it("should find a node via fast path for end mode", () => {
-			const measurer = new TextMeasurer();
-			const mapping = new Mapping(createMockLayout(), "ltr", "horizontal", false, measurer);
+		it("should find spanning node for LTR end mode", () => {
+			const { mapping, container, textNodes, restore } = setupFastPath("ltr", [
+				{ text: "before", left: 50, right: 150 },
+				{ text: "spans", left: 300, right: 450 },
+				{ text: "after", left: 600, right: 700 },
+			]);
+			try {
+				const result = (mapping as any)._canvasFindNode(container, 0, 400, "end");
+				expect(result).not.toBeNull();
+				expect(result.node).toBe(textNodes[1]);
+			} finally {
+				restore();
+			}
+		});
 
-			const container = document.createElement("div");
-			const p1 = document.createElement("p");
-			p1.textContent = "First paragraph";
-			const p2 = document.createElement("p");
-			p2.textContent = "Second paragraph";
-			container.appendChild(p1);
-			container.appendChild(p2);
-			document.body.appendChild(container);
+		it("should find spanning node for RTL start mode", () => {
+			// RTL: reading order starts at the right edge of the column.
+			// Document order: first node is visually rightmost.
+			const { mapping, container, textNodes, restore } = setupFastPath("rtl", [
+				{ text: "first", left: 350, right: 400 },
+				{ text: "second", left: 100, right: 200 },
+			]);
+			try {
+				const result = (mapping as any)._canvasFindNode(container, 0, 400, "start");
+				expect(result).not.toBeNull();
+				expect(result.node).toBe(textNodes[0]);
+			} finally {
+				restore();
+			}
+		});
 
-			const result = (mapping as any)._canvasFindNode(container, 0, 400, "end");
-			if (result) {
-				expect(result.node).toBeDefined();
-				expect(result.nodePos).toBeDefined();
+		it("should find spanning node for RTL end mode", () => {
+			// RTL: reading order ends at the left edge of the column.
+			const { mapping, container, textNodes, restore } = setupFastPath("rtl", [
+				{ text: "first", left: 350, right: 400 },
+				{ text: "last", left: -50, right: 50 },
+			]);
+			try {
+				const result = (mapping as any)._canvasFindNode(container, 0, 400, "end");
+				expect(result).not.toBeNull();
+				expect(result.node).toBe(textNodes[1]);
+			} finally {
+				restore();
+			}
+		});
+
+		it("should not return overshoot node when no valid prev exists in end mode", () => {
+			// All nodes are past the end boundary; no node fully precedes end
+			const { mapping, container, restore } = setupFastPath("ltr", [
+				{ text: "a", left: 500, right: 600 },
+				{ text: "b", left: 700, right: 800 },
+			]);
+			try {
+				const result = (mapping as any)._canvasFindNode(container, 0, 400, "end");
+				expect(result).toBeNull();
+			} finally {
+				restore();
 			}
 		});
 

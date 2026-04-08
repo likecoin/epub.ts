@@ -278,7 +278,7 @@ class TextMeasurer {
 	}
 
 	/**
-	 * Find the PreparedNode index whose cumDocWidth first exceeds targetWidth.
+	 * Find the first PreparedNode index whose cumDocWidth is >= targetWidth.
 	 */
 	findNodeIndex(prepared: PreparedNode[], targetWidth: number): number {
 		return this._lowerBound(prepared, targetWidth, n => n.cumDocWidth);
