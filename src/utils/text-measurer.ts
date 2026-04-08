@@ -27,6 +27,8 @@ export interface PreparedNode {
 	segments: TextSegment[];
 	totalWidth: number;
 	font: string;
+	/** Cumulative width from the start of the prepared root through the end of this node */
+	cumDocWidth: number;
 }
 
 type SegmenterLike = { segment(text: string): Iterable<{ segment: string; index: number }> };
@@ -228,9 +230,17 @@ class TextMeasurer {
 				segments: measured,
 				totalWidth: cumWidth,
 				font,
+				cumDocWidth: 0,
 			};
 			result.push(preparedNode);
 			this._nodeIndex.set(textNode, preparedNode);
+		}
+
+		// Compute cumulative document-level widths for node-level binary search
+		let docCumWidth = 0;
+		for (let i = 0; i < result.length; i++) {
+			docCumWidth += result[i]!.totalWidth;
+			result[i]!.cumDocWidth = docCumWidth;
 		}
 
 		this._preparedCache.set(root, result);
@@ -238,22 +248,20 @@ class TextMeasurer {
 	}
 
 	/**
-	 * Layout phase: find the segment index at a given pixel position
-	 * using binary search on cumulative widths.
-	 *
-	 * @param segments The TextSegment[] from a PreparedNode
-	 * @param position Target position in pixels (relative to text node start)
-	 * @returns Index into the segments array
+	 * Clamped lower-bound binary search: returns the first index where
+	 * getValue(arr[index]) >= target, or the last index when target exceeds
+	 * all values (callers expect a valid in-range index even for overshoot).
+	 * Returns 0 for empty arrays.
 	 */
-	findSegmentIndex(segments: TextSegment[], position: number): number {
-		if (segments.length === 0) return 0;
+	private _lowerBound<T>(arr: T[], target: number, getValue: (item: T) => number): number {
+		if (arr.length === 0) return 0;
 
 		let lo = 0;
-		let hi = segments.length - 1;
+		let hi = arr.length - 1;
 
 		while (lo < hi) {
 			const mid = (lo + hi) >>> 1;
-			if (segments[mid]!.cumWidth < position) {
+			if (getValue(arr[mid]!) < target) {
 				lo = mid + 1;
 			} else {
 				hi = mid;
@@ -261,6 +269,21 @@ class TextMeasurer {
 		}
 
 		return lo;
+	}
+
+	/**
+	 * Find the segment index at a given pixel position using binary search
+	 * on cumulative widths within a text node.
+	 */
+	findSegmentIndex(segments: TextSegment[], position: number): number {
+		return this._lowerBound(segments, position, s => s.cumWidth);
+	}
+
+	/**
+	 * Find the first PreparedNode index whose cumDocWidth is >= targetWidth.
+	 */
+	findNodeIndex(prepared: PreparedNode[], targetWidth: number): number {
+		return this._lowerBound(prepared, targetWidth, n => n.cumDocWidth);
 	}
 
 	/**

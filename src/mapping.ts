@@ -53,9 +53,19 @@ class Mapping {
 			return;
 		}
 
+		// Read scrollWidth/Height once to avoid redundant forced reflows across
+		// the two fast-path calls. Only do this when the canvas fast path can
+		// actually run (i.e. a TextMeasurer is configured) — otherwise the
+		// dimension would be computed and discarded, forcing layout for nothing.
+		let scrollDimension: number | undefined;
+		if (this._measurer) {
+			const docEl = contents.document.documentElement;
+			scrollDimension = this.horizontal ? docEl.scrollWidth : docEl.scrollHeight;
+		}
+
 		const result = this.rangePairToCfiPair(cfiBase, {
-			start: this.findStart(root, start, end),
-			end: this.findEnd(root, start, end)
+			start: this.findStart(root, start, end, scrollDimension),
+			end: this.findEnd(root, start, end, scrollDimension)
 		});
 
 		if (this._dev === true) {
@@ -110,14 +120,22 @@ class Mapping {
 		const count = spreads * this.layout.divisor;
 		const columnWidth = this.layout.columnWidth;
 		const gap = this.layout.gap;
+		// Reuse scrollWidth for horizontal (already fetched above, free). For
+		// vertical, only read scrollHeight when the fast path can use it —
+		// otherwise the read is a wasted forced reflow.
+		const scrollDimension = this.horizontal
+			? scrollWidth
+			: this._measurer
+				? view.document.documentElement.scrollHeight
+				: undefined;
 		let start, end;
 
 		for (let i = 0; i < count; i++) {
 			start = (columnWidth + gap) * i;
 			end = (columnWidth * (i+1)) + (gap * i);
 			columns.push({
-				start: this.findStart(view.document.body, start, end),
-				end: this.findEnd(view.document.body, start, end)
+				start: this.findStart(view.document.body, start, end, scrollDimension),
+				end: this.findEnd(view.document.body, start, end, scrollDimension)
 			});
 		}
 
@@ -130,9 +148,18 @@ class Mapping {
 	 * @param {Node} root root node
 	 * @param {number} start position to start at
 	 * @param {number} end position to end at
+	 * @param {number} [scrollDimension] total scrollable dimension in CSS pixels
+	 *   (scrollWidth for horizontal, scrollHeight for vertical). Hoisted reads
+	 *   avoid forced reflows in the canvas fast path; omit to read lazily.
 	 * @return {Range}
 	 */
-	findStart(root: Node, start: number, end: number): Range {
+	findStart(root: Node, start: number, end: number, scrollDimension?: number): Range {
+		// Canvas fast path: binary search on cumulative document widths
+		if (root.nodeType === Node.ELEMENT_NODE) {
+			const fast = this._canvasFindNode(root as Element, start, end, "start", scrollDimension);
+			if (fast) return this.findTextStartRange(fast.node, start, end, fast.nodePos);
+		}
+
 		const stack = [root];
 		let $el;
 		let found;
@@ -214,9 +241,18 @@ class Mapping {
 	 * @param {Node} root root node
 	 * @param {number} start position to start at
 	 * @param {number} end position to end at
+	 * @param {number} [scrollDimension] total scrollable dimension in CSS pixels
+	 *   (scrollWidth for horizontal, scrollHeight for vertical). Hoisted reads
+	 *   avoid forced reflows in the canvas fast path; omit to read lazily.
 	 * @return {Range}
 	 */
-	findEnd(root: Node, start: number, end: number): Range {
+	findEnd(root: Node, start: number, end: number, scrollDimension?: number): Range {
+		// Canvas fast path: binary search on cumulative document widths
+		if (root.nodeType === Node.ELEMENT_NODE) {
+			const fast = this._canvasFindNode(root as Element, start, end, "end", scrollDimension);
+			if (fast) return this.findTextEndRange(fast.node, start, end, fast.nodePos);
+		}
+
 		const stack = [root];
 		let $el;
 		let $prev = root;
@@ -368,6 +404,159 @@ class Mapping {
 			range.setEnd(textNode, Math.min(nextSeg ? nextSeg.charOffset : len, len));
 
 			if (verifyFn(range.getBoundingClientRect())) return range;
+		}
+
+		return null;
+	}
+
+	/**
+	 * Canvas fast path for node-level search: binary search on cumulative
+	 * document-level text widths to estimate which text node falls at a target
+	 * pixel position, then verify with 1-2 getBoundingClientRect calls.
+	 * Returns the node and its verified bounds, or null to fall through to the DOM walk.
+	 * @private
+	 */
+	private _canvasFindNode(
+		root: Element, start: number, end: number, mode: "start" | "end", scrollDimension?: number
+	): { node: Text; nodePos: DOMRect } | null {
+		if (!this._measurer) return null;
+
+		const win = root.ownerDocument?.defaultView;
+		if (!win) return null;
+
+		const prepared = this._measurer.prepare(root, win);
+		if (prepared.length === 0) return null;
+
+		const totalDocWidth = prepared[prepared.length - 1]!.cumDocWidth;
+		if (totalDocWidth === 0) return null;
+
+		// Reading scrollWidth/Height forces layout. Callers in hot paths
+		// (findRanges, page) hoist this read; fall back to a one-shot read here.
+		if (scrollDimension === undefined) {
+			const docEl = root.ownerDocument.documentElement;
+			scrollDimension = this.horizontal ? docEl.scrollWidth : docEl.scrollHeight;
+		}
+		if (scrollDimension === 0) return null;
+
+		// Map column boundary to a cumulative-text-width target. cumDocWidth
+		// grows in document order, which for RTL means right-to-left visually,
+		// so the RTL distance is measured from the right edge.
+		let target: number;
+		if (this.horizontal && this.direction === "rtl") {
+			// reading-order start = right column edge (end);
+			// reading-order end = left column edge (start)
+			target = scrollDimension - (mode === "start" ? end : start);
+		} else {
+			target = mode === "start" ? start : end;
+		}
+		const targetCumWidth = (target / scrollDimension) * totalDocWidth;
+
+		const idx = this._measurer.findNodeIndex(prepared, targetCumWidth);
+
+		// Scan a bounded window around the estimate in document order. The
+		// ratio-based estimate can miss by a handful of nodes when images,
+		// block gaps, wrapping, or column breaks distort the text-width-to-
+		// visual-position mapping. Iterating in document order mirrors the
+		// walk in findStart/findEnd, so first-match semantics are preserved.
+		//
+		// Edge guard: if the match lands at the window's left edge with
+		// lo > 0, we cannot invoke right/bottom monotonicity to rule out an
+		// earlier match outside the window. Return null to trigger the DOM
+		// walk fallback. (For end mode, the same guard applies — by
+		// monotonicity, the first node where right > end is also the
+		// leftmost match in document order.)
+		const WINDOW_RADIUS = 3;
+		const lo = Math.max(0, idx - WINDOW_RADIUS);
+		const hi = Math.min(prepared.length - 1, idx + WINDOW_RADIUS);
+
+		let prevNode: Text | null = null;
+		let prevElPos: DOMRect | null = null;
+
+		for (let ci = lo; ci <= hi; ci++) {
+			const candidate = prepared[ci]!;
+			const elPos = nodeBounds(candidate.node);
+
+			// Edge guard: match at the left edge of the window with lo > 0
+			// means we cannot invoke monotonicity to rule out an earlier
+			// match outside the window — fall back to the DOM walk.
+			const atLeftEdge = ci === lo && lo > 0;
+
+			if (this.horizontal && this.direction === "ltr") {
+				if (mode === "start") {
+					if ((elPos.left >= start && elPos.left <= end) || elPos.right > start) {
+						if (atLeftEdge) return null;
+						return { node: candidate.node, nodePos: elPos };
+					}
+				} else {
+					// Round to mirror findEnd's walk semantics on fractional pixel coords
+					const left = Math.round(elPos.left);
+					const right = Math.round(elPos.right);
+					if (left > end) {
+						if (prevNode && prevElPos) {
+							return { node: prevNode, nodePos: prevElPos };
+						}
+						return null;
+					} else if (right > end) {
+						if (atLeftEdge) return null;
+						return { node: candidate.node, nodePos: elPos };
+					} else {
+						prevNode = candidate.node;
+						prevElPos = elPos;
+					}
+				}
+			} else if (this.horizontal && this.direction === "rtl") {
+				if (mode === "start") {
+					if ((elPos.right <= end && elPos.right >= start) || elPos.left < end) {
+						if (atLeftEdge) return null;
+						return { node: candidate.node, nodePos: elPos };
+					}
+				} else {
+					const left = Math.round(elPos.left);
+					const right = Math.round(elPos.right);
+					if (right < start) {
+						if (prevNode && prevElPos) {
+							return { node: prevNode, nodePos: prevElPos };
+						}
+						return null;
+					} else if (left < start) {
+						if (atLeftEdge) return null;
+						return { node: candidate.node, nodePos: elPos };
+					} else {
+						prevNode = candidate.node;
+						prevElPos = elPos;
+					}
+				}
+			} else {
+				if (mode === "start") {
+					if ((elPos.top >= start && elPos.top <= end) || elPos.bottom > start) {
+						if (atLeftEdge) return null;
+						return { node: candidate.node, nodePos: elPos };
+					}
+				} else {
+					const top = Math.round(elPos.top);
+					const bottom = Math.round(elPos.bottom);
+					if (top > end) {
+						if (prevNode && prevElPos) {
+							return { node: prevNode, nodePos: prevElPos };
+						}
+						return null;
+					} else if (bottom > end) {
+						if (atLeftEdge) return null;
+						return { node: candidate.node, nodePos: elPos };
+					} else {
+						prevNode = candidate.node;
+						prevElPos = elPos;
+					}
+				}
+			}
+		}
+
+		// Loop ended without a match. For end mode, if every node in the
+		// window was fully before end AND the window reaches the last
+		// prepared node, the last prev is the correct answer (the column
+		// contains the rest of the document). Otherwise fall back.
+		if (mode === "end" && prevNode && prevElPos && hi === prepared.length - 1) {
+			return { node: prevNode, nodePos: prevElPos };
 		}
 
 		return null;
