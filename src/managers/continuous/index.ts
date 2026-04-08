@@ -361,7 +361,7 @@ class ContinuousViewManager extends DefaultViewManager {
 			return task.promise;
 		}
 		const first = displayed[0]!;
-		const last = displayed[displayed.length-1]!;
+		const last = displayed.at(-1)!;
 		const firstIndex = this.views.indexOf(first);
 		const lastIndex = this.views.indexOf(last);
 		const above = this.views.slice(0, firstIndex);
@@ -418,12 +418,14 @@ class ContinuousViewManager extends DefaultViewManager {
 
 	addEventListeners(_stage?: Stage): void {
 
-		this._onUnload = (_e: Event): void => {
+		this._onPageHide = (e: PageTransitionEvent): void => {
+			// Skip teardown when the page is entering bfcache — it may be
+			// restored on pageshow and still needs a working manager.
+			if (e.persisted) return;
 			this.ignore = true;
-			// this.scrollTo(0,0);
 			this.destroy();
 		};
-		window.addEventListener("unload", this._onUnload);
+		window.addEventListener("pagehide", this._onPageHide);
 
 		this.addScrollListeners();
 
@@ -451,7 +453,7 @@ class ContinuousViewManager extends DefaultViewManager {
 		}
 
 		this._onScroll = this.onScroll.bind(this);
-		scroller.addEventListener("scroll", this._onScroll);
+		scroller.addEventListener("scroll", this._onScroll, { passive: true });
 		this._scrolled = debounce(() => this.scrolled(), 30);
 
 		this.didScroll = false;
@@ -470,8 +472,8 @@ class ContinuousViewManager extends DefaultViewManager {
 		scroller.removeEventListener("scroll", this._onScroll!);
 		this._onScroll = undefined;
 
-		window.removeEventListener("unload", this._onUnload!);
-		this._onUnload = undefined;
+		window.removeEventListener("pagehide", this._onPageHide!);
+		this._onPageHide = undefined;
 	}
 
 	onScroll(): void {

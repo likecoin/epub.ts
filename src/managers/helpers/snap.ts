@@ -141,7 +141,7 @@ class Snap implements IEventEmitter<Record<string, any[]>> {
 		window.addEventListener("resize", this._onResize);
 
 		this._onScroll = this.onScroll.bind(this);
-		this.scroller!.addEventListener("scroll", this._onScroll);
+		this.scroller!.addEventListener("scroll", this._onScroll, { passive: true });
 
 		this._onTouchStart = this.onTouchStart.bind(this);
 		this.scroller!.addEventListener("touchstart", this._onTouchStart as EventListener, { passive: true });

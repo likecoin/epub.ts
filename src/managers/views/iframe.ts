@@ -438,7 +438,7 @@ class IframeView implements IEventEmitter<IframeViewEvents> {
 		requestAnimationFrame(() => {
 			let mark;
 			for (const m in this.marks) {
-				if (this.marks.hasOwnProperty(m)) {
+				if (Object.hasOwn(this.marks, m)) {
 					mark = this.marks[m]!;
 					this.placeMark(mark.element, mark.range);
 				}

@@ -315,7 +315,7 @@ class Stage {
 
 		rulesArray.forEach(function(set) {
 			for (const prop in set) {
-				if(set.hasOwnProperty(prop)) {
+				if(Object.hasOwn(set, prop)) {
 					rules += prop + ":" + set[prop] + ";";
 				}
 			}

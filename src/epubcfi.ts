@@ -915,7 +915,7 @@ class EpubCFI {
 		const lastStepIndex = steps[steps.length-1]!.index;
 
 		for (const childIndex in map) {
-			if (!map.hasOwnProperty(childIndex)) continue;
+			if (!Object.hasOwn(map, childIndex)) continue;
 
 			if(map[childIndex] === lastStepIndex) {
 				child = children[childIndex]!;

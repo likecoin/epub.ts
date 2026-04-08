@@ -142,10 +142,10 @@ const table = {
 const mimeTypes = (function(): Record<string, string> {
 	let type, subtype, val, index; const mimeTypes: Record<string, string> = {};
 	for (type in table) {
-		if (table.hasOwnProperty(type)) {
+		if (Object.hasOwn(table, type)) {
 			const category = table[type as keyof typeof table];
 			for (subtype in category) {
-				if (category.hasOwnProperty(subtype)) {
+				if (Object.hasOwn(category, subtype)) {
 					val = (category as Record<string, string | string[]>)[subtype]!;
 					if (typeof val === "string") {
 						mimeTypes[val] = type + "/" + subtype;
