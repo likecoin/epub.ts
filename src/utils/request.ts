@@ -30,7 +30,7 @@ async function request(
   try {
     response = await fetch(url, init);
   } catch (e) {
-    throw new EpubError((e as Error).message || "Network Error", 0);
+    throw new EpubError((e as Error).message || "Network Error", 0, { cause: e });
   }
 
   if (!response.ok) {

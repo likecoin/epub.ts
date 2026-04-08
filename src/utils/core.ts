@@ -7,13 +7,17 @@
  * @returns {function} requestAnimationFrame
  * @memberof Core
  */
-export const microTick: (cb: FrameRequestCallback) => number = (cb) => { Promise.resolve().then(() => cb(performance.now())); return 0; };
+export const microTick: (cb: FrameRequestCallback) => number = (cb) => { queueMicrotask(() => cb(performance.now())); return 0; };
 export const requestAnimationFrame: (cb: FrameRequestCallback) => number = (typeof window !== "undefined") ? window.requestAnimationFrame.bind(window) : microTick;
 const ELEMENT_NODE = 1;
 const TEXT_NODE = 3;
 const _COMMENT_NODE = 8;
 const _DOCUMENT_NODE = 9;
 const _URL = typeof URL !== "undefined" ? URL : (typeof window !== "undefined" ? window.URL : undefined!);
+const _randomUUID: (() => string) | undefined =
+	typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+		? crypto.randomUUID.bind(crypto)
+		: undefined;
 
 /**
  * Generates a UUID
@@ -22,6 +26,9 @@ const _URL = typeof URL !== "undefined" ? URL : (typeof window !== "undefined" ?
  * @memberof Core
  */
 export function uuid(): string {
+	if (_randomUUID) {
+		return _randomUUID();
+	}
 	let d = new Date().getTime();
 	const uuid = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function(c) {
 		const r = (d + Math.random()*16)%16 | 0;
@@ -396,8 +403,8 @@ export function handleResponse(response: string | Blob, type?: string): Document
  */
 export class EpubError extends Error {
 	status?: number;
-	constructor(message: string, status?: number) {
-		super(message);
+	constructor(message: string, status?: number, options?: ErrorOptions) {
+		super(message, options);
 		this.name = "EpubError";
 		this.status = status;
 	}

@@ -50,7 +50,7 @@ class DefaultViewManager implements IEventEmitter<DefaultManagerEvents> {
 	writingMode!: string;
 	_hasScrolled!: boolean;
 	_onScroll: ((e?: Event) => void) | undefined;
-	_onUnload: ((e: Event) => void) | undefined;
+	_onPageHide: ((e: PageTransitionEvent) => void) | undefined;
 	resizeTimeout!: ReturnType<typeof setTimeout>;
 	afterScrolled!: ReturnType<typeof setTimeout>;
 
@@ -170,10 +170,13 @@ class DefaultViewManager implements IEventEmitter<DefaultManagerEvents> {
 	addEventListeners(): void {
 		let scroller;
 
-		this._onUnload = (_e: Event): void => {
+		this._onPageHide = (e: PageTransitionEvent): void => {
+			// Skip teardown when the page is entering bfcache — it may be
+			// restored on pageshow and still needs a working manager.
+			if (e.persisted) return;
 			this.destroy();
 		};
-		window.addEventListener("unload", this._onUnload);
+		window.addEventListener("pagehide", this._onPageHide);
 
 		if(!this.settings.fullsize) {
 			scroller = this.container;
@@ -182,7 +185,7 @@ class DefaultViewManager implements IEventEmitter<DefaultManagerEvents> {
 		}
 
 		this._onScroll = this.onScroll.bind(this);
-		scroller.addEventListener("scroll", this._onScroll);
+		scroller.addEventListener("scroll", this._onScroll, { passive: true });
 	}
 
 	removeEventListeners(): void {
@@ -197,8 +200,8 @@ class DefaultViewManager implements IEventEmitter<DefaultManagerEvents> {
 		scroller.removeEventListener("scroll", this._onScroll!);
 		this._onScroll = undefined;
 
-		window.removeEventListener("unload", this._onUnload!);
-		this._onUnload = undefined;
+		window.removeEventListener("pagehide", this._onPageHide!);
+		this._onPageHide = undefined;
 	}
 
 	destroy(): void {
@@ -747,7 +750,7 @@ class DefaultViewManager implements IEventEmitter<DefaultManagerEvents> {
 		const visible = this.visible();
 		if(visible.length){
 			// Current is the last visible view
-			return visible[visible.length-1]!;
+			return visible.at(-1)!;
 		}
 		return null;
 	}
