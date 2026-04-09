@@ -95,7 +95,7 @@ class Navigation {
 			return this.toc;
 		}
 
-		if(target.indexOf("#") === 0) {
+		if(target.startsWith("#")) {
 			target = target.substring(1);
 			index = this.tocById[target];
 		} else if(target in this.tocByHref){

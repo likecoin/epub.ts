@@ -149,7 +149,7 @@ class Spine {
 			index = cfi.spinePos;
 		} else if(typeof target === "number" || isNaN(Number(target)) === false){
 			index = Number(target);
-		} else if(typeof target === "string" && target.indexOf("#") === 0) {
+		} else if(typeof target === "string" && target.startsWith("#")) {
 			index = this.spineById[target.substring(1)] ?? -1;
 		} else if(typeof target === "string") {
 			// Remove fragments

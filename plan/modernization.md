@@ -21,12 +21,19 @@ For context — these are already in use and should not be disturbed:
 - `fetch` (request.ts)
 - `TextDecoder`, `document.fonts.ready`
 
+## Baseline gaps (pre-2016 legacy still present)
+
+The baseline list above only counts APIs adopted *additively*. Several places in the code still carry **pre-2016 legacy code paths and fallback branches** that target browsers no longer in the support matrix (IE ≤10, pre-Chrome 41, pre-Safari 9). These are not "modernizations" in the Phase 1–3 sense — they are dead code removals and ES2015/ES2016 idioms that the original epub.js couldn't use because it polyfilled `requestAnimationFrame`. Phase 0.5 addresses them.
+
 ## Discovery summary
 
 Opportunities ranked by (impact × safety). Full rationale in the original discovery session; this plan focuses on *what to do* rather than *why it's good*.
 
 | # | API / Feature | Area | Impact | Risk | Phase |
 |---|---|---|---|---|---|
+| 0a | Delete unreachable `Math.random` uuid fallback | `utils/core.ts` | Dead code removal | None | 0.5 |
+| 0b | Delete `document.createEvent("MouseEvents")` fallback | `marks-pane/index.ts` | Dead code removal | None | 0.5 |
+| 0c | `String.includes` / `startsWith` / `endsWith` / `Array.includes` | scattered | Readability, intent clarity | None | 0.5 |
 | 1 | `pagehide` instead of `unload` (+ `e.persisted` guard) | default + continuous manager | Restores bfcache for all embedders | Requires `e.persisted` check — see 1.1 | 1 |
 | 2 | `crypto.randomUUID()` | `utils/core.ts` `uuid()` | Tiny perf, cleaner | None | 1 |
 | 3 | `queueMicrotask` | `utils/core.ts` `microTick` | Tiny perf | None | 1 |
@@ -41,6 +48,179 @@ Opportunities ranked by (impact × safety). Full rationale in the original disco
 | 12 | `IntersectionObserver` windowing | `ContinuousViewManager.update/check` | Eliminates manual visibility math | High | 3 |
 | 13 | CSS `content-visibility: auto` | view container | Skips paint/layout of off-screen sections | High (measurement interaction) | 3 |
 | 14 | Native CSS scroll-snap | replace `Snap` helper | Deletes ~374 lines, better feel | High (touch parity) | 3 (optional) |
+
+---
+
+## Phase 0.5 — Pre-2016 legacy cleanup
+
+**Status:** ✅ Landed. All three sub-items implemented; 993/993 tests passing; `typecheck` and `lint` clean.
+
+**Goal:** delete dead fallback branches and convert pre-ES2016 idioms. Every item here is either a pure deletion or a literal 1:1 rename with no behavior change. Land before Phase 1 so the Phase 1 diffs touch less surrounding noise.
+
+**Browser floor assumed:** Chrome 87+ / Safari 15.4+ / Firefox 78+ (the library's existing baseline, set by `Intl.Segmenter`). All APIs used below shipped well before that floor:
+
+- `String.prototype.includes` / `startsWith` / `endsWith` — ES2015, Chrome 41 / Safari 9 (2015)
+- `Array.prototype.includes` — ES2016, Chrome 47 / Safari 9 (2015)
+- `new MouseEvent()` constructor — IE 11 / Chrome 15 / Safari 6
+- `crypto.randomUUID()` — Chrome 92 / Safari 15.4 / Firefox 95
+
+### 0.5.1 Delete unreachable `uuid()` fallback ✅
+**Files:** `src/utils/core.ts:17-39`
+
+Phase 1.2 is already landed — `_randomUUID` is cached at module load and `uuid()` prefers it. The `Math.random` + `new Date().getTime()` fallback branch beneath it is now unreachable on any browser this library claims to support (`crypto.randomUUID` is available everywhere above Chrome 92 / Safari 15.4, and `crypto` itself has been universal since Chrome 11 / Safari 5.1).
+
+**Change:**
+```ts
+const _randomUUID: () => string =
+    typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+        ? crypto.randomUUID.bind(crypto)
+        : (() => { throw new Error("crypto.randomUUID unavailable"); });
+
+export function uuid(): string {
+    return _randomUUID();
+}
+```
+
+Or, even simpler — drop the capability check entirely and rely on the type system:
+```ts
+export const uuid = (): string => crypto.randomUUID();
+```
+
+**Careful points:**
+- `crypto.randomUUID` requires a **secure context** (`https://`, `localhost`, or `file://`). The library does not document an insecure-context use case, and the test suite runs under `http://localhost` (secure). Verify by grepping tests for `uuid(` calls and running the suite after deletion.
+- Node.js has `crypto.randomUUID()` on `globalThis.crypto` since Node 19 (and on `require("crypto")` since Node 14.17). The `src/node.ts` entry point already assumes a modern Node — no extra shim needed.
+
+**Why it matters:** removes ~10 lines of legacy code and one `new Date().getTime()` call (the only one in the codebase if grep is right). The fallback was never going to execute.
+
+**Test plan:** run the existing suite. Uniqueness of `uuid()` output is exercised indirectly via view/stage IDs.
+
+**Rollback:** re-inline the old fallback. Single-function scope.
+
+---
+
+### 0.5.2 Delete `document.createEvent("MouseEvents")` fallback in marks-pane ✅
+**Files:** `src/marks-pane/index.ts:53-66`
+
+Current:
+```ts
+function cloneEvent(e: MouseEvent | TouchEvent): MouseEvent {
+    const opts = Object.assign({}, e, { bubbles: false }) as MouseEventInit;
+    try {
+        return new MouseEvent(e.type, opts);
+    } catch (_err) {
+        const me = e as MouseEvent;
+        const copy = document.createEvent("MouseEvents");
+        copy.initMouseEvent(e.type, false, me.cancelable, me.view!,
+            me.detail, me.screenX, me.screenY,
+            me.clientX, me.clientY, me.ctrlKey,
+            me.altKey, me.shiftKey, me.metaKey,
+            me.button, me.relatedTarget);
+        return copy;
+    }
+}
+```
+
+The `catch` branch exists only for IE ≤10, which lacks the `MouseEvent` constructor. Every browser in the library's baseline supports `new MouseEvent()`. The 14-argument `initMouseEvent` API has been deprecated in the spec for over a decade.
+
+**Change:** delete the `try/catch`, keep only the constructor path. While here, the `Object.assign({}, e, { bubbles: false })` dance is also legacy — `MouseEventInit` accepts a small subset of properties, and `Object.assign` over a DOM event copies host-defined slots that the constructor will ignore. A tighter version:
+```ts
+function cloneEvent(e: MouseEvent): MouseEvent {
+    return new MouseEvent(e.type, {
+        bubbles: false,
+        cancelable: e.cancelable,
+        view: e.view,
+        detail: e.detail,
+        screenX: e.screenX,
+        screenY: e.screenY,
+        clientX: e.clientX,
+        clientY: e.clientY,
+        ctrlKey: e.ctrlKey,
+        altKey: e.altKey,
+        shiftKey: e.shiftKey,
+        metaKey: e.metaKey,
+        button: e.button,
+        relatedTarget: e.relatedTarget,
+    });
+}
+```
+
+**Careful points:**
+- The plan's 1.5 "skip list" marks `src/marks-pane/index.ts` as inlined from upstream. **This is an explicit exception to that rule** — deleting dead IE fallback code is not a divergence worth preserving upstream parity for. Note it in the commit message.
+- The signature currently accepts `MouseEvent | TouchEvent`. Check the call site: if it's only called with real `MouseEvent` instances (the `cloneEvent` name suggests so), tighten the type; if `TouchEvent` can be passed, keep the union and handle it.
+- This function is called from the highlight/underline hit-testing path in `Pane`. A behavioral regression would show up as click-through or misrouted mark clicks. Manual smoke test on a book with highlights after landing.
+
+**Test plan:** run existing `test/` suite (marks/annotations tests should cover this indirectly). If no direct coverage, add one test that constructs a `Pane`, dispatches a `click`, and asserts the cloned event has the expected `clientX/clientY`.
+
+**Rollback:** restore the `try/catch`. Self-contained.
+
+---
+
+### 0.5.3 `String.includes` / `startsWith` / `endsWith` and `Array.includes` ✅
+**Files:** batched across the codebase.
+
+Convert `indexOf(...) > -1`, `indexOf(...) !== -1`, and `indexOf(...) === 0` idioms to the intent-specific methods **only where the index value is discarded**. Keep `indexOf` where the returned position is used (e.g. `spineItems.indexOf(section)` at `spine.ts:213`, `views.indexOf(view)` in `helpers/views.ts`).
+
+**String `indexOf → startsWith`:**
+| File:line | Current | Replace with |
+|---|---|---|
+| `src/epubcfi.ts:117` | `cfiStr.indexOf("epubcfi(") === 0 && cfiStr[cfiStr.length-1] === ")"` | `cfiStr.startsWith("epubcfi(") && cfiStr.endsWith(")")` |
+| `src/epubcfi.ts:1024` | `str.indexOf("epubcfi(") === 0` | `str.startsWith("epubcfi(")` |
+| `src/spine.ts:152` | `target.indexOf("#") === 0` | `target.startsWith("#")` |
+| `src/navigation.ts:98` | `target.indexOf("#") === 0` | `target.startsWith("#")` |
+| `src/contents.ts:1083` | `writingMode.indexOf("vertical") === 0` | `writingMode.startsWith("vertical")` |
+| `src/managers/views/iframe.ts:232,234,237` | `writingMode.indexOf("vertical") === 0` ×3 | `writingMode.startsWith("vertical")` |
+| `src/utils/replacements.ts:83` | `href.indexOf("mailto:") === 0` | `href.startsWith("mailto:")` |
+
+**String `indexOf → includes`:**
+| File:line | Current | Replace with |
+|---|---|---|
+| `src/book.ts:432` | `path.indexOf("://") > -1` | `path.includes("://")` |
+| `src/utils/path.ts:18-19` | `const protocol = pathString.indexOf("://"); if (protocol > -1) {...}` | `if (pathString.includes("://")) {...}` (drop the intermediate) |
+| `src/utils/path.ts:84` | `what.indexOf("://") > -1` | `what.includes("://")` |
+| `src/utils/url.ts:24,95` | `indexOf("://") > -1` | `.includes("://")` |
+| `src/utils/replacements.ts:7,93` | `indexOf("://") > -1` | `.includes("://")` |
+| `src/utils/core.ts:87` | `n.indexOf(".") > -1` | `n.includes(".")` |
+| `src/contents.ts:695` | `target.indexOf("#") > -1` | `target.includes("#")` |
+
+**Array `indexOf → includes`:**
+| File:line | Current | Replace with |
+|---|---|---|
+| `src/utils/core.ts:373` | `["xml","opf","ncx"].indexOf(ext) > -1` | `["xml","opf","ncx"].includes(ext)` |
+| `src/themes.ts:171` | `links.indexOf(theme.url) === -1` | `!links.includes(theme.url)` |
+
+**Special case — `src/pagelist.ts:138`:** the variable name (`isCfi`) lies about its type (it holds a numeric index, then checks `!== -1`), but the behavior is **correct**. Investigation confirmed this is not a latent bug. Convert for clarity:
+```ts
+// Before
+isCfi = href.indexOf("epubcfi");
+// ...
+if (isCfi !== -1) { ... }
+
+// After
+hasCfi = href.includes("epubcfi");
+// ...
+if (hasCfi) { ... }
+```
+Rename the local to match its new type. Two-line change, pure readability win.
+
+**Deliberately NOT changed:**
+- `src/epubcfi.ts:755,758,782` — `Array.from(children).indexOf(anchor)` returns the child **index**, used downstream. Keep.
+- `src/spine.ts:213` — `this.spineItems.indexOf(section)` returns the index. Keep.
+- `src/managers/helpers/views.ts:29-30,75` — `_views.indexOf(view)` returns the index. Keep.
+- `src/resources.ts:201,299` — `indexInUrls` is used as an index. Keep.
+- `src/pagelist.ts:230` — `this.pages.indexOf(pg)` returns the index. Keep.
+- `src/section.ts:121,175,240`, `src/mapping.ts:721,737`, `src/contents.ts:647` — all use the returned position. Keep.
+- `src/marks-pane/index.ts:160,253,259` — upstream-inlined file; apply the plan's general skip rule (exception 0.5.2 is for dead code deletion only).
+- `src/utils/core.ts:192,215,217` — `indexOfSorted` is the library's own exported API. Keep.
+
+**Careful points:**
+- Do a final grep after the rename: `rg 'indexOf\(.*\)\s*(===|!==|>)\s*-?[01]'` should return only the intentional keeps listed above.
+- `tsconfig.json` `lib` needs `ES2016` for `Array.prototype.includes` types. Per Phase 1.5, the `lib` bump to `ES2022` (for `Object.hasOwn` / `Array.at`) already covers this — sequence the `lib` bump commit before 0.5.3 if Phase 1.5 hasn't landed yet.
+
+**Why it matters:** intent clarity. A reader of `href.indexOf("mailto:") === 0` has to mentally parse "indexOf returns -1 on miss and 0 when found at the start, so `=== 0` means starts-with". `href.startsWith("mailto:")` is the same code without the cognitive step. In a CFI parser and URL resolver where off-by-one bugs are painful, removing ambiguity is worth one batch commit.
+
+**Test plan:** the type checker catches rename mistakes; the existing test suite covers all touched files. No new tests required. Run `npm run lint && npm run typecheck && npm test` before committing.
+
+**Rollback:** single-commit revert is safe — every change is a 1:1 semantic equivalent.
 
 ---
 
@@ -71,8 +251,11 @@ Opportunities ranked by (impact × safety). Full rationale in the original disco
 
 ---
 
-### 1.2 `crypto.randomUUID()` with fallback
+### 1.2 `crypto.randomUUID()` with fallback ✅ (superseded by 0.5.1)
 **Files:** `src/utils/core.ts:16-35`
+
+**Status:** the capability-cached version landed pre-Phase-0.5, and the fallback was then deleted entirely in Phase 0.5.1. `uuid()` is now a one-liner returning `crypto.randomUUID()`.
+
 
 Cache the capability check at module load — following the existing `_URL` pattern on the same file — so `uuid()` (called for every view and stage construction) doesn't re-evaluate `typeof` on every call:
 
@@ -96,8 +279,9 @@ export function uuid(): string {
 
 ---
 
-### 1.3 `queueMicrotask` in `microTick`
+### 1.3 `queueMicrotask` in `microTick` ✅
 **Files:** `src/utils/core.ts:10`
+
 
 ```ts
 export const microTick: (cb: FrameRequestCallback) => number =
@@ -391,10 +575,15 @@ element.style.contain = "layout paint";
 
 Each numbered section below is one commit. Run `npm test && npm run typecheck && npm run lint` before each commit.
 
+### Phase 0.5 commits ✅ landed
+Landed as a single combined commit (matching the `🚀 Phase 1 browser platform modernization` precedent) rather than three separate refactor commits — the sub-items are cohesive enough that splitting across files (e.g. `core.ts` touched by both 0.5.1 and 0.5.3) adds friction with no rollback benefit.
+
+Note: `tsconfig.json` `lib` was already bumped to `ES2022` before Phase 0.5, so the sequencing concern around the 1.5 lib bump is moot.
+
 ### Phase 1 commits (independent, land in any order)
 1. `fix: use pagehide instead of unload to restore bfcache` (1.1)
-2. `refactor: prefer crypto.randomUUID when available` (1.2)
-3. `refactor: use queueMicrotask in microTick` (1.3)
+2. ~~`refactor: prefer crypto.randomUUID when available` (1.2)~~ — **already landed** in `utils/core.ts:17-20`; the fallback is removed in Phase 0.5.1.
+3. ~~`refactor: use queueMicrotask in microTick` (1.3)~~ — **already landed** in `utils/core.ts:10`.
 4. `refactor: mark scroll listeners passive` (1.4)
 5. `refactor: use Object.hasOwn and Array.at` (1.5)
 6. `feat: preserve error cause in EpubError` (1.6)
@@ -414,6 +603,7 @@ Do not flip the Phase 3 defaults in the same PR that introduces them. Ship, benc
 
 ## Success criteria
 
+- **Phase 0.5:** all existing tests pass; grep for `indexOf\(` on string literals returns only the intentional keeps (array/string position lookups); no `catch (_err)` around `new MouseEvent`; no `Math.random()` in `utils/core.ts`; `new Date().getTime()` returns zero results in `src/`.
 - **Phase 1:** all existing tests pass; no new test failures; `unload` grepping returns zero results outside `Section.unload()` naming.
 - **Phase 2:** `AbortError` never surfaces as `loaderror`; `scrollend` and `requestIdleCallback` paths covered by unit tests; benchmark shows no regression on a small reference book.
 - **Phase 3:** benchmark on a ≥100-section book shows measurable reduction in scroll-path CPU time (`performance.measure` on `update()` / visibility callbacks) before defaults flip.

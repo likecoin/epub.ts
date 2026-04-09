@@ -14,28 +14,14 @@ const TEXT_NODE = 3;
 const _COMMENT_NODE = 8;
 const _DOCUMENT_NODE = 9;
 const _URL = typeof URL !== "undefined" ? URL : (typeof window !== "undefined" ? window.URL : undefined!);
-const _randomUUID: (() => string) | undefined =
-	typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
-		? crypto.randomUUID.bind(crypto)
-		: undefined;
 
 /**
  * Generates a UUID
- * based on: http://stackoverflow.com/questions/105034/how-to-create-a-guid-uuid-in-javascript
  * @returns {string} uuid
  * @memberof Core
  */
 export function uuid(): string {
-	if (_randomUUID) {
-		return _randomUUID();
-	}
-	let d = new Date().getTime();
-	const uuid = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function(c) {
-		const r = (d + Math.random()*16)%16 | 0;
-		d = Math.floor(d/16);
-		return (c==="x" ? r : (r&0x7|0x8)).toString(16);
-	});
-	return uuid;
+	return crypto.randomUUID();
 }
 
 /**
@@ -84,7 +70,7 @@ export function isFloat(n: unknown): boolean {
 		return false;
 	}
 
-	if (typeof n === "string" && n.indexOf(".") > -1) {
+	if (typeof n === "string" && n.includes(".")) {
 		return true;
 	}
 
@@ -370,7 +356,7 @@ export function indexOfElementNode(elementNode: Node): number {
  * @memberof Core
  */
 export function isXml(ext: string): boolean {
-	return ["xml", "opf", "ncx"].indexOf(ext) > -1;
+	return ["xml", "opf", "ncx"].includes(ext);
 }
 
 /**
