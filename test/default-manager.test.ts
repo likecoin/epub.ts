@@ -364,4 +364,23 @@ describe("DefaultViewManager", () => {
 			expect(spy).toHaveBeenCalled();
 		});
 	});
+
+	describe("pagehide handler", () => {
+		it("should call destroy() on pagehide when persisted is false", () => {
+			const manager = new DefaultViewManager(createMockManagerOptions());
+			manager.render(document.createElement("div"), { width: 800, height: 600 });
+			const spy = vi.spyOn(manager, "destroy");
+			manager._onPageHide!({ persisted: false } as PageTransitionEvent);
+			expect(spy).toHaveBeenCalled();
+		});
+
+		it("should skip destroy() on pagehide when persisted is true (bfcache)", () => {
+			const manager = new DefaultViewManager(createMockManagerOptions());
+			manager.render(document.createElement("div"), { width: 800, height: 600 });
+			const spy = vi.spyOn(manager, "destroy");
+			manager._onPageHide!({ persisted: true } as PageTransitionEvent);
+			expect(spy).not.toHaveBeenCalled();
+			manager.destroy();
+		});
+	});
 });

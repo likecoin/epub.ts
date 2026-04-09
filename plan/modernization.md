@@ -5,7 +5,7 @@ Discovery + phased implementation plan for adopting modern browser APIs (2016–
 ## Principles
 
 - **API compatibility first.** The public surface must stay drop-in with `epubjs v0.3.93`. Every change below is either internal or a capability-detected enhancement with fallback to today's code path.
-- **Feature-detect, never assume.** Browsers targeted by this library range from Chrome 87+ / Safari 15.4+ (current `Intl.Segmenter` floor) upward. Each new API gets a `typeof`/`in` check with the existing behavior as fallback.
+- **Feature-detect below the floor; assume above it.** The library's baseline after Phase 0.5 + Phase 1 is **Chrome 93+ / Safari 15.4+ / Firefox 95+**, bounded by the newest APIs now adopted unconditionally: `crypto.randomUUID` (Chrome 92 / Safari 15.4 / Firefox 95), `Array.prototype.at` (Chrome 92 / Safari 15.4 / Firefox 90), `Object.hasOwn` (Chrome 93 / Safari 15.4 / Firefox 92), and `Error` `cause` (Chrome 93 / Safari 15 / Firefox 91). APIs above that floor — `Intl.Segmenter` in Firefox, `scrollend`, `requestIdleCallback`, etc. — still get a `typeof`/`in` check with fallback.
 - **No behavioral regressions.** Changes must pass the existing 993+ test suite unmodified. Tests added for new paths should run against both the modern and fallback branches where feasible.
 - **Small, reversible commits.** Each item in Phase 1 and 2 is a self-contained commit that can be reverted in isolation.
 - **Measure, don't guess.** For Phase 3 items (windowing rewrite), land behind an opt-in flag first and benchmark against a large reference book before making it the default.
@@ -57,7 +57,7 @@ Opportunities ranked by (impact × safety). Full rationale in the original disco
 
 **Goal:** delete dead fallback branches and convert pre-ES2016 idioms. Every item here is either a pure deletion or a literal 1:1 rename with no behavior change. Land before Phase 1 so the Phase 1 diffs touch less surrounding noise.
 
-**Browser floor assumed:** Chrome 87+ / Safari 15.4+ / Firefox 78+ (the library's existing baseline, set by `Intl.Segmenter`). All APIs used below shipped well before that floor:
+**Browser floor assumed:** Chrome 92+ / Safari 15.4+ / Firefox 95+, bounded by `crypto.randomUUID` — the newest API adopted unconditionally in this phase. All other APIs used below shipped well before that floor:
 
 - `String.prototype.includes` / `startsWith` / `endsWith` — ES2015, Chrome 41 / Safari 9 (2015)
 - `Array.prototype.includes` — ES2016, Chrome 47 / Safari 9 (2015)

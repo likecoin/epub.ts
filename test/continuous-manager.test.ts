@@ -250,4 +250,26 @@ describe("ContinuousViewManager", () => {
 			expect(destroySpy).toHaveBeenCalled();
 		});
 	});
+
+	describe("pagehide handler", () => {
+		it("should set ignore and call destroy() on pagehide when persisted is false", () => {
+			const manager = new ContinuousViewManager(createMockManagerOptions());
+			manager.render(document.createElement("div"), { width: 800, height: 600 });
+			const spy = vi.spyOn(manager, "destroy");
+			manager._onPageHide!({ persisted: false } as PageTransitionEvent);
+			expect(manager.ignore).toBe(true);
+			expect(spy).toHaveBeenCalled();
+		});
+
+		it("should skip destroy() and leave ignore untouched on pagehide when persisted is true (bfcache)", () => {
+			const manager = new ContinuousViewManager(createMockManagerOptions());
+			manager.render(document.createElement("div"), { width: 800, height: 600 });
+			const ignoreBefore = manager.ignore;
+			const spy = vi.spyOn(manager, "destroy");
+			manager._onPageHide!({ persisted: true } as PageTransitionEvent);
+			expect(spy).not.toHaveBeenCalled();
+			expect(manager.ignore).toBe(ignoreBefore);
+			manager.destroy();
+		});
+	});
 });
