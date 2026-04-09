@@ -275,7 +275,7 @@ class ContinuousViewManager extends DefaultViewManager {
 		let offset = horizontal ? this.scrollLeft : this.scrollTop;
 		const visibleLength = horizontal ? Math.floor(bounds.width) : bounds.height;
 		const contentLength = horizontal ? this.container.scrollWidth : this.container.scrollHeight;
-		const writingMode = (this.writingMode && this.writingMode.indexOf("vertical") === 0) ? "vertical" : "horizontal";
+		const writingMode = this.writingMode && this.writingMode.startsWith("vertical") ? "vertical" : "horizontal";
 		const rtlScrollType = this.settings.rtlScrollType;
 		const rtl = this.settings.direction === "rtl";
 

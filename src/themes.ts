@@ -168,7 +168,7 @@ class Themes {
 		for (const name in themes) {
 			if (Object.hasOwn(themes, name) && (name === this._current || name === "default")) {
 				theme = themes[name]!;
-				if((theme.rules && Object.keys(theme.rules).length > 0) || (theme.url && links.indexOf(theme.url) === -1) || (theme.serialized)) {
+				if((theme.rules && Object.keys(theme.rules).length > 0) || (theme.url && !links.includes(theme.url)) || (theme.serialized)) {
 					this.add(name, contents);
 				}
 				this._injected!.push(name);

@@ -114,9 +114,8 @@ class EpubCFI {
 			return {spinePos: -1};
 		}
 
-		if(cfiStr.indexOf("epubcfi(") === 0 && cfiStr[cfiStr.length-1] === ")") {
-			// Remove initial epubcfi( and ending )
-			cfiStr = cfiStr.slice(8, cfiStr.length-1);
+		if(cfiStr.startsWith("epubcfi(") && cfiStr.endsWith(")")) {
+			cfiStr = cfiStr.slice(8, -1);
 		}
 
 		const baseComponent = this.getChapterComponent(cfiStr);
@@ -1021,8 +1020,8 @@ class EpubCFI {
 	 */
 	isCfiString(str: unknown): boolean {
 		if(typeof str === "string" &&
-			str.indexOf("epubcfi(") === 0 &&
-			str[str.length-1] === ")") {
+			str.startsWith("epubcfi(") &&
+			str.endsWith(")")) {
 			return true;
 		}
 

@@ -52,18 +52,7 @@ function proxyMouse(target: HTMLElement | HTMLIFrameElement, tracked: Mark[]): v
 
 function cloneEvent(e: MouseEvent | TouchEvent): MouseEvent {
 	const opts = Object.assign({}, e, { bubbles: false }) as MouseEventInit;
-	try {
-		return new MouseEvent(e.type, opts);
-	} catch (_err) {
-		const me = e as MouseEvent;
-		const copy = document.createEvent("MouseEvents");
-		copy.initMouseEvent(e.type, false, me.cancelable, me.view!,
-			me.detail, me.screenX, me.screenY,
-			me.clientX, me.clientY, me.ctrlKey,
-			me.altKey, me.shiftKey, me.metaKey,
-			me.button, me.relatedTarget);
-		return copy;
-	}
+	return new MouseEvent(e.type, opts);
 }
 
 function hitTest(item: Mark, target: HTMLElement | HTMLIFrameElement, x: number, y: number): boolean {

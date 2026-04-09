@@ -429,7 +429,7 @@ class Book implements IEventEmitter<BookEvents> {
 			return "";
 		}
 		let resolved = path;
-		const isAbsolute = (path.indexOf("://") > -1);
+		const isAbsolute = path.includes("://");
 
 		if (isAbsolute) {
 			return path;

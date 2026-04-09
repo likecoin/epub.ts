@@ -21,7 +21,7 @@ class Url {
 	extension: string;
 
 	constructor(urlString: string, baseString?: string | false) {
-		const absolute = (urlString.indexOf("://") > -1);
+		const absolute = urlString.includes("://");
 		let pathname = urlString;
 		let basePath;
 
@@ -92,7 +92,7 @@ class Url {
 	 * @returns {string} url
 	 */
 	resolve (what: string): string {
-		const isAbsolute = (what.indexOf("://") > -1);
+		const isAbsolute = what.includes("://");
 
 		if (isAbsolute) {
 			return what;

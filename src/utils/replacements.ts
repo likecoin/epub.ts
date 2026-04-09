@@ -4,7 +4,7 @@ import Url from "./url";
 export function replaceBase(doc: Document, section: { url: string }): void {
 	let base;
 	let url = section.url;
-	const absolute = (url.indexOf("://") > -1);
+	const absolute = url.includes("://");
 
 	if(!doc){
 		return;
@@ -80,7 +80,7 @@ export function replaceLinks(contents: Element, fn: (path: string) => void): voi
 	const replaceLink = function(link: Element): void {
 		const href = link.getAttribute("href") ?? "";
 
-		if(href.indexOf("mailto:") === 0){
+		if(href.startsWith("mailto:")){
 			return;
 		}
 
@@ -90,7 +90,7 @@ export function replaceLinks(contents: Element, fn: (path: string) => void): voi
 			return;
 		}
 
-		const absolute = (href.indexOf("://") > -1);
+		const absolute = href.includes("://");
 
 		if(absolute){
 

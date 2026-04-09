@@ -135,12 +135,12 @@ class PageList {
 				href = content.getAttribute("href") || "",
 				text = content.textContent || "",
 				page = parseInt(text),
-				isCfi = href.indexOf("epubcfi");
+				hasCfi = href.includes("epubcfi");
 		let split,
 				packageUrl,
 				cfi;
 
-		if(isCfi !== -1) {
+		if(hasCfi) {
 			split = href.split("#");
 			packageUrl = split[0];
 			cfi = split.length > 1 ? split[1] : undefined;

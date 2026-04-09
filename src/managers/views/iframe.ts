@@ -229,12 +229,12 @@ class IframeView implements IEventEmitter<IframeViewEvents> {
 				// Set the axis based on the flow and writing mode
 				let axis;
 				if (this.settings.flow === "scrolled") {
-					axis = (writingMode.indexOf("vertical") === 0) ? "horizontal" : "vertical";
+					axis = writingMode.startsWith("vertical") ? "horizontal" : "vertical";
 				} else {
-					axis = (writingMode.indexOf("vertical") === 0) ? "vertical" : "horizontal";
+					axis = writingMode.startsWith("vertical") ? "vertical" : "horizontal";
 				}
 
-				if (writingMode.indexOf("vertical") === 0 && this.settings.flow === "paginated") {
+				if (writingMode.startsWith("vertical") && this.settings.flow === "paginated") {
 					this.layout.delta = this.layout.height;
 				}
 

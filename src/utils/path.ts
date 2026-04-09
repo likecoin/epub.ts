@@ -15,8 +15,7 @@ class Path {
 	extension: string;
 
 	constructor(pathString: string) {
-		const protocol = pathString.indexOf("://");
-		if (protocol > -1) {
+		if (pathString.includes("://")) {
 			pathString = new URL(pathString).pathname;
 		}
 
@@ -81,7 +80,7 @@ class Path {
 	 * @returns {string} relative
 	 */
 	relative (what: string): string {
-		const isAbsolute = what && (what.indexOf("://") > -1);
+		const isAbsolute = what && what.includes("://");
 
 		if (isAbsolute) {
 			return what;

@@ -691,19 +691,20 @@ class Contents implements IEventEmitter<ContentsEvents> {
 				}
 			}
 
-		} else if(typeof target === "string" &&
-			target.indexOf("#") > -1) {
-
-			const id = target.substring(target.indexOf("#")+1);
-			const el = this.document.getElementById(id);
-			if(el) {
-				if (isWebkit) {
-					// Webkit reports incorrect bounding rects in Columns
-					const newRange = new Range();
-					newRange.selectNode(el);
-					position = newRange.getBoundingClientRect();
-				} else {
-					position = el.getBoundingClientRect();
+		} else if(typeof target === "string") {
+			const hashIdx = target.indexOf("#");
+			if (hashIdx !== -1) {
+				const id = target.slice(hashIdx + 1);
+				const el = this.document.getElementById(id);
+				if(el) {
+					if (isWebkit) {
+						// Webkit reports incorrect bounding rects in Columns
+						const newRange = new Range();
+						newRange.selectNode(el);
+						position = newRange.getBoundingClientRect();
+					} else {
+						position = el.getBoundingClientRect();
+					}
 				}
 			}
 		}
@@ -1080,7 +1081,7 @@ class Contents implements IEventEmitter<ContentsEvents> {
 		const COLUMN_FILL = "column-fill";
 
 		const writingMode = this.writingMode();
-		const axis = (writingMode.indexOf("vertical") === 0) ? "vertical" : "horizontal";
+		const axis = writingMode.startsWith("vertical") ? "vertical" : "horizontal";
 
 		this.layoutStyle("paginated");
 
