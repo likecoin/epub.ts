@@ -1,5 +1,36 @@
 # Changelog
 
+## 0.6.2 (2026-04-10)
+
+### Modernization
+
+- Phase 1 browser platform modernization — drop-in adoption of 2016–2022 browser APIs:
+  - Replace `window` `"unload"` listeners with `"pagehide"` in both view managers and guard on `event.persisted` so bfcache entry leaves the manager alive (destroying would break `pageshow` restore)
+  - Prefer `crypto.randomUUID()` in `uuid()`, cached at module load to avoid a per-call `typeof` check
+  - Use `queueMicrotask` in `microTick`, skipping the `Promise.resolve()` allocation on every locations queue tick
+  - Mark scroll listeners `{ passive: true }` in default + continuous managers and `snap.ts` — none call `preventDefault`, so compositor-thread scrolling is free
+  - Migrate remaining `hasOwnProperty` call sites to `Object.hasOwn`
+  - Replace `arr[arr.length - 1]` with `arr.at(-1)` where it clarifies intent
+  - Add `ErrorOptions` (`cause`) to `EpubError` and forward the caught error from `request.ts` so fetch failures preserve their original stack
+  - Bump `tsconfig` `lib` to ES2022 (target stays at ES2020)
+- Phase 0.5 pre-2016 legacy cleanup — delete dead IE/pre-ES2016 fallback branches and convert `indexOf` comparisons to intent-specific string/array methods (`includes`, `startsWith`, `endsWith`). Drops the `Math.random`/`Date.getTime` fallback in `uuid()` and the `document.createEvent("MouseEvents")` fallback in marks-pane. 18 idiom sites across 13 files. All behavior-preserving.
+
+### Bug fixes
+
+- Prevent scroll flicker by hiding off-screen views instead of destroying them
+- Stop `DefaultViewManager`'s internal task queue (`this.q`) on `destroy()` — any `check()`/`update()` task enqueued just before destroy previously continued firing via `requestAnimationFrame` and crashed on torn-down views (production hit destroyed iframes; tests had a ~40% flake rate from leaked rAF callbacks crossing files)
+
+### Tests
+
+- Add 8 `ContinuousViewManager.erase()` unit tests covering scroll-compensation arithmetic on every code path (vertical, horizontal LTR, horizontal RTL non-fullsize and fullsize, fractional `bounds.width`, no-above branch, views-collection removal)
+- Lock in the `pagehide` bfcache guard (`if (e.persisted) return`) with direct-invocation tests for both managers so a future refactor can't silently strip it
+
+### Internal
+
+- Add local benchmark suite (`bench/`) comparing bundle size and runtime perf against `epubjs@0.3.93`. Puppeteer harness runs cold-parse, first-display, next-page, `locations.generate`, `currentLocation`, and heap scenarios against Alice in Wonderland and War and Peace fixtures. Gitignored output. Headline: `locations.generate(1000)` drops from ~43s to ~159ms on the War and Peace fixture.
+- Add Performance section to README with numbers for both fixtures.
+- Correct `plan/modernization.md` browser floor to Chrome 93+ / Safari 15.4+ / Firefox 95+ (bounded by `crypto.randomUUID`, `Array.prototype.at`, `Object.hasOwn`, and `Error` `cause`).
+
 ## 0.6.1 (2026-04-08)
 
 ### Performance
