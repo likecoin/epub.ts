@@ -208,6 +208,10 @@ class DefaultViewManager implements IEventEmitter<DefaultManagerEvents> {
 		clearTimeout(this.resizeTimeout);
 		clearTimeout(this.afterScrolled);
 
+		// Drop any pending check/update tasks so they can't fire via rAF
+		// after the manager is torn down.
+		this.q.stop();
+
 		this.clear();
 
 		this.removeEventListeners();

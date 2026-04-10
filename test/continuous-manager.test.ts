@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import ContinuousViewManager from "../src/managers/continuous/index";
 import type { ManagerOptions, ViewSettings } from "../src/types";
 import type Section from "../src/section";
@@ -152,6 +152,7 @@ describe("ContinuousViewManager", () => {
 			const spy = vi.spyOn(manager, "scrollBy");
 			manager.next();
 			expect(spy).toHaveBeenCalledWith(800, 0, true);
+			manager.destroy();
 		});
 
 		it("should scroll by layout.height vertically when not paginated horizontal", () => {
@@ -173,6 +174,7 @@ describe("ContinuousViewManager", () => {
 			const spy = vi.spyOn(manager, "scrollBy");
 			manager.next();
 			expect(spy).toHaveBeenCalledWith(0, 600, true);
+			manager.destroy();
 		});
 	});
 
@@ -207,6 +209,7 @@ describe("ContinuousViewManager", () => {
 			const spy = vi.spyOn(manager, "scrollBy");
 			manager.prev();
 			expect(spy).toHaveBeenCalledWith(-800, 0, true);
+			manager.destroy();
 		});
 
 		it("should scroll by negative layout.height vertically", () => {
@@ -228,6 +231,7 @@ describe("ContinuousViewManager", () => {
 			const spy = vi.spyOn(manager, "scrollBy");
 			manager.prev();
 			expect(spy).toHaveBeenCalledWith(0, -600, true);
+			manager.destroy();
 		});
 	});
 
@@ -427,6 +431,158 @@ describe("ContinuousViewManager", () => {
 			expect(eraseSpy).toHaveBeenCalledTimes(2);
 			expect(eraseSpy).toHaveBeenCalledWith(below[2]);
 			expect(eraseSpy).toHaveBeenCalledWith(below[3]);
+		});
+	});
+
+	describe("erase()", () => {
+		// Verifies the scroll-compensation arithmetic in erase() — when an
+		// above-view is removed we shift the scroll position so the currently
+		// visible content stays put. This is the actual jitter-risk surface.
+
+		function makeView(width: number, height: number): Record<string, unknown> {
+			return {
+				displayed: true,
+				element: document.createElement("div"),
+				bounds: vi.fn().mockReturnValue({ width, height }),
+				destroy: vi.fn(),
+			};
+		}
+
+		function setContainerScroll(manager: ContinuousViewManager, top: number, left: number): void {
+			Object.defineProperty(manager.container, "scrollTop", { value: top, configurable: true, writable: true });
+			Object.defineProperty(manager.container, "scrollLeft", { value: left, configurable: true, writable: true });
+		}
+
+		function setWindowScroll(top: number, left: number): void {
+			Object.defineProperty(window, "scrollY", { value: top, configurable: true, writable: true });
+			Object.defineProperty(window, "scrollX", { value: left, configurable: true, writable: true });
+		}
+
+		function setupManager(overrides: {
+			axis?: "horizontal" | "vertical";
+			direction?: "ltr" | "rtl";
+			fullsize?: boolean;
+		}): ContinuousViewManager {
+			const manager = new ContinuousViewManager(createMockManagerOptions());
+			manager.render(document.createElement("div"), { width: 800, height: 600 });
+			if (overrides.axis !== undefined) manager.settings.axis = overrides.axis;
+			if (overrides.direction !== undefined) manager.settings.direction = overrides.direction;
+			if (overrides.fullsize !== undefined) manager.settings.fullsize = overrides.fullsize;
+			managers.push(manager);
+			return manager;
+		}
+
+		const managers: ContinuousViewManager[] = [];
+		afterEach(() => {
+			while (managers.length) managers.pop()!.destroy();
+			// Window scroll can be mutated by fullsize tests — always reset.
+			setWindowScroll(0, 0);
+		});
+
+		it("does not adjust scroll when called without an above array", () => {
+			const manager = setupManager({ axis: "vertical" });
+			setContainerScroll(manager, 1500, 0);
+
+			const view = makeView(800, 600);
+			manager.views.append(view as any);
+			const scrollSpy = vi.spyOn(manager, "scrollTo").mockImplementation(() => {});
+
+			manager.erase(view as any);
+
+			expect(scrollSpy).not.toHaveBeenCalled();
+		});
+
+		it("vertical: shifts scrollTop up by the erased view's height", () => {
+			const manager = setupManager({ axis: "vertical" });
+			setContainerScroll(manager, 1500, 0);
+
+			const view = makeView(800, 600);
+			manager.views.append(view as any);
+			const scrollSpy = vi.spyOn(manager, "scrollTo").mockImplementation(() => {});
+
+			manager.erase(view as any, []);
+
+			expect(scrollSpy).toHaveBeenCalledWith(0, 900, true);
+		});
+
+		it("horizontal LTR non-fullsize: shifts scrollLeft left by floor(width)", () => {
+			const manager = setupManager({ axis: "horizontal", direction: "ltr", fullsize: false });
+			setContainerScroll(manager, 0, 2400);
+
+			const view = makeView(800, 600);
+			manager.views.append(view as any);
+			const scrollSpy = vi.spyOn(manager, "scrollTo").mockImplementation(() => {});
+
+			manager.erase(view as any, []);
+
+			expect(scrollSpy).toHaveBeenCalledWith(1600, 0, true);
+		});
+
+		it("horizontal LTR: applies Math.floor to fractional bounds.width", () => {
+			const manager = setupManager({ axis: "horizontal", direction: "ltr", fullsize: false });
+			setContainerScroll(manager, 0, 2400);
+
+			const view = makeView(799.7, 600);
+			manager.views.append(view as any);
+			const scrollSpy = vi.spyOn(manager, "scrollTo").mockImplementation(() => {});
+
+			manager.erase(view as any, []);
+
+			// floor(799.7) = 799 → 2400 - 799 = 1601
+			expect(scrollSpy).toHaveBeenCalledWith(1601, 0, true);
+		});
+
+		it("horizontal RTL non-fullsize: preserves scrollLeft (container compensates natively)", () => {
+			const manager = setupManager({ axis: "horizontal", direction: "rtl", fullsize: false });
+			setContainerScroll(manager, 0, -1600);
+
+			const view = makeView(800, 600);
+			manager.views.append(view as any);
+			const scrollSpy = vi.spyOn(manager, "scrollTo").mockImplementation(() => {});
+
+			manager.erase(view as any, []);
+
+			expect(scrollSpy).toHaveBeenCalledWith(-1600, 0, true);
+		});
+
+		it("horizontal RTL fullsize: shifts scrollX right by floor(width) using window scroll", () => {
+			setWindowScroll(0, -1600);
+			const manager = setupManager({ axis: "horizontal", direction: "rtl", fullsize: true });
+
+			const view = makeView(800, 600);
+			manager.views.append(view as any);
+			const scrollSpy = vi.spyOn(manager, "scrollTo").mockImplementation(() => {});
+
+			manager.erase(view as any, []);
+
+			expect(scrollSpy).toHaveBeenCalledWith(-800, 0, true);
+		});
+
+		it("vertical fullsize: reads window.scrollY for prevTop", () => {
+			setWindowScroll(2000, 0);
+			const manager = setupManager({ axis: "vertical", fullsize: true });
+
+			const view = makeView(800, 600);
+			manager.views.append(view as any);
+			const scrollSpy = vi.spyOn(manager, "scrollTo").mockImplementation(() => {});
+
+			manager.erase(view as any, []);
+
+			expect(scrollSpy).toHaveBeenCalledWith(0, 1400, true);
+		});
+
+		it("removes the view from the views collection", () => {
+			const manager = setupManager({ axis: "vertical" });
+			setContainerScroll(manager, 600, 0);
+
+			const view = makeView(800, 600);
+			manager.views.append(view as any);
+			expect(manager.views.length).toBe(1);
+
+			vi.spyOn(manager, "scrollTo").mockImplementation(() => {});
+			manager.erase(view as any, []);
+
+			expect(manager.views.length).toBe(0);
 		});
 	});
 
