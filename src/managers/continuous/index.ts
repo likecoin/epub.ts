@@ -26,6 +26,7 @@ class ContinuousViewManager extends DefaultViewManager {
 	prevScrollLeft!: number;
 	scrollTimeout!: ReturnType<typeof setTimeout>;
 	trimTimeout!: ReturnType<typeof setTimeout>;
+	private _filling: boolean = false;
 
 	constructor(options: ManagerOptions) {
 		super(options);
@@ -80,12 +81,14 @@ class ContinuousViewManager extends DefaultViewManager {
 	}
 
 	async fill(): Promise<void> {
+		this._filling = true;
 		let result: boolean | void | Error = true;
 		while (result) {
 			result = await this.q.enqueue(() => {
 				return this.check();
 			});
 		}
+		this._filling = false;
 	}
 
 	moveTo(offset: { left: number; top: number }): void {
@@ -123,11 +126,7 @@ class ContinuousViewManager extends DefaultViewManager {
 
 	}
 
-	add(section: Section): Promise<IframeView> {
-		const view = this.createView(section);
-
-		this.views.append(view);
-
+	private setupViewListeners(view: IframeView): void {
 		view.on(EVENTS.VIEWS.RESIZED, (_bounds: ReframeBounds) => {
 			view.expanded = true;
 		});
@@ -140,9 +139,15 @@ class ContinuousViewManager extends DefaultViewManager {
 			this.updateWritingMode(mode);
 		});
 
-		// view.on(EVENTS.VIEWS.SHOWN, this.afterDisplayed.bind(this));
-		view.onDisplayed = (view): void => this.afterDisplayed(view);
-		view.onResize = (view): void => this.afterResized(view);
+		view.onDisplayed = (v): void => this.afterDisplayed(v);
+	}
+
+	add(section: Section): Promise<IframeView> {
+		const view = this.createView(section);
+
+		this.views.append(view);
+		this.setupViewListeners(view);
+		view.onResize = (v): void => this.afterResized(v);
 
 		return view.display(this.request);
 	}
@@ -150,21 +155,8 @@ class ContinuousViewManager extends DefaultViewManager {
 	append(section: Section): Promise<IframeView> {
 		const view = this.createView(section);
 
-		view.on(EVENTS.VIEWS.RESIZED, (_bounds: ReframeBounds) => {
-			view.expanded = true;
-		});
-
-		view.on(EVENTS.VIEWS.AXIS, (axis: string) => {
-			this.updateAxis(axis);
-		});
-
-		view.on(EVENTS.VIEWS.WRITING_MODE, (mode: string) => {
-			this.updateWritingMode(mode);
-		});
-
+		this.setupViewListeners(view);
 		this.views.append(view);
-
-		view.onDisplayed = (view): void => this.afterDisplayed(view);
 
 		return Promise.resolve(view);
 	}
@@ -172,22 +164,9 @@ class ContinuousViewManager extends DefaultViewManager {
 	prepend(section: Section): Promise<IframeView> {
 		const view = this.createView(section);
 
-		view.on(EVENTS.VIEWS.RESIZED, (_bounds: ReframeBounds) => {
-			this.counter(_bounds);
-			view.expanded = true;
-		});
-
-		view.on(EVENTS.VIEWS.AXIS, (axis: string) => {
-			this.updateAxis(axis);
-		});
-
-		view.on(EVENTS.VIEWS.WRITING_MODE, (mode: string) => {
-			this.updateWritingMode(mode);
-		});
-
+		view.on(EVENTS.VIEWS.RESIZED, (bounds: ReframeBounds) => this.counter(bounds));
+		this.setupViewListeners(view);
 		this.views.prepend(view);
-
-		view.onDisplayed = (view): void => this.afterDisplayed(view);
 
 		return Promise.resolve(view);
 	}
@@ -198,61 +177,76 @@ class ContinuousViewManager extends DefaultViewManager {
 		} else {
 			this.scrollBy(bounds.widthDelta, 0, true);
 		}
+		// Sync cached scroll position so check() reads correct values
+		if (!this.settings.fullsize) {
+			this.scrollTop = this.container.scrollTop;
+			this.scrollLeft = this.container.scrollLeft;
+		} else {
+			const dir = this.settings.direction === "rtl" && this.settings.rtlScrollType === "default" ? -1 : 1;
+			this.scrollTop = window.scrollY * dir;
+			this.scrollLeft = window.scrollX * dir;
+		}
 	}
 
 	update(_offset?: number): Promise<void> {
 		const container = this.bounds();
 		const views = this.views.all();
 		const viewsLength = views.length;
-		const visible = [];
 		const offset = typeof _offset !== "undefined" ? _offset : (this.settings.offset || 0);
-		let isVisible;
-		let view: IframeView;
 
-		const updating = new defer<void>();
-		const promises = [];
+		// Phase 1: identify visible views and their ±1 neighbors
+		const visibleIndices = new Set<number>();
 		for (let i = 0; i < viewsLength; i++) {
-			view = views[i]!;
+			if (this.isVisible(views[i]!, offset, offset, container)) {
+				visibleIndices.add(i);
+			}
+		}
+		const keep = new Set(visibleIndices);
+		visibleIndices.forEach(i => {
+			keep.add(i - 1);
+			keep.add(i + 1);
+		});
 
-			isVisible = this.isVisible(view, offset, offset, container);
+		// Phase 2: show, hide, or destroy
+		const updating = new defer<void>();
+		const promises: Promise<void>[] = [];
+		let scheduledDestroy = false;
+		for (let i = 0; i < viewsLength; i++) {
+			const view = views[i]!;
 
-			if(isVisible === true) {
-				// console.log("visible " + view.index, view.displayed);
-
+			if (visibleIndices.has(i)) {
 				if (!view.displayed) {
-					const displayed = view.display(this.request)
-						.then(function (view: IframeView) {
-							view.show();
-						}, (_err: Error) => {
-							view.hide();
-						});
-					promises.push(displayed);
+					promises.push(
+						view.display(this.request)
+							.then((v: IframeView) => v.show(), () => view.hide())
+					);
 				} else {
 					view.show();
 				}
-				visible.push(view);
-			} else {
+			} else if (keep.has(i)) {
+				if (view.displayed) {
+					view.hide();
+				}
+			} else if (!this._filling && view.displayed) {
 				this.q.enqueue(() => view.destroy());
-				// console.log("hidden " + view.index, view.displayed);
-
-				clearTimeout(this.trimTimeout);
-				this.trimTimeout = setTimeout(() => {
-					this.q.enqueue(() => this.trim());
-				}, 250);
+				scheduledDestroy = true;
 			}
-
 		}
 
-		if(promises.length){
+		if (scheduledDestroy) {
+			clearTimeout(this.trimTimeout);
+			this.trimTimeout = setTimeout(() => {
+				this.q.enqueue(() => this.trim());
+			}, 250);
+		}
+
+		if (promises.length) {
 			return (Promise.all(promises) as unknown as Promise<void>)
-				.catch((err: Error) => {
-					updating.reject(err);
-				});
+				.catch((err: Error) => { updating.reject(err); });
 		} else {
 			updating.resolve();
 			return updating.promise;
 		}
-
 	}
 
 	check(_offsetLeft?: number, _offsetTop?: number): Promise<boolean | void | Error> {
@@ -296,36 +290,24 @@ class ContinuousViewManager extends DefaultViewManager {
 			}
 		}
 
-		const prepend = (): void => {
-			const first = this.views.first();
-			const prev = first && first.section.prev?.();
-
-			if(prev) {
-				newViews.push(this.prepend(prev));
-			}
-		};
-
-		const append = (): void => {
-			const last = this.views.last();
-			const next = last && last.section.next?.();
-
-			if(next) {
-				newViews.push(this.append(next));
-			}
-
-		};
-
 		const end = offset + visibleLength + delta;
 		const start = offset - delta;
 
 		if (end >= contentLength) {
-			append();
+			const last = this.views.last();
+			const next = last && last.section.next?.();
+			if(next) {
+				newViews.push(this.append(next));
+			}
 		}
-		
+
 		if (start < 0) {
-			prepend();
+			const first = this.views.first();
+			const prev = first && first.section.prev?.();
+			if(prev) {
+				newViews.push(this.prepend(prev));
+			}
 		}
-		
 
 		const promises = newViews.map((viewPromise) => {
 			return viewPromise.then((view) => view.display(this.request));
@@ -367,13 +349,24 @@ class ContinuousViewManager extends DefaultViewManager {
 		const above = this.views.slice(0, firstIndex);
 		const below = this.views.slice(lastIndex+1);
 
-		// Erase all but last above
-		for (let i = 0; i < above.length-1; i++) {
+		// When the furthest-loaded view is at a book boundary, nothing can be
+		// prefetched in that direction — so retain an extra view on the
+		// scroll-available side to keep scroll-back smoother.
+		//   isAtEnd   (no next section) → keep 2 above (extra back-buffer)
+		//   isAtStart (no prev section) → keep 2 below (extra forward-buffer)
+		const lastView = this.views.last();
+		const firstView = this.views.first();
+		const isAtEnd = lastView && !lastView.section.next?.();
+		const isAtStart = firstView && !firstView.section.prev?.();
+
+		const keepAbove = isAtEnd ? 2 : 1;
+		const keepBelow = isAtStart ? 2 : 1;
+
+		for (let i = 0; i < above.length - keepAbove; i++) {
 			this.erase(above[i]!, above);
 		}
 
-		// Erase all except first below
-		for (let j = 1; j < below.length; j++) {
+		for (let j = keepBelow; j < below.length; j++) {
 			this.erase(below[j]!);
 		}
 
@@ -397,7 +390,7 @@ class ContinuousViewManager extends DefaultViewManager {
 		const bounds = view.bounds();
 
 		this.views.remove(view);
-		
+
 		if(above) {
 			if (this.settings.axis === "vertical") {
 				this.scrollTo(0, prevTop - bounds.height, true);
