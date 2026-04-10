@@ -251,6 +251,185 @@ describe("ContinuousViewManager", () => {
 		});
 	});
 
+	describe("update()", () => {
+		function makeMockView(index: number): Record<string, unknown> {
+			const el = document.createElement("div");
+			el.style.width = "800px";
+			el.style.height = "600px";
+			return {
+				index,
+				displayed: true,
+				expanded: false,
+				element: el,
+				section: { index, next: vi.fn(), prev: vi.fn() },
+				show: vi.fn(),
+				hide: vi.fn(),
+				destroy: vi.fn().mockResolvedValue(undefined),
+				display: vi.fn().mockImplementation(function(this: Record<string, unknown>) {
+					return Promise.resolve(this);
+				}),
+				bounds: vi.fn().mockReturnValue({ width: 800, height: 600 }),
+				offset: vi.fn().mockReturnValue({ top: 0, left: 0 }),
+				position: vi.fn().mockReturnValue({ left: 0, right: 800, top: 0, bottom: 600 }),
+				on: vi.fn(),
+				off: vi.fn(),
+				emit: vi.fn(),
+			};
+		}
+
+		it("should destroy each off-screen view individually (regression: closure capture)", () => {
+			// Regression for PR #14: `let view` outside the for-loop caused the
+			// queued `() => view.destroy()` closures to all reference the last
+			// iterated view, destroying the wrong view. Lock in that each
+			// off-screen view's own destroy() is invoked.
+			const manager = new ContinuousViewManager(createMockManagerOptions());
+			manager.render(document.createElement("div"), { width: 800, height: 600 });
+			manager.layout = {
+				props: { delta: 800, spread: false, name: "reflowable" },
+				width: 800,
+				height: 600,
+			} as unknown as Layout;
+
+			const views = [0, 1, 2, 3, 4].map(makeMockView);
+			views.forEach(v => manager.views.append(v as any));
+
+			// Only view 2 visible; ±1 neighbors (1, 3) are kept; 0 and 4 destroyed.
+			vi.spyOn(manager, "isVisible").mockImplementation(
+				(v: unknown) => (v as { index: number }).index === 2
+			);
+
+			manager.q.tick = (cb: FrameRequestCallback): number => { cb(0); return 0; };
+			manager.update();
+			manager.q.dump();
+
+			expect((views[0]!.destroy as ReturnType<typeof vi.fn>)).toHaveBeenCalledTimes(1);
+			expect((views[4]!.destroy as ReturnType<typeof vi.fn>)).toHaveBeenCalledTimes(1);
+			expect((views[1]!.destroy as ReturnType<typeof vi.fn>)).not.toHaveBeenCalled();
+			expect((views[2]!.destroy as ReturnType<typeof vi.fn>)).not.toHaveBeenCalled();
+			expect((views[3]!.destroy as ReturnType<typeof vi.fn>)).not.toHaveBeenCalled();
+		});
+
+		it("should hide (not destroy) views in the ±1 keep buffer", () => {
+			const manager = new ContinuousViewManager(createMockManagerOptions());
+			manager.render(document.createElement("div"), { width: 800, height: 600 });
+			manager.layout = {
+				props: { delta: 800, spread: false, name: "reflowable" },
+				width: 800,
+				height: 600,
+			} as unknown as Layout;
+
+			const views = [0, 1, 2].map(makeMockView);
+			views.forEach(v => manager.views.append(v as any));
+
+			vi.spyOn(manager, "isVisible").mockImplementation(
+				(v: unknown) => (v as { index: number }).index === 1
+			);
+
+			manager.q.tick = (cb: FrameRequestCallback): number => { cb(0); return 0; };
+			manager.update();
+			manager.q.dump();
+
+			expect((views[0]!.hide as ReturnType<typeof vi.fn>)).toHaveBeenCalled();
+			expect((views[2]!.hide as ReturnType<typeof vi.fn>)).toHaveBeenCalled();
+			expect((views[0]!.destroy as ReturnType<typeof vi.fn>)).not.toHaveBeenCalled();
+			expect((views[2]!.destroy as ReturnType<typeof vi.fn>)).not.toHaveBeenCalled();
+			expect((views[1]!.show as ReturnType<typeof vi.fn>)).toHaveBeenCalled();
+		});
+
+		it("should skip destroying off-screen views while filling", () => {
+			const manager = new ContinuousViewManager(createMockManagerOptions());
+			manager.render(document.createElement("div"), { width: 800, height: 600 });
+			manager.layout = {
+				props: { delta: 800, spread: false, name: "reflowable" },
+				width: 800,
+				height: 600,
+			} as unknown as Layout;
+
+			const views = [0, 1, 2, 3].map(makeMockView);
+			views.forEach(v => manager.views.append(v as any));
+
+			vi.spyOn(manager, "isVisible").mockReturnValue(false);
+			(manager as unknown as { _filling: boolean })._filling = true;
+
+			manager.q.tick = (cb: FrameRequestCallback): number => { cb(0); return 0; };
+			manager.update();
+			manager.q.dump();
+
+			for (const v of views) {
+				expect((v.destroy as ReturnType<typeof vi.fn>)).not.toHaveBeenCalled();
+			}
+		});
+	});
+
+	describe("trim()", () => {
+		function makeDisplayedView(index: number, hasPrev: boolean, hasNext: boolean): Record<string, unknown> {
+			return {
+				index,
+				displayed: true,
+				element: document.createElement("div"),
+				section: {
+					index,
+					next: vi.fn().mockReturnValue(hasNext ? {} : undefined),
+					prev: vi.fn().mockReturnValue(hasPrev ? {} : undefined),
+				},
+				bounds: vi.fn().mockReturnValue({ width: 800, height: 600 }),
+				destroy: vi.fn().mockResolvedValue(undefined),
+			};
+		}
+
+		it("keeps an extra above-view when loaded window is at book end", async () => {
+			const manager = new ContinuousViewManager(createMockManagerOptions());
+			manager.render(document.createElement("div"), { width: 800, height: 600 });
+
+			// 4 above + 1 displayed, last view has no next (book end)
+			const above = [
+				makeDisplayedView(0, false, true),
+				makeDisplayedView(1, true, true),
+				makeDisplayedView(2, true, true),
+				makeDisplayedView(3, true, true),
+			];
+			const displayedView = makeDisplayedView(4, true, false);
+			[...above, displayedView].forEach(v => manager.views.append(v as any));
+
+			// Mark above views as not-displayed so views.displayed() only returns index 4
+			above.forEach(v => { v.displayed = false; });
+
+			const eraseSpy = vi.spyOn(manager, "erase").mockImplementation(() => {});
+			await manager.trim();
+
+			// keepAbove = 2 at book end → erase above[0], above[1], leaving above[2], above[3]
+			expect(eraseSpy).toHaveBeenCalledTimes(2);
+			expect(eraseSpy).toHaveBeenCalledWith(above[0], expect.anything());
+			expect(eraseSpy).toHaveBeenCalledWith(above[1], expect.anything());
+		});
+
+		it("keeps an extra below-view when loaded window is at book start", async () => {
+			const manager = new ContinuousViewManager(createMockManagerOptions());
+			manager.render(document.createElement("div"), { width: 800, height: 600 });
+
+			// 1 displayed + 4 below, first view has no prev (book start)
+			const displayedView = makeDisplayedView(0, false, true);
+			const below = [
+				makeDisplayedView(1, true, true),
+				makeDisplayedView(2, true, true),
+				makeDisplayedView(3, true, true),
+				makeDisplayedView(4, true, true),
+			];
+			[displayedView, ...below].forEach(v => manager.views.append(v as any));
+
+			// Only index 0 displayed
+			below.forEach(v => { v.displayed = false; });
+
+			const eraseSpy = vi.spyOn(manager, "erase").mockImplementation(() => {});
+			await manager.trim();
+
+			// keepBelow = 2 at book start → erase below[2], below[3], keeping below[0], below[1]
+			expect(eraseSpy).toHaveBeenCalledTimes(2);
+			expect(eraseSpy).toHaveBeenCalledWith(below[2]);
+			expect(eraseSpy).toHaveBeenCalledWith(below[3]);
+		});
+	});
+
 	describe("pagehide handler", () => {
 		it("should set ignore and call destroy() on pagehide when persisted is false", () => {
 			const manager = new ContinuousViewManager(createMockManagerOptions());
