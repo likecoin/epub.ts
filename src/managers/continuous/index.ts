@@ -126,9 +126,8 @@ class ContinuousViewManager extends DefaultViewManager {
 
 	}
 
-	private setupViewListeners(view: IframeView, onResized?: (bounds: ReframeBounds) => void): void {
+	private setupViewListeners(view: IframeView): void {
 		view.on(EVENTS.VIEWS.RESIZED, (_bounds: ReframeBounds) => {
-			onResized?.(_bounds);
 			view.expanded = true;
 		});
 
@@ -165,7 +164,8 @@ class ContinuousViewManager extends DefaultViewManager {
 	prepend(section: Section): Promise<IframeView> {
 		const view = this.createView(section);
 
-		this.setupViewListeners(view, (bounds) => this.counter(bounds));
+		view.on(EVENTS.VIEWS.RESIZED, (bounds: ReframeBounds) => this.counter(bounds));
+		this.setupViewListeners(view);
 		this.views.prepend(view);
 
 		return Promise.resolve(view);
@@ -210,6 +210,7 @@ class ContinuousViewManager extends DefaultViewManager {
 		// Phase 2: show, hide, or destroy
 		const updating = new defer<void>();
 		const promises: Promise<void>[] = [];
+		let scheduledDestroy = false;
 		for (let i = 0; i < viewsLength; i++) {
 			const view = views[i]!;
 
@@ -226,15 +227,17 @@ class ContinuousViewManager extends DefaultViewManager {
 				if (view.displayed) {
 					view.hide();
 				}
-			} else {
-				if (!this._filling && view.displayed) {
-					this.q.enqueue(() => view.destroy());
-					clearTimeout(this.trimTimeout);
-					this.trimTimeout = setTimeout(() => {
-						this.q.enqueue(() => this.trim());
-					}, 250);
-				}
+			} else if (!this._filling && view.displayed) {
+				this.q.enqueue(() => view.destroy());
+				scheduledDestroy = true;
 			}
+		}
+
+		if (scheduledDestroy) {
+			clearTimeout(this.trimTimeout);
+			this.trimTimeout = setTimeout(() => {
+				this.q.enqueue(() => this.trim());
+			}, 250);
 		}
 
 		if (promises.length) {
