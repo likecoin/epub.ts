@@ -155,7 +155,8 @@ Full documentation: [likecoin.github.io/epub.ts](https://likecoin.github.io/epub
 
 | Environment | Import | Notes |
 |-------------|--------|-------|
-| Modern browsers | `@likecoin/epub-ts` | Chrome, Firefox, Safari, Edge |
+| Modern browsers | `@likecoin/epub-ts` | Chrome 80+, Edge 80+, Firefox 74+, Safari 13.4+ (ES2020, Q1 2020) |
+| Insecure contexts | `@likecoin/epub-ts` | `http://` intranet and `file://` deployments supported — runtime APIs gated behind secure contexts (`crypto.randomUUID`) are feature-detected with fallbacks |
 | Vite / webpack | `@likecoin/epub-ts` | ESM or CJS |
 | Node.js 18+ | `@likecoin/epub-ts/node` | Parsing only (no rendering); requires `linkedom` peer dep |
 

@@ -343,7 +343,7 @@ class ContinuousViewManager extends DefaultViewManager {
 			return task.promise;
 		}
 		const first = displayed[0]!;
-		const last = displayed.at(-1)!;
+		const last = displayed[displayed.length - 1]!;
 		const firstIndex = this.views.indexOf(first);
 		const lastIndex = this.views.indexOf(last);
 		const above = this.views.slice(0, firstIndex);

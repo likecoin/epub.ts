@@ -754,7 +754,7 @@ class DefaultViewManager implements IEventEmitter<DefaultManagerEvents> {
 		const visible = this.visible();
 		if(visible.length){
 			// Current is the last visible view
-			return visible.at(-1)!;
+			return visible[visible.length - 1]!;
 		}
 		return null;
 	}

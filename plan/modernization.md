@@ -5,7 +5,7 @@ Discovery + phased implementation plan for adopting modern browser APIs (2016–
 ## Principles
 
 - **API compatibility first.** The public surface must stay drop-in with `epubjs v0.3.93`. Every change below is either internal or a capability-detected enhancement with fallback to today's code path.
-- **Feature-detect below the floor; assume above it.** The library's baseline after Phase 0.5 + Phase 1 is **Chrome 93+ / Safari 15.4+ / Firefox 95+**, bounded by the newest APIs now adopted unconditionally: `crypto.randomUUID` (Chrome 92 / Safari 15.4 / Firefox 95), `Array.prototype.at` (Chrome 92 / Safari 15.4 / Firefox 90), `Object.hasOwn` (Chrome 93 / Safari 15.4 / Firefox 92), and `Error` `cause` (Chrome 93 / Safari 15 / Firefox 91). APIs above that floor — `Intl.Segmenter` in Firefox, `scrollend`, `requestIdleCallback`, etc. — still get a `typeof`/`in` check with fallback.
+- **Feature-detect above the floor; assume below it.** The library's baseline is **Chrome 80+ / Edge 80+ / Firefox 74+ / Safari 13.4+** (Q1 2020, ES2020 syntax era). This floor is deliberately chosen to support `http://` intranet deployments, `file://` contexts (where `crypto.randomUUID` is gated behind secure contexts), and older embedded WebViews. Any runtime API newer than this must be feature-detected with a working fallback — including `crypto.randomUUID`, `Object.hasOwn`, `Array.prototype.at`, the `Error` `cause` constructor option, `Promise.withResolvers`, `scrollend`, `requestIdleCallback`, `content-visibility`, and `Intl.Segmenter` on Firefox. TypeScript `target` and `lib` are both pinned to `ES2020` so accidental reintroduction of `Object.hasOwn` / `Array.prototype.at` / `Promise.any` / `String.prototype.replaceAll` / `WeakRef` / `Error cause` constructor options surfaces as a compile error instead of a runtime break on Firefox 74–91.
 - **No behavioral regressions.** Changes must pass the existing 993+ test suite unmodified. Tests added for new paths should run against both the modern and fallback branches where feasible.
 - **Small, reversible commits.** Each item in Phase 1 and 2 is a self-contained commit that can be reverted in isolation.
 - **Measure, don't guess.** For Phase 3 items (windowing rewrite), land behind an opt-in flag first and benchmark against a large reference book before making it the default.
@@ -64,10 +64,33 @@ Opportunities ranked by (impact × safety). Full rationale in the original disco
 - `new MouseEvent()` constructor — IE 11 / Chrome 15 / Safari 6
 - `crypto.randomUUID()` — Chrome 92 / Safari 15.4 / Firefox 95
 
-### 0.5.1 Delete unreachable `uuid()` fallback ✅
-**Files:** `src/utils/core.ts:17-39`
+### 0.5.1 Delete unreachable `uuid()` fallback ⚠️ **Reverted (2026-04-14)**
+**Files:** `src/utils/core.ts`
 
-Phase 1.2 is already landed — `_randomUUID` is cached at module load and `uuid()` prefers it. The `Math.random` + `new Date().getTime()` fallback branch beneath it is now unreachable on any browser this library claims to support (`crypto.randomUUID` is available everywhere above Chrome 92 / Safari 15.4, and `crypto` itself has been universal since Chrome 11 / Safari 5.1).
+**Status:** originally landed as part of Phase 0.5, then reverted on 2026-04-14 when the library floor was dropped from Chrome 93 / Safari 15.4 / Firefox 95 to Chrome 80 / Safari 13.4 / Firefox 74 (ES2020 era) to support `http://` intranet and `file://` deployments. Under the new floor, the `Math.random` fallback is *reachable* on at least three supported configurations:
+
+1. `http://intranet/...` — `crypto.randomUUID` is gated behind secure contexts; on http:// the method is undefined on every browser.
+2. `file:///...` — same secure-context gating (treated as secure only on some browsers).
+3. Firefox 74–94 — predates Firefox's 95 ship of `crypto.randomUUID` (Dec 2021).
+
+The restored implementation is a feature-detected v4 generator that format-matches `crypto.randomUUID`:
+
+```ts
+export function uuid(): string {
+    if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+        return crypto.randomUUID();
+    }
+    // Fallback for insecure contexts (http://) and Firefox < 95.
+    // These UUIDs are internal DOM handles, not security tokens.
+    return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+        const r = Math.random() * 16 | 0;
+        const v = c === "x" ? r : (r & 0x3) | 0x8;
+        return v.toString(16);
+    });
+}
+```
+
+Historical notes from the original landing of this phase:
 
 **Change:**
 ```ts
@@ -86,11 +109,11 @@ Or, even simpler — drop the capability check entirely and rely on the type sys
 export const uuid = (): string => crypto.randomUUID();
 ```
 
-**Careful points:**
-- `crypto.randomUUID` requires a **secure context** (`https://`, `localhost`, or `file://`). The library does not document an insecure-context use case, and the test suite runs under `http://localhost` (secure). Verify by grepping tests for `uuid(` calls and running the suite after deletion.
+**Careful points (obsolete — retained for history):**
+- ~~`crypto.randomUUID` requires a **secure context** (`https://`, `localhost`, or `file://`). The library does not document an insecure-context use case~~ — **this assumption was wrong.** `http://` intranet and `file://` deployments are now in-scope, which is why the fallback was restored.
 - Node.js has `crypto.randomUUID()` on `globalThis.crypto` since Node 19 (and on `require("crypto")` since Node 14.17). The `src/node.ts` entry point already assumes a modern Node — no extra shim needed.
 
-**Why it matters:** removes ~10 lines of legacy code and one `new Date().getTime()` call (the only one in the codebase if grep is right). The fallback was never going to execute.
+**Why it originally mattered:** removed ~10 lines of legacy code. The conclusion "the fallback was never going to execute" was based on a higher browser floor than the library now declares.
 
 **Test plan:** run the existing suite. Uniqueness of `uuid()` output is exercised indirectly via view/stage IDs.
 
@@ -251,10 +274,10 @@ Rename the local to match its new type. Two-line change, pure readability win.
 
 ---
 
-### 1.2 `crypto.randomUUID()` with fallback ✅ (superseded by 0.5.1)
-**Files:** `src/utils/core.ts:16-35`
+### 1.2 `crypto.randomUUID()` with fallback ✅ **Restored (2026-04-14)**
+**Files:** `src/utils/core.ts`
 
-**Status:** the capability-cached version landed pre-Phase-0.5, and the fallback was then deleted entirely in Phase 0.5.1. `uuid()` is now a one-liner returning `crypto.randomUUID()`.
+**Status:** feature-detected with a Math.random v4 fallback. The original Phase 0.5.1 deletion was reverted when the ES2020 floor decision brought `http://` intranet and Firefox 74–94 back into scope. **Do not delete the fallback** — see 0.5.1 for the reasoning. The implementation lives in `uuid()` and is format-compatible with `crypto.randomUUID` (RFC 4122 v4) so downstream ID consumers see no difference.
 
 
 Cache the capability check at module load — following the existing `_URL` pattern on the same file — so `uuid()` (called for every view and stage construction) doesn't re-evaluate `typeof` on every call:
@@ -316,49 +339,57 @@ Per DOM spec, `removeEventListener` only needs matching `capture`; `passive` is 
 
 ---
 
-### 1.5 `Object.hasOwn` and `Array.at(-1)` cleanups
-**Files:**
-- `src/managers/views/iframe.ts:441` — `this.marks.hasOwnProperty(m)` → `Object.hasOwn(this.marks, m)`
-- `src/managers/helpers/stage.ts:318` — `set.hasOwnProperty(prop)` → `Object.hasOwn(set, prop)`
-- `src/themes.ts:83,169,243` — three call sites in `registerThemes`, `inject`, `overrides`
-- `src/epubcfi.ts:918` — `toTextRange` child step matching
-- `src/utils/mime.ts:145,148` — MIME table initialization loops
-- `src/managers/default/index.ts:750` — `visible[visible.length-1]!` → `visible.at(-1)!`
-- `src/managers/continuous/index.ts:363-364` — `displayed[displayed.length-1]!` → `displayed.at(-1)!`
+### 1.5 `Object.hasOwn` and `Array.at(-1)` — **UNWIND (do not adopt)**
 
-**Prerequisite (one-time):** `tsconfig.json` `lib` must include `ES2022` for `Object.hasOwn` and `Array.prototype.at` type definitions. `target` stays at `ES2020` — the lib bump only enables type info, not emit syntax.
+**Status:** ⚠️ **Reversed under ES2020 floor decision (2026-04-14).** Both APIs are ES2022 and exceed the new floor (`Object.hasOwn` needs Firefox 92 / Safari 15.4; `Array.prototype.at` needs Firefox 90 / Safari 15.4). The codebase currently contains uses of both — these must be rewritten to legacy equivalents, not added to.
 
-**Skip list:** `src/marks-pane/index.ts` uses `hasOwnProperty` twice but the file header marks it as inlined from an upstream library; don't diverge.
+**Follow-up work (rewrite these call sites):**
+- `src/managers/views/iframe.ts:441` — `Object.hasOwn(this.marks, m)` → `Object.prototype.hasOwnProperty.call(this.marks, m)`
+- `src/managers/helpers/stage.ts:318` — `Object.hasOwn(set, prop)` → `Object.prototype.hasOwnProperty.call(set, prop)`
+- `src/themes.ts:83,169,243` — three call sites, same rewrite
+- `src/epubcfi.ts:917` — same rewrite
+- `src/utils/mime.ts:145,148` — same rewrite (two call sites)
+- `src/managers/default/index.ts:757` — `visible.at(-1)!` → `visible[visible.length - 1]!`
+- `src/managers/continuous/index.ts:346` — `displayed.at(-1)!` → `displayed[displayed.length - 1]!`
 
-**Why it matters:** purely cosmetic; batch into a single `refactor:` commit (plus the separate `chore: bump tsconfig lib to ES2022` prerequisite commit if you want a clean history). `Object.hasOwn` and `Array.at()` are both universal since 2022 (Chrome 92/Safari 15.4 for `.at`, Chrome 93/Safari 15.4 for `Object.hasOwn`) — within the library's existing baseline.
+**Follow-up config change:** narrow `tsconfig.json` `lib` from `ES2022` all the way to `ES2020` (matching `target`). This removes `Object.hasOwn`, `Array.prototype.at`, and the `Error` `cause` constructor option from the ambient type definitions, turning accidental reintroduction into a compile error rather than a Firefox 74–91 runtime crash. ES2020 also excludes `Promise.any`, `String.prototype.replaceAll`, `WeakRef`, and `FinalizationRegistry` — none of which are used in the codebase, so the tighter floor loses nothing in practice. Verified: full typecheck + 1010-test suite passes at `lib: ES2020`.
 
-**Test plan:** type-checker is sufficient.
+**Skip list:** `src/marks-pane/index.ts` is inlined from an upstream library; don't touch `hasOwnProperty` calls there regardless.
+
+**Why it matters:** these APIs are readability sugar, not capability wins. The rewrite is 8 call sites, each a literal 1:1 substitution with zero behavior change. Cost: ~16 lines of code (slightly longer legacy form). Benefit: the library actually works on Firefox 74–91 and matches the declared floor.
+
+**Test plan:** type-checker is sufficient. Full test suite must pass after both the rewrite and the `lib` downgrade.
 
 ---
 
 ### 1.6 `Error` `cause` for `EpubError`
 **Files:** `src/utils/core.ts:397-404`, `src/utils/request.ts:33,38`
 
-Extend `EpubError`:
+Extend `EpubError` with a public `cause` slot, but **do not forward it through `super(message, options)`** — the two-argument `Error` constructor is ES2022 and would widen the floor to Chrome 93 / Safari 15 / Firefox 91. Assign the property after construction instead:
+
 ```ts
 export class EpubError extends Error {
     status?: number;
-    constructor(message: string, status?: number, options?: { cause?: unknown }) {
-        super(message, options);
+    cause?: unknown;
+    constructor(message: string, status?: number, cause?: unknown) {
+        super(message);
         this.name = "EpubError";
         this.status = status;
+        if (cause !== undefined) this.cause = cause;
     }
 }
 ```
 
-Then:
+Then at the throw site:
 ```ts
-throw new EpubError((e as Error).message || "Network Error", 0, { cause: e });
+throw new EpubError((e as Error).message || "Network Error", 0, e);
 ```
 
-**Why it matters:** preserves the original stack when wrapping fetch failures. No behavior change for catch blocks that only read `.message` / `.status`.
+**Why this form under the ES2020 floor:** `err.cause` is a plain own property on the Error instance — setting and reading it works on every runtime, because JavaScript is duck-typed. Only the *two-argument `Error` constructor* (`new Error(msg, { cause })`) is ES2022 syntax for the runtime. On browsers with native cause-chain support (Chrome 93+ / Safari 15+ / Firefox 91+), DevTools will render the chain regardless of how the property was set. On browsers below that, catch blocks can still read `.cause` programmatically — DevTools just don't format it specially, which is harmless.
 
-**Test plan:** add one assertion: `expect(thrown.cause).toBeInstanceOf(TypeError)` when fetch rejects.
+**Why it matters:** preserves the original error for `catch` inspection when wrapping fetch failures. No behavior change for catch blocks that only read `.message` / `.status`.
+
+**Test plan:** add one assertion: `expect((thrown as { cause: unknown }).cause).toBeInstanceOf(TypeError)` when fetch rejects.
 
 ---
 
@@ -582,11 +613,11 @@ Note: `tsconfig.json` `lib` was already bumped to `ES2022` before Phase 0.5, so 
 
 ### Phase 1 commits (independent, land in any order)
 1. `fix: use pagehide instead of unload to restore bfcache` (1.1)
-2. ~~`refactor: prefer crypto.randomUUID when available` (1.2)~~ — **already landed** in `utils/core.ts:17-20`; the fallback is removed in Phase 0.5.1.
+2. `refactor: restore crypto.randomUUID fallback for http:// and file:// contexts` (1.2) — **landed 2026-04-14** as part of the ES2020 floor decision; see Phase 0.5.1 revert note.
 3. ~~`refactor: use queueMicrotask in microTick` (1.3)~~ — **already landed** in `utils/core.ts:10`.
 4. `refactor: mark scroll listeners passive` (1.4)
-5. `refactor: use Object.hasOwn and Array.at` (1.5)
-6. `feat: preserve error cause in EpubError` (1.6)
+5. `refactor: rewrite Object.hasOwn / Array.at uses to ES2020-compatible equivalents + narrow tsconfig lib to ES2021` (1.5) — **unwind**, not adopt. See Phase 1.5 above.
+6. `feat: preserve error cause in EpubError via post-construction property assignment` (1.6) — ES2020-compatible form; see Phase 1.6 above.
 
 ### Phase 2 commits (in this order due to shared files)
 7. `refactor: delegate defer to Promise.withResolvers when available` (2.1)
@@ -603,10 +634,11 @@ Do not flip the Phase 3 defaults in the same PR that introduces them. Ship, benc
 
 ## Success criteria
 
-- **Phase 0.5:** all existing tests pass; grep for `indexOf\(` on string literals returns only the intentional keeps (array/string position lookups); no `catch (_err)` around `new MouseEvent`; no `Math.random()` in `utils/core.ts`; `new Date().getTime()` returns zero results in `src/`.
-- **Phase 1:** all existing tests pass; no new test failures; `unload` grepping returns zero results outside `Section.unload()` naming.
+- **Phase 0.5:** all existing tests pass; grep for `indexOf\(` on string literals returns only the intentional keeps (array/string position lookups); no `catch (_err)` around `new MouseEvent`; `new Date().getTime()` returns zero results in `src/`. (Note: the original "no `Math.random()` in `utils/core.ts`" criterion was retired with the 2026-04-14 ES2020 floor decision — `Math.random` is now expected inside `uuid()` as the feature-detected fallback for `http://` / `file://` / Firefox 74–94.)
+- **Phase 1:** all existing tests pass; no new test failures; `unload` grepping returns zero results outside `Section.unload()` naming; `Object.hasOwn` and `.at(` grepping in `src/` returns zero results (Phase 1.5 unwind); `tsconfig.json` `lib` is `ES2020` (matches `target`).
 - **Phase 2:** `AbortError` never surfaces as `loaderror`; `scrollend` and `requestIdleCallback` paths covered by unit tests; benchmark shows no regression on a small reference book.
 - **Phase 3:** benchmark on a ≥100-section book shows measurable reduction in scroll-path CPU time (`performance.measure` on `update()` / visibility callbacks) before defaults flip.
+- **Floor (all phases):** library loads and runs against `http://` and `file://` origins without errors; manual smoke test on Firefox 78 ESR (lowest ESR above the declared floor).
 
 ## Out of scope (documented non-goals)
 

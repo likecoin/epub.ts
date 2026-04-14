@@ -15,14 +15,25 @@ const _COMMENT_NODE = 8;
 const _DOCUMENT_NODE = 9;
 const _URL = typeof URL !== "undefined" ? URL : (typeof window !== "undefined" ? window.URL : undefined!);
 
+const _cryptoRandomUUID: (() => string) | undefined =
+	typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+		? crypto.randomUUID.bind(crypto)
+		: undefined;
+
+// Math.random is acceptable here: these UUIDs are internal DOM handles, not security tokens.
+const _mathRandomUUID = (): string =>
+	"xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+		const r = Math.random() * 16 | 0;
+		const v = c === "x" ? r : (r & 0x3) | 0x8;
+		return v.toString(16);
+	});
+
 /**
  * Generates a UUID
  * @returns {string} uuid
  * @memberof Core
  */
-export function uuid(): string {
-	return crypto.randomUUID();
-}
+export const uuid: () => string = _cryptoRandomUUID ?? _mathRandomUUID;
 
 /**
  * Gets the height of a document
@@ -389,10 +400,12 @@ export function handleResponse(response: string | Blob, type?: string): Document
  */
 export class EpubError extends Error {
 	status?: number;
-	constructor(message: string, status?: number, options?: ErrorOptions) {
-		super(message, options);
+	cause?: unknown;
+	constructor(message: string, status?: number, cause?: unknown) {
+		super(message);
 		this.name = "EpubError";
 		this.status = status;
+		if (cause !== undefined) this.cause = cause;
 	}
 }
 

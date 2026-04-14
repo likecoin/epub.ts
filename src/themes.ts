@@ -80,7 +80,7 @@ class Themes {
 	 */
 	registerThemes (themes: Record<string, string | Record<string, Record<string, string>>>): void {
 		for (const theme in themes) {
-			if (Object.hasOwn(themes, theme)) {
+			if (Object.prototype.hasOwnProperty.call(themes, theme)) {
 				const value = themes[theme]!;
 				if (typeof(value) === "string") {
 					this.registerUrl(theme, value);
@@ -166,7 +166,7 @@ class Themes {
 		let theme;
 
 		for (const name in themes) {
-			if (Object.hasOwn(themes, name) && (name === this._current || name === "default")) {
+			if (Object.prototype.hasOwnProperty.call(themes, name) && (name === this._current || name === "default")) {
 				theme = themes[name]!;
 				if((theme.rules && Object.keys(theme.rules).length > 0) || (theme.url && !links.includes(theme.url)) || (theme.serialized)) {
 					this.add(name, contents);
@@ -240,7 +240,7 @@ class Themes {
 		const overrides = this._overrides;
 
 		for (const rule in overrides) {
-			if (Object.hasOwn(overrides, rule)) {
+			if (Object.prototype.hasOwnProperty.call(overrides, rule)) {
 				contents.css(rule, overrides[rule]!.value, overrides[rule]!.priority);
 			}
 		}
