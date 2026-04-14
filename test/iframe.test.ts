@@ -499,5 +499,29 @@ describe("IframeView", () => {
 			view.destroy();
 			expect(view.__listeners).toEqual({});
 		});
+
+		it("should abort in-flight section render and suppress loaderror", async () => {
+			const section = createMockSection();
+			(section as any).render = vi.fn((_req?: unknown, signal?: AbortSignal) =>
+				new Promise((_resolve, reject) => {
+					signal?.addEventListener("abort", () => {
+						reject(new DOMException("Aborted", "AbortError"));
+					});
+				})
+			);
+
+			const view = createView(section);
+			const loadErrorHandler = vi.fn();
+			const renderedHandler = vi.fn();
+			view.on("loaderror", loadErrorHandler);
+			view.on("rendered", renderedHandler);
+
+			const renderPromise = view.render(vi.fn());
+			view.destroy();
+
+			await expect(renderPromise).rejects.toMatchObject({ name: "AbortError" });
+			expect(loadErrorHandler).not.toHaveBeenCalled();
+			expect(renderedHandler).not.toHaveBeenCalled();
+		});
 	});
 });

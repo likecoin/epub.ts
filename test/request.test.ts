@@ -1,8 +1,22 @@
 import { describe, it, expect } from "vitest";
 import request from "../src/utils/request";
+import { EpubError } from "../src/utils/core";
 import { getFixtureUrl } from "./helpers";
 
 describe("request", () => {
+	describe("AbortSignal", () => {
+		it("should surface AbortError verbatim instead of wrapping it as EpubError", async () => {
+			const controller = new AbortController();
+			controller.abort();
+			const rejected = await request(
+				getFixtureUrl("/alice/OPS/toc.xhtml"), undefined, undefined, undefined, controller.signal
+			).then(() => undefined, (e: unknown) => e);
+			expect(rejected).toBeDefined();
+			expect((rejected as Error).name).toBe("AbortError");
+			expect(rejected).not.toBeInstanceOf(EpubError);
+		});
+	});
+
 	describe("type inference from extension", () => {
 		it("should fetch .opf as XML Document", async () => {
 			const result = await request(getFixtureUrl("/alice/OPS/package.opf"));
