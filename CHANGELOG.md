@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.6.3 (2026-04-14)
+
+### Modernization
+
+- Phase 2 browser platform modernization — five feature-detected enhancements, each with an ES2020 fallback so the library still runs on the declared Chrome 80 / Safari 13.4 / Firefox 74 floor:
+  - `defer` delegates to `Promise.withResolvers()` when available, skipping the extra closure allocation
+  - `request()` / `Section.load/render` / `IframeView` accept an optional `AbortSignal`; views create a controller at `render()` and abort it in `destroy()`, so rapid page navigation no longer downloads sections the user flicked past. `AbortError` is surfaced verbatim instead of being wrapped as `EpubError`, and is suppressed on the `loaderror` path
+  - Default + continuous managers attach a native `scrollend` listener when `"onscrollend" in window`, suppressing the 20ms/150ms `setTimeout` fallback emission path. Native timing is authoritative for momentum scroll on iOS
+  - `Locations.generate()` schedules the pause between sections via `requestIdleCallback` (`timeout: pause + 50`) when present, interleaving background location walking with user scrolling
+  - `.epub-view` containers get `contain: layout paint` to isolate sibling reflow and paint. `size` containment is deliberately excluded because `expand()` still needs to read the iframe document's natural `scrollWidth`/`scrollHeight`
+- Drop browser floor to ES2020 — re-allows `http://` intranet and `file://` deployments by reintroducing a `Math.random`-based `uuid()` fallback for insecure contexts and Firefox 74–94. `tsconfig` `lib` narrowed from ES2022 back to ES2020; `Object.hasOwn` and `Array.prototype.at` uses were rewritten to ES2020-compatible equivalents so accidental reintroduction surfaces as a compile error instead of a Firefox 74–91 runtime crash
+
+### Tests
+
+- Add `AbortSignal` propagation tests covering both the `request()` layer (pre-aborted signal surfaces `AbortError` verbatim, not wrapped as `EpubError`) and the `IframeView` layer (`destroy()` mid-render rejects the render promise with `AbortError` and emits neither `loaderror` nor `rendered`)
+
 ## 0.6.2 (2026-04-10)
 
 ### Modernization
