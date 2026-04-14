@@ -60,14 +60,14 @@ class Section {
 	 * @param  {method} [_request] a request method to use for loading
 	 * @return {document} a promise with the xml document
 	 */
-	async load(_request?: RequestFunction): Promise<Element> {
+	async load(_request?: RequestFunction, signal?: AbortSignal): Promise<Element> {
 		const request = _request || this.request || Request;
 
 		if(this.contents) {
 			return this.contents;
 		}
 
-		const xml = await request(this.url!);
+		const xml = await request(this.url!, undefined, undefined, undefined, signal);
 
 		this.document = xml as Document;
 		this.contents = (xml as Document).documentElement;
@@ -89,8 +89,8 @@ class Section {
 	 * @param  {method} [_request] a request method to use for loading
 	 * @return {string} output a serialized XML Document
 	 */
-	async render(_request?: RequestFunction): Promise<string> {
-		const contents = await this.load(_request);
+	async render(_request?: RequestFunction, signal?: AbortSignal): Promise<string> {
+		const contents = await this.load(_request, signal);
 		const serializer = new XMLSerializer();
 		this.output = serializer.serializeToString(contents);
 

@@ -50,6 +50,7 @@ class DefaultViewManager implements IEventEmitter<DefaultManagerEvents> {
 	writingMode!: string;
 	_hasScrolled!: boolean;
 	_onScroll: ((e?: Event) => void) | undefined;
+	_onScrollEnd: ((e?: Event) => void) | undefined;
 	_onPageHide: ((e: PageTransitionEvent) => void) | undefined;
 	resizeTimeout!: ReturnType<typeof setTimeout>;
 	afterScrolled!: ReturnType<typeof setTimeout>;
@@ -186,6 +187,20 @@ class DefaultViewManager implements IEventEmitter<DefaultManagerEvents> {
 
 		this._onScroll = this.onScroll.bind(this);
 		scroller.addEventListener("scroll", this._onScroll, { passive: true });
+
+		if (typeof window !== "undefined" && "onscrollend" in window) {
+			this._onScrollEnd = (): void => {
+				if (this.ignore) {
+					this.ignore = false;
+					return;
+				}
+				this.emit(EVENTS.MANAGERS.SCROLLED, {
+					top: this.scrollTop,
+					left: this.scrollLeft
+				});
+			};
+			scroller.addEventListener("scrollend", this._onScrollEnd as EventListener);
+		}
 	}
 
 	removeEventListeners(): void {
@@ -199,6 +214,11 @@ class DefaultViewManager implements IEventEmitter<DefaultManagerEvents> {
 
 		scroller.removeEventListener("scroll", this._onScroll!);
 		this._onScroll = undefined;
+
+		if (this._onScrollEnd) {
+			scroller.removeEventListener("scrollend", this._onScrollEnd as EventListener);
+			this._onScrollEnd = undefined;
+		}
 
 		window.removeEventListener("pagehide", this._onPageHide!);
 		this._onPageHide = undefined;
@@ -1025,17 +1045,19 @@ class DefaultViewManager implements IEventEmitter<DefaultManagerEvents> {
 				left: scrollLeft
 			});
 
-			clearTimeout(this.afterScrolled);
-			this.afterScrolled = setTimeout(() => {
-				this.emit(EVENTS.MANAGERS.SCROLLED, {
-					top: this.scrollTop,
-					left: this.scrollLeft
-				});
-			}, 20);
+			if (!this._onScrollEnd) {
+				clearTimeout(this.afterScrolled);
+				this.afterScrolled = setTimeout(() => {
+					this.emit(EVENTS.MANAGERS.SCROLLED, {
+						top: this.scrollTop,
+						left: this.scrollLeft
+					});
+				}, 20);
+			}
 
 
 
-		} else {
+		} else if (!this._onScrollEnd) {
 			this.ignore = false;
 		}
 

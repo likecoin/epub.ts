@@ -449,6 +449,20 @@ class ContinuousViewManager extends DefaultViewManager {
 		scroller.addEventListener("scroll", this._onScroll, { passive: true });
 		this._scrolled = debounce(() => this.scrolled(), 30);
 
+		if (typeof window !== "undefined" && "onscrollend" in window) {
+			this._onScrollEnd = (): void => {
+				// Don't report scroll if we are about the snap
+				if (this.snapper && this.snapper.supportsTouch() && this.snapper.needsSnap()) {
+					return;
+				}
+				this.emit(EVENTS.MANAGERS.SCROLLED, {
+					top: this.scrollTop,
+					left: this.scrollLeft
+				});
+			};
+			scroller.addEventListener("scrollend", this._onScrollEnd as EventListener);
+		}
+
 		this.didScroll = false;
 
 	}
@@ -464,6 +478,11 @@ class ContinuousViewManager extends DefaultViewManager {
 
 		scroller.removeEventListener("scroll", this._onScroll!);
 		this._onScroll = undefined;
+
+		if (this._onScrollEnd) {
+			scroller.removeEventListener("scrollend", this._onScrollEnd as EventListener);
+			this._onScrollEnd = undefined;
+		}
 
 		window.removeEventListener("pagehide", this._onPageHide!);
 		this._onPageHide = undefined;
@@ -521,6 +540,10 @@ class ContinuousViewManager extends DefaultViewManager {
 			top: this.scrollTop,
 			left: this.scrollLeft
 		});
+
+		if (this._onScrollEnd) {
+			return;
+		}
 
 		clearTimeout(this.afterScrolled);
 		this.afterScrolled = setTimeout(() => {

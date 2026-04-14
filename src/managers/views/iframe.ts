@@ -64,6 +64,7 @@ class IframeView implements IEventEmitter<IframeViewEvents> {
 	stopExpanding!: boolean;
 	axis!: string;
 	expanded?: boolean;
+	_abortController: AbortController | undefined;
 
 	declare on: IEventEmitter<IframeViewEvents>["on"];
 	declare off: IEventEmitter<IframeViewEvents>["off"];
@@ -126,6 +127,9 @@ class IframeView implements IEventEmitter<IframeViewEvents> {
 		element.style.overflow = "hidden";
 		element.style.position = "relative";
 		element.style.display = "block";
+		// Isolate each view's reflow/paint from its siblings. Do NOT include
+		// `size` — `expand()` needs to read the content's natural dimensions.
+		element.style.contain = "layout paint";
 
 		if(axis && axis === "horizontal"){
 			element.style.flex = "none";
@@ -212,13 +216,21 @@ class IframeView implements IEventEmitter<IframeViewEvents> {
 		// Fit to size of the container, apply padding
 		this.size();
 
+		if (typeof AbortController !== "undefined" && !this._abortController) {
+			this._abortController = new AbortController();
+		}
+		const signal = this._abortController?.signal;
+
 		if(!this.sectionRender) {
-			this.sectionRender = this.section.render(request);
+			this.sectionRender = this.section.render(request, signal);
 		}
 
 		// Render Chain
 		return this.sectionRender
 			.then((contents: string) => {
+				if (signal?.aborted) {
+					return Promise.reject(new DOMException("Aborted", "AbortError"));
+				}
 				return this.load(contents);
 			})
 			.then(() => {
@@ -262,6 +274,9 @@ class IframeView implements IEventEmitter<IframeViewEvents> {
 				});
 
 			}, (e: Error) => {
+				if (signal?.aborted || e.name === "AbortError") {
+					return Promise.reject(e);
+				}
 				this.emit(EVENTS.VIEWS.LOAD_ERROR, e);
 				return new Promise((resolve, reject) => {
 					reject(e);
@@ -888,6 +903,11 @@ class IframeView implements IEventEmitter<IframeViewEvents> {
 	}
 
 	destroy(): void {
+
+		if (this._abortController) {
+			this._abortController.abort();
+			this._abortController = undefined;
+		}
 
 		for (const cfiRange in this.highlights) {
 			this.unhighlight(cfiRange);

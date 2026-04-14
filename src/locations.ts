@@ -7,6 +7,9 @@ import type { IEventEmitter, RequestFunction } from "./types";
 import type Spine from "./spine";
 import type Section from "./section";
 
+const _hasIdleCallback: boolean =
+	typeof requestIdleCallback === "function" && typeof cancelIdleCallback === "function";
+
 /**
  * Find Locations for a Book
  * @param {Spine} spine
@@ -34,7 +37,7 @@ class Locations implements IEventEmitter<LocationsEvents> {
 	_current: number | undefined;
 	_wordCounter: number;
 	_currentCfi: string | undefined;
-	processingTimeout: ReturnType<typeof setTimeout> | undefined;
+	processingTimeout: ReturnType<typeof setTimeout> | number | undefined;
 
 	constructor(spine: Spine, request: RequestFunction, pause?: number) {
 		this.spine = spine;
@@ -108,7 +111,12 @@ class Locations implements IEventEmitter<LocationsEvents> {
 		section.unload();
 
 		return new Promise<string[]>((resolve) => {
-			this.processingTimeout = setTimeout(() => resolve(locations), this.pause);
+			const done = (): void => resolve(locations);
+			if (_hasIdleCallback) {
+				this.processingTimeout = requestIdleCallback(done, { timeout: (this.pause ?? 0) + 50 });
+			} else {
+				this.processingTimeout = setTimeout(done, this.pause);
+			}
 		});
 	}
 
@@ -247,7 +255,12 @@ class Locations implements IEventEmitter<LocationsEvents> {
 		section.unload();
 
 		return new Promise<{ cfi: string; wordCount: number }[]>((resolve) => {
-			this.processingTimeout = setTimeout(() => resolve(locations), this.pause);
+			const done = (): void => resolve(locations);
+			if (_hasIdleCallback) {
+				this.processingTimeout = requestIdleCallback(done, { timeout: (this.pause ?? 0) + 50 });
+			} else {
+				this.processingTimeout = setTimeout(done, this.pause);
+			}
 		});
 	}
 
@@ -513,7 +526,14 @@ class Locations implements IEventEmitter<LocationsEvents> {
 
 		this.currentLocation = undefined;
 		this._currentCfi = undefined;
-		clearTimeout(this.processingTimeout);
+		if (this.processingTimeout !== undefined) {
+			if (_hasIdleCallback) {
+				cancelIdleCallback(this.processingTimeout as number);
+			} else {
+				clearTimeout(this.processingTimeout as ReturnType<typeof setTimeout>);
+			}
+			this.processingTimeout = undefined;
+		}
 	}
 }
 

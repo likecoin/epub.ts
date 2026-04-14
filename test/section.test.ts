@@ -165,7 +165,7 @@ describe("section", () => {
 			const section = new Section(createMockSpineItem({ url: "http://test/ch1.xhtml" }));
 
 			const result = await section.load(request);
-			expect(request).toHaveBeenCalledWith("http://test/ch1.xhtml");
+			expect(request).toHaveBeenCalledWith("http://test/ch1.xhtml", undefined, undefined, undefined, undefined);
 			expect(result).toBe(doc.documentElement);
 			expect(section.document).toBe(doc);
 			expect(section.contents).toBe(doc.documentElement);

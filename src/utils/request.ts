@@ -6,6 +6,7 @@ async function request(
   type?: string,
   withCredentials?: boolean,
   headers?: Record<string, string>,
+  signal?: AbortSignal,
 ): Promise<unknown> {
   // If type isn't set, determine it from the file extension
   if (!type) {
@@ -26,10 +27,18 @@ async function request(
     init.headers = h;
   }
 
+  if (signal) {
+    init.signal = signal;
+  }
+
   let response: Response;
   try {
     response = await fetch(url, init);
   } catch (e) {
+    // Preserve AbortError verbatim so callers can detect intentional cancellation.
+    if ((e as Error).name === "AbortError") {
+      throw e;
+    }
     throw new EpubError((e as Error).message || "Network Error", 0, e);
   }
 

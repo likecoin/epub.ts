@@ -231,7 +231,7 @@ export interface EpubCFIComponent {
 }
 
 // ===== Function Types =====
-export type RequestFunction = (url: string, type?: string, withCredentials?: boolean, headers?: Record<string, string>) => Promise<unknown>;
+export type RequestFunction = (url: string, type?: string, withCredentials?: boolean, headers?: Record<string, string>, signal?: AbortSignal) => Promise<unknown>;
 
 export type ViewManagerConstructor = new (options: ManagerOptions) => any;
 export type ViewConstructor = new (section: Section, options?: ViewSettings) => any;

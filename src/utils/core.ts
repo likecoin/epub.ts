@@ -601,12 +601,30 @@ export function blob2base64(blob: Blob): Promise<string | ArrayBuffer> {
  * Creates a new pending promise and provides methods to resolve or reject it.
  * From: https://developer.mozilla.org/en-US/docs/Mozilla/JavaScript_code_modules/Promise.jsm/Deferred#backwards_forwards_compatible
  */
+type WithResolversResult<U> = {
+	promise: Promise<U>;
+	resolve: (value: U | PromiseLike<U>) => void;
+	reject: (reason?: unknown) => void;
+};
+
+const _withResolvers: (<U>() => WithResolversResult<U>) | undefined =
+	typeof (Promise as unknown as { withResolvers?: unknown }).withResolvers === "function"
+		? (Promise as unknown as { withResolvers: <U>() => WithResolversResult<U> }).withResolvers.bind(Promise)
+		: undefined;
+
 export class defer<T = unknown> {
 	resolve!: (value: T | PromiseLike<T>) => void;
 	reject!: (reason?: unknown) => void;
 	promise: Promise<T>;
 
 	constructor() {
+		if (_withResolvers) {
+			const { promise, resolve, reject } = _withResolvers<T>();
+			this.promise = promise;
+			this.resolve = resolve;
+			this.reject = reject;
+			return;
+		}
 		this.promise = new Promise<T>((resolve, reject) => {
 			this.resolve = resolve;
 			this.reject = reject;
