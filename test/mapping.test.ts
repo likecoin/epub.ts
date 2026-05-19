@@ -337,6 +337,66 @@ describe("Mapping", () => {
 		});
 	});
 
+	describe("page() canvas-fast-path inversion guard", () => {
+		const FAST_PAIR = { start: "epubcfi(fast-start)", end: "epubcfi(fast-end)" };
+		const RECOMPUTED = { start: "epubcfi(walk-start)", end: "epubcfi(walk-end)" };
+
+		// p1 precedes p2 in document order, so a range on p2 starts after a
+		// range on p1 ends — the inversion the guard must detect.
+		function setup() {
+			const measurer = new TextMeasurer();
+			const mapping = new Mapping(createMockLayout(), "ltr", "horizontal", false, measurer);
+			const p1 = document.createElement("p");
+			p1.textContent = "earlier";
+			const p2 = document.createElement("p");
+			p2.textContent = "later";
+			document.body.appendChild(p1);
+			document.body.appendChild(p2);
+			const rangeOn = (p: HTMLParagraphElement) => {
+				const r = document.createRange();
+				r.selectNodeContents(p.firstChild!);
+				return r;
+			};
+			const mockContents = { document } as unknown as Contents;
+			return { mapping, rangeOn, p1, p2, mockContents };
+		}
+
+		it("recomputes with the DOM walk when the fast path inverts start/end", () => {
+			const { mapping, rangeOn, p1, p2, mockContents } = setup();
+			// noFast === true (5th arg) is the DOM-walk recompute: it returns
+			// the ordered pair; the fast path returns the inverted one.
+			const findStart = vi.spyOn(mapping, "findStart" as any).mockImplementation(
+				(...a: unknown[]) => (a[4] === true ? rangeOn(p1) : rangeOn(p2))
+			);
+			const findEnd = vi.spyOn(mapping, "findEnd" as any).mockImplementation(
+				(...a: unknown[]) => (a[4] === true ? rangeOn(p2) : rangeOn(p1))
+			);
+			vi.spyOn(mapping, "rangePairToCfiPair").mockReturnValue(RECOMPUTED);
+
+			const result = mapping.page(mockContents, "epubcfi(/6/2!)", 0, 800)!;
+
+			expect(result).toEqual(RECOMPUTED);
+			expect(findStart).toHaveBeenCalledTimes(2);
+			expect(findEnd).toHaveBeenCalledTimes(2);
+			expect(findStart.mock.calls[1]![4]).toBe(true);
+			expect(findEnd.mock.calls[1]![4]).toBe(true);
+		});
+
+		it("does not recompute when the fast path result is already ordered", () => {
+			const { mapping, rangeOn, p1, p2, mockContents } = setup();
+			const findStart = vi.spyOn(mapping, "findStart" as any).mockReturnValue(rangeOn(p1));
+			const findEnd = vi.spyOn(mapping, "findEnd" as any).mockReturnValue(rangeOn(p2));
+			const toCfi = vi.spyOn(mapping, "rangePairToCfiPair").mockReturnValue(FAST_PAIR);
+
+			const result = mapping.page(mockContents, "epubcfi(/6/2!)", 0, 800)!;
+
+			expect(result).toEqual(FAST_PAIR);
+			expect(findStart).toHaveBeenCalledTimes(1);
+			expect(findEnd).toHaveBeenCalledTimes(1);
+			expect(toCfi).toHaveBeenCalledTimes(1);
+		});
+	});
+
 	describe("_canvasFindNode fast path", () => {
 		it("should return null when no measurer is set", () => {
 			const mapping = new Mapping(createMockLayout(), "ltr", "horizontal");

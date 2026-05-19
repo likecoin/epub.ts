@@ -63,10 +63,31 @@ class Mapping {
 			scrollDimension = this.horizontal ? docEl.scrollWidth : docEl.scrollHeight;
 		}
 
-		const result = this.rangePairToCfiPair(cfiBase, {
-			start: this.findStart(root, start, end, scrollDimension),
-			end: this.findEnd(root, start, end, scrollDimension)
-		});
+		const startRange = this.findStart(root, start, end, scrollDimension);
+		const endRange = this.findEnd(root, start, end, scrollDimension);
+
+		// The canvas fast path estimates node positions from a uniform
+		// text-width-to-scrollWidth ratio. Where that mapping is non-linear
+		// (e.g. a reflowable section rendered in a rendition shared with
+		// viewport-pinned fixed-layout siblings), it can select the wrong
+		// nodes and place start after end in document order — an invariant
+		// violation for a single page. The DOM walk is monotonic and cannot
+		// invert, so fall back to it for this page when that happens.
+		let inverted = false;
+		if (this._measurer) {
+			try {
+				inverted = startRange.compareBoundaryPoints(Range.END_TO_START, endRange) > 0;
+			} catch {
+				// Cross-document or detached range — keep the fast-path result.
+			}
+		}
+
+		const result = inverted
+			? this.rangePairToCfiPair(cfiBase, {
+				start: this.findStart(root, start, end, scrollDimension, true),
+				end: this.findEnd(root, start, end, scrollDimension, true)
+			})
+			: this.rangePairToCfiPair(cfiBase, { start: startRange, end: endRange });
 
 		if (this._dev === true) {
 			const doc = contents.document;
@@ -151,11 +172,13 @@ class Mapping {
 	 * @param {number} [scrollDimension] total scrollable dimension in CSS pixels
 	 *   (scrollWidth for horizontal, scrollHeight for vertical). Hoisted reads
 	 *   avoid forced reflows in the canvas fast path; omit to read lazily.
+	 * @param {boolean} [noFast] skip the canvas fast path and use the DOM walk
+	 *   (used to recover from a fast-path-induced start/end inversion)
 	 * @return {Range}
 	 */
-	findStart(root: Node, start: number, end: number, scrollDimension?: number): Range {
+	findStart(root: Node, start: number, end: number, scrollDimension?: number, noFast: boolean = false): Range {
 		// Canvas fast path: binary search on cumulative document widths
-		if (root.nodeType === Node.ELEMENT_NODE) {
+		if (!noFast && root.nodeType === Node.ELEMENT_NODE) {
 			const fast = this._canvasFindNode(root as Element, start, end, "start", scrollDimension);
 			if (fast) return this.findTextStartRange(fast.node, start, end, fast.nodePos);
 		}
@@ -244,11 +267,13 @@ class Mapping {
 	 * @param {number} [scrollDimension] total scrollable dimension in CSS pixels
 	 *   (scrollWidth for horizontal, scrollHeight for vertical). Hoisted reads
 	 *   avoid forced reflows in the canvas fast path; omit to read lazily.
+	 * @param {boolean} [noFast] skip the canvas fast path and use the DOM walk
+	 *   (used to recover from a fast-path-induced start/end inversion)
 	 * @return {Range}
 	 */
-	findEnd(root: Node, start: number, end: number, scrollDimension?: number): Range {
+	findEnd(root: Node, start: number, end: number, scrollDimension?: number, noFast: boolean = false): Range {
 		// Canvas fast path: binary search on cumulative document widths
-		if (root.nodeType === Node.ELEMENT_NODE) {
+		if (!noFast && root.nodeType === Node.ELEMENT_NODE) {
 			const fast = this._canvasFindNode(root as Element, start, end, "end", scrollDimension);
 			if (fast) return this.findTextEndRange(fast.node, start, end, fast.nodePos);
 		}
