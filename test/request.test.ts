@@ -1,17 +1,28 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import request from "../src/utils/request";
 import { EpubError } from "../src/utils/core";
 import { getFixtureUrl } from "./helpers";
 
 describe("request", () => {
 	describe("AbortSignal", () => {
+		afterEach(() => {
+			vi.restoreAllMocks();
+		});
+
+		// jsdom's AbortSignal is a different realm than Node's undici fetch,
+		// which rejects it with a TypeError before it can abort — so a real
+		// aborted fetch can't be reproduced here. Stub fetch to reject with
+		// the AbortError undici/browsers actually throw, then assert
+		// request() surfaces it verbatim rather than wrapping it.
 		it("should surface AbortError verbatim instead of wrapping it as EpubError", async () => {
-			const controller = new AbortController();
-			controller.abort();
+			const abortError = new DOMException("The operation was aborted.", "AbortError");
+			vi.spyOn(globalThis, "fetch").mockRejectedValue(abortError);
+
 			const rejected = await request(
-				getFixtureUrl("/alice/OPS/toc.xhtml"), undefined, undefined, undefined, controller.signal
+				getFixtureUrl("/alice/OPS/toc.xhtml")
 			).then(() => undefined, (e: unknown) => e);
-			expect(rejected).toBeDefined();
+
+			expect(rejected).toBe(abortError);
 			expect((rejected as Error).name).toBe("AbortError");
 			expect(rejected).not.toBeInstanceOf(EpubError);
 		});
