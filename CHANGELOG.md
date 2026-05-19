@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.6.4 (2026-05-19)
+
+### Bug fixes
+
+- `Mapping.page()` no longer emits a page whose `location.start.cfi` is after `location.end.cfi`. The canvas fast path estimates node positions from a uniform text-width-to-`scrollWidth` ratio; for a reflowable section rendered in a rendition shared with viewport-pinned fixed-layout siblings that mapping is non-linear, so `findStart`/`findEnd` could select the wrong nodes and invert document order — breaking consumers that rely on `start.cfi <= end.cfi`. `page()` now detects the inversion via `Range.compareBoundaryPoints` (no CFI string round-trip) and falls back to the monotonic DOM walk for that page via a new `noFast` flag on `findStart`/`findEnd`
+
+### Tests
+
+- Fix the `AbortSignal` `request()` test under jsdom. jsdom's `AbortSignal` is a different realm than Node's undici `fetch`, which rejected the foreign signal with a `TypeError` before it could abort, so `request.ts`'s `AbortError`-passthrough branch was never exercised and the error fell through to the `EpubError` wrapper. The test now stubs `fetch` to reject with the `AbortError` undici/browsers actually throw, verifying `request()`'s real contract deterministically without depending on cross-realm `AbortSignal` compatibility
+
 ## 0.6.3 (2026-04-14)
 
 ### Modernization
