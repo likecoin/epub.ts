@@ -107,6 +107,36 @@ describe("Mapping", () => {
 			expect(ranges.length).toBeGreaterThan(1);
 		});
 
+		it("should emit a range for every word without dropping any", () => {
+			const cases: [string, string[]][] = [
+				["hello world", ["hello", "world"]],
+				["a b c d", ["a", "b", "c", "d"]],
+				["hello world foo", ["hello", "world", "foo"]],
+				["a  b", ["a", "b"]], // consecutive splitters: no empty range
+			];
+			const mapping = new Mapping(createMockLayout());
+			for (const [input, expected] of cases) {
+				const textNode = document.createTextNode(input);
+				const container = document.createElement("div");
+				container.appendChild(textNode);
+				document.body.appendChild(container);
+				const ranges = mapping.splitTextNodeIntoRanges(textNode);
+				expect(ranges.map(r => r.toString())).toEqual(expected);
+			}
+		});
+
+		it("should keep every word and the leading offset together", () => {
+			const textNode = document.createTextNode("\n  hello world");
+			const container = document.createElement("div");
+			container.appendChild(textNode);
+			document.body.appendChild(container);
+			const mapping = new Mapping(createMockLayout());
+			const ranges = mapping.splitTextNodeIntoRanges(textNode);
+			expect(ranges.map(r => r.toString())).toEqual(["hello", "world"]);
+			expect(ranges[0]!.startOffset).toBe(3);
+			expect(ranges[1]!.startOffset).toBe(9);
+		});
+
 		it("should return a single range for non-text nodes", () => {
 			const el = document.createElement("div");
 			el.textContent = "hello world";

@@ -791,28 +791,22 @@ class Mapping {
 			return [range];
 		}
 
-		range = doc.createRange();
-		range.setStart(node, leading);
-		range.setEnd(node, leading + pos);
-		ranges.push(range);
-		range = null;
-
-		while ( pos !== -1 ) {
-
-			pos = text.indexOf(splitter, pos + 1);
-			if(pos > 0) {
-
-				if(range) {
-					range.setEnd(node, leading + pos);
-					ranges.push(range);
-				}
-
+		// Walk every splitter position; splitter.length (not +1) handles
+		// multi-character splitters correctly.
+		let wordStart = 0;
+		while(pos !== -1) {
+			if(pos > wordStart) {
 				range = doc.createRange();
-				range.setStart(node, leading + pos + 1);
+				range.setStart(node, leading + wordStart);
+				range.setEnd(node, leading + pos);
+				ranges.push(range);
 			}
+			wordStart = pos + splitter.length;
+			pos = text.indexOf(splitter, wordStart);
 		}
-
-		if(range) {
+		if(wordStart < text.length) {
+			range = doc.createRange();
+			range.setStart(node, leading + wordStart);
 			range.setEnd(node, leading + text.length);
 			ranges.push(range);
 		}
