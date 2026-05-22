@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.6.5 (2026-05-22)
+
+### Bug fixes
+
+- `Mapping.splitTextNodeIntoRanges` now splits spaceless scripts (CJK) per character instead of collapsing the whole text node into a single range. With only a space splitter, Chinese text produced one range, so `findTextStartRange` could not locate a column boundary inside a long paragraph and fell back to character offset `:0` — every page beginning mid-paragraph reported the paragraph's start, breaking reading-position and TTS anchoring. The `Intl.Segmenter`-based canvas fast path already handled CJK, but `text-indent` (universal in CJK books) tripped the exotic-CSS gate and disabled it, leaving the space-only DOM fallback in charge. Offsets are emitted in UTF-16 code units (astral characters advance by two), matching the EPUB CFI spec
+- Split ranges are now aligned past leading whitespace. Split positions were computed against the `String.trim()`-ed text but applied to the raw text node, so a node with leading whitespace (common in pretty-printed XHTML) shifted every range left — the first range started inside the whitespace and word ranges mapped to the wrong characters, yielding incorrect CFIs and page boundaries
+- The word-splitting loop no longer drops interior words. It nulled its working range after the first word, so the second word of every multi-word text node was never emitted (`"a b c d"` produced `["a", "c", "d"]`; a two-word node produced only its first word), leaving `findTextStartRange`/`findTextEndRange` with no range covering the dropped words and resolving a column boundary inside one to an adjacent word's offset. Rewritten as a single walk over every splitter; using `splitter.length` instead of a hardcoded `+1` also fixes multi-character custom splitters
+
 ## 0.6.4 (2026-05-19)
 
 ### Bug fixes
