@@ -162,6 +162,20 @@ describe("Mapping", () => {
 			expect(cjkRange).toBeDefined();
 			expect(cjkRange!.endOffset - cjkRange!.startOffset).toBe(2);
 		});
+
+		it("should offset ranges past leading whitespace (pretty-printed XHTML)", () => {
+			// Text node with leading newline/indent, as emitted by pretty-printers.
+			const textNode = document.createTextNode("\n  hello world foo");
+			const container = document.createElement("div");
+			container.appendChild(textNode);
+			document.body.appendChild(container);
+			const mapping = new Mapping(createMockLayout());
+			const ranges = mapping.splitTextNodeIntoRanges(textNode);
+			// First range must start at the real 'h' (offset 3), not inside
+			// the whitespace, and contain the word — not "\n  he".
+			expect(ranges[0]!.startOffset).toBe(3);
+			expect(ranges[0]!.toString()).toBe("hello");
+		});
 	});
 
 	describe("rangePairToCfiPair()", () => {

@@ -740,6 +740,10 @@ class Mapping {
 		const ranges: Range[] = [];
 		const textContent = node.textContent || "";
 		const text = textContent.trim();
+		// pos is computed against the trimmed text but applied to the raw
+		// node, so shift every offset by the leading whitespace the trim
+		// removed (common in pretty-printed XHTML) to keep ranges aligned.
+		const leading = textContent.length - textContent.trimStart().length;
 		let range: Range | null;
 		const doc = node.ownerDocument!;
 		const splitter = _splitter || " ";
@@ -788,8 +792,8 @@ class Mapping {
 		}
 
 		range = doc.createRange();
-		range.setStart(node, 0);
-		range.setEnd(node, pos);
+		range.setStart(node, leading);
+		range.setEnd(node, leading + pos);
 		ranges.push(range);
 		range = null;
 
@@ -799,17 +803,17 @@ class Mapping {
 			if(pos > 0) {
 
 				if(range) {
-					range.setEnd(node, pos);
+					range.setEnd(node, leading + pos);
 					ranges.push(range);
 				}
 
 				range = doc.createRange();
-				range.setStart(node, pos+1);
+				range.setStart(node, leading + pos + 1);
 			}
 		}
 
 		if(range) {
-			range.setEnd(node, text.length);
+			range.setEnd(node, leading + text.length);
 			ranges.push(range);
 		}
 
