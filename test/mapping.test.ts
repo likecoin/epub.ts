@@ -125,6 +125,43 @@ describe("Mapping", () => {
 			const ranges = mapping.splitTextNodeIntoRanges(textNode, "-");
 			expect(ranges.length).toBeGreaterThan(1);
 		});
+
+		it("should split spaceless CJK text per character", () => {
+			const textNode = document.createTextNode("這些基礎");
+			const container = document.createElement("div");
+			container.appendChild(textNode);
+			document.body.appendChild(container);
+			const mapping = new Mapping(createMockLayout());
+			const ranges = mapping.splitTextNodeIntoRanges(textNode);
+			expect(ranges.length).toBe(4);
+			// Each range starts at a distinct, increasing character offset
+			expect(ranges.map(r => r.startOffset)).toEqual([0, 1, 2, 3]);
+			expect(ranges[1]!.toString()).toBe("些");
+		});
+
+		it("should keep Latin runs together when mixed with CJK", () => {
+			const textNode = document.createTextNode("abc你好");
+			const container = document.createElement("div");
+			container.appendChild(textNode);
+			document.body.appendChild(container);
+			const mapping = new Mapping(createMockLayout());
+			const ranges = mapping.splitTextNodeIntoRanges(textNode);
+			// "abc" stays one range; 你 and 好 split individually
+			expect(ranges.map(r => r.toString())).toEqual(["abc", "你", "好"]);
+		});
+
+		it("should keep astral-plane CJK surrogate pairs intact", () => {
+			const textNode = document.createTextNode("a𠀀b");
+			const container = document.createElement("div");
+			container.appendChild(textNode);
+			document.body.appendChild(container);
+			const mapping = new Mapping(createMockLayout());
+			const ranges = mapping.splitTextNodeIntoRanges(textNode);
+			// 𠀀 (U+20000) is one code point but two UTF-16 units
+			const cjkRange = ranges.find(r => r.toString() === "𠀀");
+			expect(cjkRange).toBeDefined();
+			expect(cjkRange!.endOffset - cjkRange!.startOffset).toBe(2);
+		});
 	});
 
 	describe("rangePairToCfiPair()", () => {

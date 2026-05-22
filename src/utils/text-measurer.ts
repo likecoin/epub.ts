@@ -34,7 +34,7 @@ export interface PreparedNode {
 type SegmenterLike = { segment(text: string): Iterable<{ segment: string; index: number }> };
 
 // CJK Unicode ranges for per-character segmentation fallback
-const CJK_RE = /[\u2E80-\u9FFF\uF900-\uFAFF\uFE30-\uFE4F\u{20000}-\u{2FA1F}]/u;
+export const CJK_RE = /[\u2E80-\u9FFF\uF900-\uFAFF\uFE30-\uFE4F\u{20000}-\u{2FA1F}]/u;
 
 /**
  * Determine if a CSS property value is "exotic" (non-default), meaning

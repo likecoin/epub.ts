@@ -5,6 +5,7 @@ import type IframeView from "./managers/views/iframe";
 import type Contents from "./contents";
 import type TextMeasurer from "./utils/text-measurer";
 import type { PreparedNode } from "./utils/text-measurer";
+import { CJK_RE } from "./utils/text-measurer";
 
 /**
  * Map text locations to CFI ranges
@@ -746,6 +747,41 @@ class Mapping {
 		let pos = text.indexOf(splitter);
 
 		if(pos === -1 || node.nodeType !== Node.TEXT_NODE) {
+			// No splitter found. Spaceless scripts (CJK) would otherwise
+			// collapse to a single whole-node range, leaving callers like
+			// findTextStartRange unable to locate a column offset inside a
+			// long paragraph (it falls back to offset 0). Split per character
+			// instead, keeping Latin runs together. Offsets index the node's
+			// own data — iterate by code point so surrogate pairs stay intact.
+			if(node.nodeType === Node.TEXT_NODE && CJK_RE.test(textContent)) {
+				let runStart = -1;
+				let i = 0;
+				for(const ch of textContent) {
+					if(CJK_RE.test(ch)) {
+						if(runStart !== -1) {
+							range = doc.createRange();
+							range.setStart(node, runStart);
+							range.setEnd(node, i);
+							ranges.push(range);
+							runStart = -1;
+						}
+						range = doc.createRange();
+						range.setStart(node, i);
+						range.setEnd(node, i + ch.length);
+						ranges.push(range);
+					} else if(runStart === -1) {
+						runStart = i;
+					}
+					i += ch.length;
+				}
+				if(runStart !== -1) {
+					range = doc.createRange();
+					range.setStart(node, runStart);
+					range.setEnd(node, i);
+					ranges.push(range);
+				}
+				return ranges;
+			}
 			range = doc.createRange();
 			range.selectNodeContents(node);
 			return [range];
