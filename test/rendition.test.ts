@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import Rendition from "../src/rendition";
 import DefaultViewManager from "../src/managers/default/index";
 import ContinuousViewManager from "../src/managers/continuous/index";
@@ -434,6 +434,14 @@ describe("Rendition", () => {
 	describe("content reflow re-anchoring", () => {
 		const CFI = "epubcfi(/6/12!/4[A-5]/2/114/1:0)";
 
+		beforeEach(() => {
+			vi.useFakeTimers();
+		});
+
+		afterEach(() => {
+			vi.useRealTimers();
+		});
+
 		function createRenditionWithManager(): { rendition: Rendition; section: Section } {
 			const rendition = new Rendition(createMockBook());
 			// The constructor queues book.opened + start(); drop them so advancing
@@ -452,7 +460,6 @@ describe("Rendition", () => {
 		}
 
 		it("re-applies the armed target on a content reflow", async () => {
-			vi.useFakeTimers();
 			const { rendition, section } = createRenditionWithManager();
 			rendition._armReanchor(CFI);
 
@@ -461,11 +468,9 @@ describe("Rendition", () => {
 
 			expect(rendition.manager.display).toHaveBeenCalledWith(section, CFI);
 			expect(rendition.reportLocation).toHaveBeenCalled();
-			vi.useRealTimers();
 		});
 
 		it("does nothing once the re-anchor window has expired", async () => {
-			vi.useFakeTimers();
 			const { rendition } = createRenditionWithManager();
 			rendition._armReanchor(CFI);
 
@@ -475,22 +480,18 @@ describe("Rendition", () => {
 
 			expect(rendition.manager.display).not.toHaveBeenCalled();
 			expect(rendition._reanchorCfi).toBeUndefined();
-			vi.useRealTimers();
 		});
 
 		it("is a no-op when nothing is armed", async () => {
-			vi.useFakeTimers();
 			const { rendition } = createRenditionWithManager();
 
 			rendition.onContentReflow();
 			await vi.advanceTimersByTimeAsync(100);
 
 			expect(rendition.manager.display).not.toHaveBeenCalled();
-			vi.useRealTimers();
 		});
 
 		it("cancels a pending re-anchor when a newer display re-arms", async () => {
-			vi.useFakeTimers();
 			const { rendition } = createRenditionWithManager();
 			rendition._armReanchor("epubcfi(/6/4!/4/2/2/1:0)");
 			rendition.onContentReflow(); // schedules the debounce for the stale target
@@ -499,11 +500,9 @@ describe("Rendition", () => {
 			await vi.advanceTimersByTimeAsync(100);
 
 			expect(rendition.manager.display).not.toHaveBeenCalled();
-			vi.useRealTimers();
 		});
 
 		it("emits displayError when the re-anchor display rejects", async () => {
-			vi.useFakeTimers();
 			const { rendition } = createRenditionWithManager();
 			(rendition.manager.display as ReturnType<typeof vi.fn>).mockRejectedValue(new Error("boom"));
 			const emitSpy = vi.spyOn(rendition, "emit");
@@ -513,11 +512,9 @@ describe("Rendition", () => {
 			await vi.advanceTimersByTimeAsync(100);
 
 			expect(emitSpy).toHaveBeenCalledWith("displayerror", expect.any(Error));
-			vi.useRealTimers();
 		});
 
 		it("does not start an overlapping re-anchor while one is in flight", async () => {
-			vi.useFakeTimers();
 			const { rendition } = createRenditionWithManager();
 			// Hold the display pending so the in-flight flag stays set.
 			let resolveDisplay: () => void = () => {};
@@ -535,11 +532,9 @@ describe("Rendition", () => {
 
 			resolveDisplay();
 			await vi.advanceTimersByTimeAsync(0);
-			vi.useRealTimers();
 		});
 
 		it("skips re-anchoring fixed-layout (pre-paginated) views", async () => {
-			vi.useFakeTimers();
 			const { rendition } = createRenditionWithManager();
 			rendition._layout = { name: "pre-paginated" } as unknown as Rendition["_layout"];
 			rendition._armReanchor(CFI);
@@ -548,11 +543,9 @@ describe("Rendition", () => {
 			await vi.advanceTimersByTimeAsync(100);
 
 			expect(rendition.manager.display).not.toHaveBeenCalled();
-			vi.useRealTimers();
 		});
 
 		it("skips while another display is mid-flight", async () => {
-			vi.useFakeTimers();
 			const { rendition } = createRenditionWithManager();
 			rendition.displaying = {} as unknown as Rendition["displaying"];
 			rendition._armReanchor(CFI);
@@ -561,7 +554,6 @@ describe("Rendition", () => {
 			await vi.advanceTimersByTimeAsync(100);
 
 			expect(rendition.manager.display).not.toHaveBeenCalled();
-			vi.useRealTimers();
 		});
 
 		it("disarms on next() so a turned page is not yanked back", () => {
