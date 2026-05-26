@@ -101,6 +101,7 @@ class Rendition implements IEventEmitter<RenditionEvents> {
 	_reanchorCfi: string | undefined;
 	_reanchorUntil = 0;
 	_reanchorTimer: ReturnType<typeof setTimeout> | undefined;
+	_reanchoring = false;
 
 	declare on: IEventEmitter<RenditionEvents>["on"];
 	declare off: IEventEmitter<RenditionEvents>["off"];
@@ -319,6 +320,14 @@ class Rendition implements IEventEmitter<RenditionEvents> {
 		// changing). onResized() above only fires on viewport/stage changes.
 		this.manager.on(EVENTS.MANAGERS.RESIZE, () => this.onContentReflow());
 
+		// A genuine user scroll (programmatic scrolls set `ignore`, so they don't
+		// emit MANAGERS.SCROLL) means the reader took over in scrolled/continuous
+		// flow — stop re-anchoring so we don't fight their scrolling. Guarded so
+		// this un-throttled scroll event does no work outside the re-anchor window.
+		this.manager.on(EVENTS.MANAGERS.SCROLL, () => {
+			if (this._reanchorCfi) this._disarmReanchor();
+		});
+
 		// Listen for rotation
 		this.manager.on(EVENTS.MANAGERS.ORIENTATION_CHANGE, (orientation: number) => this.onOrientationChange(orientation));
 
@@ -388,7 +397,6 @@ class Rendition implements IEventEmitter<RenditionEvents> {
 		if (!this.book) {
 			return;
 		}
-		const _isCfiString = this.epubcfi.isCfiString(target);
 		const displaying = new defer<Section | undefined>();
 		const displayed = displaying.promise;
 
@@ -545,6 +553,9 @@ class Rendition implements IEventEmitter<RenditionEvents> {
 	_armReanchor(cfi: string): void {
 		this._reanchorCfi = cfi;
 		this._reanchorUntil = Date.now() + REANCHOR_WINDOW;
+		// A fresh display supersedes any re-anchor still pending from an earlier
+		// reflow, so its timeout can't fire and yank back to the old target.
+		clearTimeout(this._reanchorTimer);
 	}
 
 	/**
@@ -576,14 +587,24 @@ class Rendition implements IEventEmitter<RenditionEvents> {
 		if (this._layout && this._layout.name === "pre-paginated") return;
 		clearTimeout(this._reanchorTimer);
 		this._reanchorTimer = setTimeout(() => {
-			// A newer display is mid-flight; it re-arms and anchors itself.
-			if (this.displaying) return;
+			// Bail if a newer display re-armed/cleared the target or the window
+			// lapsed, or a display is still mid-flight (it anchors itself) — never
+			// re-anchor to a stale location.
+			if (this._reanchorCfi !== cfi || Date.now() > this._reanchorUntil) return;
+			// Skip while a user display (this.displaying) or an earlier re-anchor
+			// is still in flight, so overlapping manager.display() calls can't
+			// fight over views (matters for async managers, e.g. continuous).
+			if (this.displaying || this._reanchoring) return;
 			const section = this.book && this.book.spine.get(cfi);
 			if (!section) return;
 			// Drive the manager directly instead of this.display(): the queued
 			// path would cancel an in-flight user navigation and re-arm the
 			// window via _display(), looping while content keeps reflowing.
-			this.manager.display(section, cfi).then(() => this.reportLocation());
+			this._reanchoring = true;
+			this.manager.display(section, cfi)
+				.then(() => this.reportLocation())
+				.catch((error: Error) => this.emit(EVENTS.RENDITION.DISPLAY_ERROR, error))
+				.finally(() => { this._reanchoring = false; });
 		}, REANCHOR_DEBOUNCE);
 	}
 
@@ -978,6 +999,7 @@ class Rendition implements IEventEmitter<RenditionEvents> {
 			this.manager.off(EVENTS.MANAGERS.REMOVED);
 			this.manager.off(EVENTS.MANAGERS.RESIZED);
 			this.manager.off(EVENTS.MANAGERS.RESIZE);
+			this.manager.off(EVENTS.MANAGERS.SCROLL);
 			this.manager.off(EVENTS.MANAGERS.ORIENTATION_CHANGE);
 			this.manager.off(EVENTS.MANAGERS.SCROLLED);
 			this.manager.destroy();

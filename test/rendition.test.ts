@@ -489,6 +489,55 @@ describe("Rendition", () => {
 			vi.useRealTimers();
 		});
 
+		it("cancels a pending re-anchor when a newer display re-arms", async () => {
+			vi.useFakeTimers();
+			const { rendition } = createRenditionWithManager();
+			rendition._armReanchor("epubcfi(/6/4!/4/2/2/1:0)");
+			rendition.onContentReflow(); // schedules the debounce for the stale target
+			rendition._armReanchor(CFI); // a newer display supersedes it
+
+			await vi.advanceTimersByTimeAsync(100);
+
+			expect(rendition.manager.display).not.toHaveBeenCalled();
+			vi.useRealTimers();
+		});
+
+		it("emits displayError when the re-anchor display rejects", async () => {
+			vi.useFakeTimers();
+			const { rendition } = createRenditionWithManager();
+			(rendition.manager.display as ReturnType<typeof vi.fn>).mockRejectedValue(new Error("boom"));
+			const emitSpy = vi.spyOn(rendition, "emit");
+			rendition._armReanchor(CFI);
+
+			rendition.onContentReflow();
+			await vi.advanceTimersByTimeAsync(100);
+
+			expect(emitSpy).toHaveBeenCalledWith("displayerror", expect.any(Error));
+			vi.useRealTimers();
+		});
+
+		it("does not start an overlapping re-anchor while one is in flight", async () => {
+			vi.useFakeTimers();
+			const { rendition } = createRenditionWithManager();
+			// Hold the display pending so the in-flight flag stays set.
+			let resolveDisplay: () => void = () => {};
+			(rendition.manager.display as ReturnType<typeof vi.fn>).mockReturnValue(
+				new Promise<void>((resolve) => { resolveDisplay = resolve; }),
+			);
+			rendition._armReanchor(CFI);
+
+			rendition.onContentReflow();
+			await vi.advanceTimersByTimeAsync(100); // first re-anchor fires, stays pending
+			rendition.onContentReflow();
+			await vi.advanceTimersByTimeAsync(100); // second must be skipped
+
+			expect(rendition.manager.display).toHaveBeenCalledTimes(1);
+
+			resolveDisplay();
+			await vi.advanceTimersByTimeAsync(0);
+			vi.useRealTimers();
+		});
+
 		it("skips re-anchoring fixed-layout (pre-paginated) views", async () => {
 			vi.useFakeTimers();
 			const { rendition } = createRenditionWithManager();
