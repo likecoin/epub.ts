@@ -21,6 +21,12 @@ import type Views from "./managers/helpers/views";
 import DefaultViewManager from "./managers/default/index";
 import ContinuousViewManager from "./managers/continuous/index";
 
+// How long after a CFI display we keep re-anchoring on content reflow, and how
+// long we coalesce a burst of reflows (e.g. several images loading) before
+// re-applying the anchor. See onContentReflow().
+const REANCHOR_WINDOW = 2500;
+const REANCHOR_DEBOUNCE = 50;
+
 /**
  * Displays an Epub as a series of Views for each Section.
  * Requires Manager and View class to handle specifics of rendering
@@ -86,6 +92,15 @@ class Rendition implements IEventEmitter<RenditionEvents> {
 	View!: ViewConstructor;
 	_layout: Layout | undefined;
 	displaying: defer<Section | undefined> | undefined;
+
+	// After a CFI display, the section can still reflow (late-loading images, web
+	// fonts, or theme CSS injected by the host). The first moveTo() then clamps a
+	// deep target to the last *currently* measured page, stranding the reader an
+	// early page before where they actually were. We re-run the anchor on each
+	// content reflow for a short window so the restore settles on the real target.
+	_reanchorCfi: string | undefined;
+	_reanchorUntil = 0;
+	_reanchorTimer: ReturnType<typeof setTimeout> | undefined;
 
 	declare on: IEventEmitter<RenditionEvents>["on"];
 	declare off: IEventEmitter<RenditionEvents>["off"];
@@ -300,6 +315,10 @@ class Rendition implements IEventEmitter<RenditionEvents> {
 		// Listen for resizing
 		this.manager.on(EVENTS.MANAGERS.RESIZED, (size: SizeObject, epubcfi?: string) => this.onResized(size, epubcfi));
 
+		// Listen for content-only reflow (a view grew without the viewport
+		// changing). onResized() above only fires on viewport/stage changes.
+		this.manager.on(EVENTS.MANAGERS.RESIZE, () => this.onContentReflow());
+
 		// Listen for rotation
 		this.manager.on(EVENTS.MANAGERS.ORIENTATION_CHANGE, (orientation: number) => this.onOrientationChange(orientation));
 
@@ -385,6 +404,15 @@ class Rendition implements IEventEmitter<RenditionEvents> {
 		if(!section){
 			displaying.reject(new Error("No Section Found"));
 			return displayed;
+		}
+
+		// Arm re-anchoring for CFI targets so a later content reflow can correct
+		// a clamped restore (target may now be a CFI even when the original
+		// argument was a percentage, resolved above).
+		if (this.epubcfi.isCfiString(target)) {
+			this._armReanchor(target as string);
+		} else {
+			this._disarmReanchor();
 		}
 
 		this.manager.display(section, target as string)
@@ -510,6 +538,56 @@ class Rendition implements IEventEmitter<RenditionEvents> {
 	}
 
 	/**
+	 * Remember a CFI target so content reflows can re-anchor to it. Opens a
+	 * short window after the display call during which onContentReflow() acts.
+	 * @private
+	 */
+	_armReanchor(cfi: string): void {
+		this._reanchorCfi = cfi;
+		this._reanchorUntil = Date.now() + REANCHOR_WINDOW;
+	}
+
+	/**
+	 * Cancel a pending re-anchor — e.g. the user turned the page, taking over
+	 * navigation, so we must not yank them back to the previous target.
+	 * @private
+	 */
+	_disarmReanchor(): void {
+		this._reanchorCfi = undefined;
+		this._reanchorUntil = 0;
+		clearTimeout(this._reanchorTimer);
+	}
+
+	/**
+	 * Content (not the viewport) reflowed. The first display anchored against an
+	 * under-measured layout, so a deep CFI may have been clamped to an earlier
+	 * page; re-apply the original target and re-report so consumers persist the
+	 * corrected location rather than the clamped one.
+	 * @private
+	 */
+	onContentReflow(): void {
+		const cfi = this._reanchorCfi;
+		if (!cfi) return;
+		if (Date.now() > this._reanchorUntil) {
+			this._disarmReanchor();
+			return;
+		}
+		// Fixed-layout views don't reflow; re-adding them would only flicker.
+		if (this._layout && this._layout.name === "pre-paginated") return;
+		clearTimeout(this._reanchorTimer);
+		this._reanchorTimer = setTimeout(() => {
+			// A newer display is mid-flight; it re-arms and anchors itself.
+			if (this.displaying) return;
+			const section = this.book && this.book.spine.get(cfi);
+			if (!section) return;
+			// Drive the manager directly instead of this.display(): the queued
+			// path would cancel an in-flight user navigation and re-arm the
+			// window via _display(), looping while content keeps reflowing.
+			this.manager.display(section, cfi).then(() => this.reportLocation());
+		}, REANCHOR_DEBOUNCE);
+	}
+
+	/**
 	 * Report resize events and display the last seen location
 	 * @private
 	 */
@@ -585,6 +663,7 @@ class Rendition implements IEventEmitter<RenditionEvents> {
 	 * @return {Promise}
 	 */
 	next(): Promise<void> {
+		this._disarmReanchor();
 		return this.q.enqueue(() => this.manager.next())
 			.then(() => this.reportLocation());
 	}
@@ -594,6 +673,7 @@ class Rendition implements IEventEmitter<RenditionEvents> {
 	 * @return {Promise}
 	 */
 	prev(): Promise<void> {
+		this._disarmReanchor();
 		return this.q.enqueue(() => this.manager.prev())
 			.then(() => this.reportLocation());
 	}
@@ -891,11 +971,13 @@ class Rendition implements IEventEmitter<RenditionEvents> {
 	 */
 	destroy(): void {
 		this.q.clear();
+		this._disarmReanchor();
 
 		if (this.manager) {
 			this.manager.off(EVENTS.MANAGERS.ADDED);
 			this.manager.off(EVENTS.MANAGERS.REMOVED);
 			this.manager.off(EVENTS.MANAGERS.RESIZED);
+			this.manager.off(EVENTS.MANAGERS.RESIZE);
 			this.manager.off(EVENTS.MANAGERS.ORIENTATION_CHANGE);
 			this.manager.off(EVENTS.MANAGERS.SCROLLED);
 			this.manager.destroy();

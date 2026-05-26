@@ -430,4 +430,103 @@ describe("Rendition", () => {
 			expect(rendition.hooks.show.list()).toEqual([]);
 		});
 	});
+
+	describe("content reflow re-anchoring", () => {
+		const CFI = "epubcfi(/6/12!/4[A-5]/2/114/1:0)";
+
+		function createRenditionWithManager(): { rendition: Rendition; section: Section } {
+			const rendition = new Rendition(createMockBook());
+			// The constructor queues book.opened + start(); drop them so advancing
+			// fake timers only flushes the re-anchor debounce, not a stray start()
+			// against the partial manager mock below.
+			rendition.q.clear();
+			const section = { index: 5 } as unknown as Section;
+			(rendition.book.spine.get as ReturnType<typeof vi.fn>).mockReturnValue(section);
+			rendition.manager = {
+				display: vi.fn().mockResolvedValue(undefined),
+				next: vi.fn().mockResolvedValue(undefined),
+				prev: vi.fn().mockResolvedValue(undefined),
+			} as unknown as DefaultViewManager;
+			rendition.reportLocation = vi.fn().mockResolvedValue(undefined);
+			return { rendition, section };
+		}
+
+		it("re-applies the armed target on a content reflow", async () => {
+			vi.useFakeTimers();
+			const { rendition, section } = createRenditionWithManager();
+			rendition._armReanchor(CFI);
+
+			rendition.onContentReflow();
+			await vi.advanceTimersByTimeAsync(100);
+
+			expect(rendition.manager.display).toHaveBeenCalledWith(section, CFI);
+			expect(rendition.reportLocation).toHaveBeenCalled();
+			vi.useRealTimers();
+		});
+
+		it("does nothing once the re-anchor window has expired", async () => {
+			vi.useFakeTimers();
+			const { rendition } = createRenditionWithManager();
+			rendition._armReanchor(CFI);
+
+			vi.setSystemTime(Date.now() + 5000);
+			rendition.onContentReflow();
+			await vi.advanceTimersByTimeAsync(100);
+
+			expect(rendition.manager.display).not.toHaveBeenCalled();
+			expect(rendition._reanchorCfi).toBeUndefined();
+			vi.useRealTimers();
+		});
+
+		it("is a no-op when nothing is armed", async () => {
+			vi.useFakeTimers();
+			const { rendition } = createRenditionWithManager();
+
+			rendition.onContentReflow();
+			await vi.advanceTimersByTimeAsync(100);
+
+			expect(rendition.manager.display).not.toHaveBeenCalled();
+			vi.useRealTimers();
+		});
+
+		it("skips re-anchoring fixed-layout (pre-paginated) views", async () => {
+			vi.useFakeTimers();
+			const { rendition } = createRenditionWithManager();
+			rendition._layout = { name: "pre-paginated" } as unknown as Rendition["_layout"];
+			rendition._armReanchor(CFI);
+
+			rendition.onContentReflow();
+			await vi.advanceTimersByTimeAsync(100);
+
+			expect(rendition.manager.display).not.toHaveBeenCalled();
+			vi.useRealTimers();
+		});
+
+		it("skips while another display is mid-flight", async () => {
+			vi.useFakeTimers();
+			const { rendition } = createRenditionWithManager();
+			rendition.displaying = {} as unknown as Rendition["displaying"];
+			rendition._armReanchor(CFI);
+
+			rendition.onContentReflow();
+			await vi.advanceTimersByTimeAsync(100);
+
+			expect(rendition.manager.display).not.toHaveBeenCalled();
+			vi.useRealTimers();
+		});
+
+		it("disarms on next() so a turned page is not yanked back", () => {
+			const { rendition } = createRenditionWithManager();
+			rendition._armReanchor(CFI);
+			rendition.next();
+			expect(rendition._reanchorCfi).toBeUndefined();
+		});
+
+		it("disarms on prev()", () => {
+			const { rendition } = createRenditionWithManager();
+			rendition._armReanchor(CFI);
+			rendition.prev();
+			expect(rendition._reanchorCfi).toBeUndefined();
+		});
+	});
 });
