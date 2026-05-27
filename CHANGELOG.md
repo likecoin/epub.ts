@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.6.6 (2026-05-27)
+
+### Bug fixes
+
+- `Locations.parse()` now yields at least one location per section. Sections with no real text — image-only plates or whitespace-only markup — produced zero locations because the opening range was created only after empty text nodes were skipped, so the trailing "close remaining" range never had a start container. Every such section silently contributed nothing to `Locations.total`, skewing the total and every reading-progress percentage after it. The opening range is now created before the empty-node skip, so even a whitespace-only section emits one location. Ports [futurepress/epub.js#1407](https://github.com/futurepress/epub.js/pull/1407), but drops that PR's `range === undefined` guard: the guard suppresses the per-node re-anchor that runs when a node ends exactly on a break boundary, making a section's trailing location span backward from the previous node as a cross-node range — keeping the `counter === 0` re-anchor preserves correct anchoring
+- The CFI display position is re-anchored after late content reflow. A deep CFI restore could land on an early page before the saved position: the first `moveTo()` clamps the target to the last page of an under-measured layout, and the section only grows afterwards as images, web fonts, or host-injected theme CSS load. The rendition now listens for content-only reflow (`MANAGERS.RESIZE`, previously unhandled) and re-applies the original target for a short window after display, then re-reports so consumers persist the corrected location instead of the clamped one. The re-anchor is disarmed on `next`/`prev` and on genuine user scroll so an actively reading user is never yanked back, guarded against stale timers when a fresh display re-arms, serialized via an in-flight flag so overlapping displays on async (continuous) managers can't fight over views, and surfaces `manager.display` rejections as `displayError` instead of leaking an unhandled rejection
+
 ## 0.6.5 (2026-05-22)
 
 ### Bug fixes
