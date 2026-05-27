@@ -133,16 +133,18 @@ class Locations implements IEventEmitter<LocationsEvents> {
 			let dist;
 			let pos = 0;
 
-			if ((node.textContent ?? "").trim().length === 0) {
-				prev = node as Text;
-				return false; // continue
-			}
-
-			// Start range
+			// Start range — create the opening range before skipping empty
+			// nodes so sections with only whitespace/image content still yield
+			// at least one location.
 			if (counter === 0) {
 				range = this.createRange();
 				range.startContainer = node;
 				range.startOffset = 0;
+			}
+
+			if ((node.textContent ?? "").trim().length === 0) {
+				prev = node as Text;
+				return false; // continue
 			}
 
 			dist = _break! - counter;

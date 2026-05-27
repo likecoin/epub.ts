@@ -36,6 +36,32 @@ describe("Locations", () => {
 			expect(result.length).toBe(15);
 		});
 
+		it("yields at least one location for an image-only section", () => {
+			var imageOnly = "<html xmlns=\"http://www.w3.org/1999/xhtml\"><body>\n\t<img src=\"plate.png\" alt=\"\"/>\n</body></html>";
+			var doc = core.parse(imageOnly, "application/xhtml+xml");
+			var contents = doc.documentElement;
+			var locations = new Locations();
+			var result = locations.parse(contents, "/6/4[chap01ref]", 100);
+			expect(result.length).toBe(1);
+		});
+
+		it("anchors a section's trailing location inside its final node", () => {
+			// First node spans past one break (22 chars, break 20); the second
+			// node is shorter than a break, exercising the node-boundary
+			// re-anchor path. The trailing location must start inside the
+			// second paragraph (/2/4), not span back from the end of the
+			// first (/2/2) as a cross-node range.
+			var twoNodes = "<html xmlns=\"http://www.w3.org/1999/xhtml\"><body><p>aaaaaaaaaaaaaaaaaaaaaa</p><p>bb</p></body></html>";
+			var doc = core.parse(twoNodes, "application/xhtml+xml");
+			var contents = doc.documentElement;
+			var locations = new Locations();
+			var result = locations.parse(contents, "/6/4[chap01ref]", 20);
+			expect(result).toEqual([
+				"epubcfi(/6/4[chap01ref]!/2/2,/1:1,/1:21)",
+				"epubcfi(/6/4[chap01ref]!/2/4,/1:0,/1:2)"
+			]);
+		});
+
 	});
 
 	describe("constructor", () => {
