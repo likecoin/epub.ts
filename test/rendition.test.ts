@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import Rendition from "../src/rendition";
 import DefaultViewManager from "../src/managers/default/index";
 import ContinuousViewManager from "../src/managers/continuous/index";
@@ -428,6 +428,146 @@ describe("Rendition", () => {
 			expect(rendition.hooks.layout.list()).toEqual([]);
 			expect(rendition.hooks.render.list()).toEqual([]);
 			expect(rendition.hooks.show.list()).toEqual([]);
+		});
+	});
+
+	describe("content reflow re-anchoring", () => {
+		const CFI = "epubcfi(/6/12!/4[A-5]/2/114/1:0)";
+
+		beforeEach(() => {
+			vi.useFakeTimers();
+		});
+
+		afterEach(() => {
+			vi.useRealTimers();
+		});
+
+		function createRenditionWithManager(): { rendition: Rendition; section: Section } {
+			const rendition = new Rendition(createMockBook());
+			// The constructor queues book.opened + start(); drop them so advancing
+			// fake timers only flushes the re-anchor debounce, not a stray start()
+			// against the partial manager mock below.
+			rendition.q.clear();
+			const section = { index: 5 } as unknown as Section;
+			(rendition.book.spine.get as ReturnType<typeof vi.fn>).mockReturnValue(section);
+			rendition.manager = {
+				display: vi.fn().mockResolvedValue(undefined),
+				next: vi.fn().mockResolvedValue(undefined),
+				prev: vi.fn().mockResolvedValue(undefined),
+			} as unknown as DefaultViewManager;
+			rendition.reportLocation = vi.fn().mockResolvedValue(undefined);
+			return { rendition, section };
+		}
+
+		it("re-applies the armed target on a content reflow", async () => {
+			const { rendition, section } = createRenditionWithManager();
+			rendition._armReanchor(CFI);
+
+			rendition.onContentReflow();
+			await vi.advanceTimersByTimeAsync(100);
+
+			expect(rendition.manager.display).toHaveBeenCalledWith(section, CFI);
+			expect(rendition.reportLocation).toHaveBeenCalled();
+		});
+
+		it("does nothing once the re-anchor window has expired", async () => {
+			const { rendition } = createRenditionWithManager();
+			rendition._armReanchor(CFI);
+
+			vi.setSystemTime(Date.now() + 5000);
+			rendition.onContentReflow();
+			await vi.advanceTimersByTimeAsync(100);
+
+			expect(rendition.manager.display).not.toHaveBeenCalled();
+			expect(rendition._reanchorCfi).toBeUndefined();
+		});
+
+		it("is a no-op when nothing is armed", async () => {
+			const { rendition } = createRenditionWithManager();
+
+			rendition.onContentReflow();
+			await vi.advanceTimersByTimeAsync(100);
+
+			expect(rendition.manager.display).not.toHaveBeenCalled();
+		});
+
+		it("cancels a pending re-anchor when a newer display re-arms", async () => {
+			const { rendition } = createRenditionWithManager();
+			rendition._armReanchor("epubcfi(/6/4!/4/2/2/1:0)");
+			rendition.onContentReflow(); // schedules the debounce for the stale target
+			rendition._armReanchor(CFI); // a newer display supersedes it
+
+			await vi.advanceTimersByTimeAsync(100);
+
+			expect(rendition.manager.display).not.toHaveBeenCalled();
+		});
+
+		it("emits displayError when the re-anchor display rejects", async () => {
+			const { rendition } = createRenditionWithManager();
+			(rendition.manager.display as ReturnType<typeof vi.fn>).mockRejectedValue(new Error("boom"));
+			const emitSpy = vi.spyOn(rendition, "emit");
+			rendition._armReanchor(CFI);
+
+			rendition.onContentReflow();
+			await vi.advanceTimersByTimeAsync(100);
+
+			expect(emitSpy).toHaveBeenCalledWith("displayerror", expect.any(Error));
+		});
+
+		it("does not start an overlapping re-anchor while one is in flight", async () => {
+			const { rendition } = createRenditionWithManager();
+			// Hold the display pending so the in-flight flag stays set.
+			let resolveDisplay: () => void = () => {};
+			(rendition.manager.display as ReturnType<typeof vi.fn>).mockReturnValue(
+				new Promise<void>((resolve) => { resolveDisplay = resolve; }),
+			);
+			rendition._armReanchor(CFI);
+
+			rendition.onContentReflow();
+			await vi.advanceTimersByTimeAsync(100); // first re-anchor fires, stays pending
+			rendition.onContentReflow();
+			await vi.advanceTimersByTimeAsync(100); // second must be skipped
+
+			expect(rendition.manager.display).toHaveBeenCalledTimes(1);
+
+			resolveDisplay();
+			await vi.advanceTimersByTimeAsync(0);
+		});
+
+		it("skips re-anchoring fixed-layout (pre-paginated) views", async () => {
+			const { rendition } = createRenditionWithManager();
+			rendition._layout = { name: "pre-paginated" } as unknown as Rendition["_layout"];
+			rendition._armReanchor(CFI);
+
+			rendition.onContentReflow();
+			await vi.advanceTimersByTimeAsync(100);
+
+			expect(rendition.manager.display).not.toHaveBeenCalled();
+		});
+
+		it("skips while another display is mid-flight", async () => {
+			const { rendition } = createRenditionWithManager();
+			rendition.displaying = {} as unknown as Rendition["displaying"];
+			rendition._armReanchor(CFI);
+
+			rendition.onContentReflow();
+			await vi.advanceTimersByTimeAsync(100);
+
+			expect(rendition.manager.display).not.toHaveBeenCalled();
+		});
+
+		it("disarms on next() so a turned page is not yanked back", () => {
+			const { rendition } = createRenditionWithManager();
+			rendition._armReanchor(CFI);
+			rendition.next();
+			expect(rendition._reanchorCfi).toBeUndefined();
+		});
+
+		it("disarms on prev()", () => {
+			const { rendition } = createRenditionWithManager();
+			rendition._armReanchor(CFI);
+			rendition.prev();
+			expect(rendition._reanchorCfi).toBeUndefined();
 		});
 	});
 });
