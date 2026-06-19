@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.6.7 (2026-06-20)
+
+### Bug fixes
+
+- `Rendition.currentLocation()` no longer throws after the rendition is destroyed. `reportLocation()` defers its work through the task queue and a `requestAnimationFrame`, but the scheduled frame can fire after `destroy()` has set `this.manager = undefined` — clearing the task queue cannot cancel an already-scheduled rAF. When a consumer tore down the reader (e.g. a route change) between scheduling and the frame firing, the callback woke up to an undefined manager and threw `Cannot read properties of undefined (reading 'currentLocation')`. The rAF callback now bails out when the manager is gone, and the same guard is added to the public `currentLocation()` method, which reaches the identical `manager.currentLocation()` call synchronously and could throw the same way if called post-destroy
+
 ## 0.6.6 (2026-05-27)
 
 ### Bug fixes
