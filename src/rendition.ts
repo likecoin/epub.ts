@@ -840,6 +840,9 @@ class Rendition implements IEventEmitter<RenditionEvents> {
 	reportLocation(): Promise<void> {
 		return this.q.enqueue(() => {
 			requestAnimationFrame(() => {
+				if (!this.manager) {
+					return;
+				}
 				const location = this.manager.currentLocation() as ViewLocation[] | PromiseLike<ViewLocation[]>;
 				if (location && "then" in location && typeof location.then === "function") {
 					(location as PromiseLike<ViewLocation[]>).then((result: ViewLocation[]) => {
@@ -905,6 +908,9 @@ class Rendition implements IEventEmitter<RenditionEvents> {
 	 * @return {displayedLocation | promise} location (may be a promise)
 	 */
 	currentLocation(): Location | undefined {
+		if (!this.manager) {
+			return undefined;
+		}
 		const location = this.manager.currentLocation() as ViewLocation[] | PromiseLike<ViewLocation[]>;
 		if (location && "then" in location && typeof location.then === "function") {
 			(location as PromiseLike<ViewLocation[]>).then((result: ViewLocation[]) => {
