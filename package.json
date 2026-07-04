@@ -25,11 +25,17 @@
       "types": "./dist/node.d.ts",
       "import": "./dist/epub.node.js",
       "require": "./dist/epub.node.cjs"
-    }
+    },
+    "./umd": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/epub.umd.js"
+    },
+    "./dist/*": "./dist/*"
   },
   "sideEffects": [
     "dist/epub.node.js",
-    "dist/epub.node.cjs"
+    "dist/epub.node.cjs",
+    "dist/epub.umd.js"
   ],
   "files": [
     "dist"
