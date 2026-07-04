@@ -1,5 +1,6 @@
-import { describe, it, expect, beforeAll, afterAll } from "vitest";
+import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach, vi } from "vitest";
 import Book from "../src/book";
+import { EpubError } from "../src/utils/core";
 import { getFixtureUrl } from "./helpers";
 
 describe("Book", () => {
@@ -159,6 +160,77 @@ describe("Book", () => {
 			const last = book.spine.last();
 			expect(last).toBeDefined();
 			expect(last!.idref).toBe("chapter_010");
+		});
+	});
+
+	describe("Open failure", () => {
+		const badUrl = getFixtureUrl("/does-not-exist.opf");
+
+		// A failed open rejects every pending promise (opened, ready and each
+		// loaded.* deferred). A real consumer awaits only one of them, so the
+		// siblings would surface as unhandled rejections; swallow them here so
+		// the suite asserts one promise at a time without noisy warnings.
+		const silenceSiblings = (book: Book) => {
+			book.opened.catch(() => {});
+			book.ready.catch(() => {});
+			Object.values(book.loaded).forEach((p) => p.catch(() => {}));
+		};
+
+		it("should reject book.opened with an EpubError instead of hanging", async () => {
+			const book = new Book(badUrl);
+			silenceSiblings(book);
+			await expect(book.opened).rejects.toBeInstanceOf(EpubError);
+		});
+
+		it("should reject book.ready fast rather than hanging forever", async () => {
+			const book = new Book(badUrl);
+			silenceSiblings(book);
+			await expect(book.ready).rejects.toBeInstanceOf(EpubError);
+		});
+
+		it("should emit openFailed with the surfaced cause", async () => {
+			const book = new Book(badUrl);
+			silenceSiblings(book);
+			const err = await new Promise<EpubError>((resolve) => {
+				book.on("openFailed", (e: EpubError) => resolve(e));
+			});
+			expect(err).toBeInstanceOf(EpubError);
+			expect(err.message).toContain("Cannot load book at");
+			expect(err.cause).toBeDefined();
+		});
+
+		it("should propagate the HTTP status from the underlying cause", async () => {
+			const book = new Book(badUrl);
+			silenceSiblings(book);
+			await expect(book.opened).rejects.toMatchObject({ status: 404 });
+		});
+
+		// The open() setup runs synchronously before the promise chain is built
+		// (e.g. Archive construction throws "JSZip lib not loaded"), so such a
+		// throw must fail fast like an async error rather than escape the caller.
+		describe("synchronous setup throw", () => {
+			const mockOpenEpubThrow = () =>
+				vi.spyOn(Book.prototype, "openEpub").mockImplementation(() => {
+					throw new Error("JSZip lib not loaded");
+				});
+			let spy: ReturnType<typeof mockOpenEpubThrow>;
+			beforeEach(() => { spy = mockOpenEpubThrow(); });
+			afterEach(() => spy.mockRestore());
+
+			it("should not throw from the constructor", async () => {
+				let book!: Book;
+				expect(() => { book = new Book(new ArrayBuffer(8)); }).not.toThrow();
+				silenceSiblings(book);
+				await expect(book.opened).rejects.toThrow("JSZip lib not loaded");
+			});
+
+			it("should reject rather than throw when open() is called directly", async () => {
+				const book = new Book();
+				silenceSiblings(book);
+				let opening!: Promise<void>;
+				expect(() => { opening = book.open(new ArrayBuffer(8), "binary"); }).not.toThrow();
+				await expect(opening).rejects.toBeInstanceOf(EpubError);
+			});
 		});
 	});
 });

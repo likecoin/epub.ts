@@ -1,5 +1,5 @@
 import EventEmitter from "./utils/event-emitter";
-import {extend, defer} from "./utils/core";
+import {extend, defer, EpubError} from "./utils/core";
 import Url from "./utils/url";
 import Path from "./utils/path";
 import Spine from "./spine";
@@ -296,10 +296,10 @@ class Book implements IEventEmitter<BookEvents> {
 		}
 
 		if(url) {
-			this.open(url as string | ArrayBuffer | Blob, this.settings.openAs).catch((_error) => {
-				const err = new Error("Cannot load book at "+ url );
-				this.emit(EVENTS.BOOK.OPEN_FAILED, err);
-			});
+			// open() already surfaces the cause, rejects opening/loading and emits
+			// OPEN_FAILED; swallow the rejection here so the auto-open doesn't
+			// produce an unhandled promise rejection.
+			this.open(url as string | ArrayBuffer | Blob, this.settings.openAs).catch(() => {});
 		}
 	}
 
@@ -311,35 +311,67 @@ class Book implements IEventEmitter<BookEvents> {
 	 * @example book.open("/path/to/book.epub")
 	 */
 	open(input: string | ArrayBuffer | Blob, what?: string): Promise<void> {
-		let opening;
-		const type = what || this.determineType(input);
+		// Route both synchronous setup throws (e.g. "JSZip lib not loaded" from
+		// Archive construction) and async open-chain failures through one handler:
+		// preserve the real cause, reject the pending open/load promises so
+		// `book.opened`/`book.ready` fail fast instead of hanging, and emit OPEN_FAILED.
+		const fail = (error: unknown): EpubError => {
+			const cause = error instanceof Error ? error : new Error(String(error));
+			// Preserve the HTTP status the requester attached (e.g. 404) so callers
+			// awaiting `book.opened` still see it after the wrap.
+			const status = cause instanceof EpubError ? cause.status : undefined;
+			let inputLabel: string;
+			if (typeof input === "string") {
+				inputLabel = input.length > 200 ? input.slice(0, 200) + "…" : input;
+			} else if (input instanceof ArrayBuffer) {
+				inputLabel = "ArrayBuffer(" + input.byteLength + " bytes)";
+			} else {
+				inputLabel = "Blob(" + (input.type || "application/octet-stream") + ", " + input.size + " bytes)";
+			}
+			const err = new EpubError("Cannot load book at " + inputLabel + ": " + cause.message, status, cause);
+			this.opening.reject(err);
+			(Object.keys(this.loading) as (keyof Book["loading"])[]).forEach((key) => {
+				this.loading[key].reject(err);
+			});
+			this.emit(EVENTS.BOOK.OPEN_FAILED, err);
+			return err;
+		};
 
-		if (type === INPUT_TYPE.BINARY) {
-			this.archived = true;
-			this.url = new Url("/", "");
-			opening = this.openEpub(input);
-		} else if (type === INPUT_TYPE.BASE64) {
-			this.archived = true;
-			this.url = new Url("/", "");
-			opening = this.openEpub(input, type);
-		} else if (type === INPUT_TYPE.EPUB) {
-			this.archived = true;
-			this.url = new Url("/", "");
-			opening = this.request(input as string, "binary", this.settings.requestCredentials, this.settings.requestHeaders)
-				.then((result) => this.openEpub(result as string | ArrayBuffer));
-		} else if(type === INPUT_TYPE.OPF) {
-			this.url = new Url(input as string);
-			opening = this.openPackaging(this.url.Path.toString());
-		} else if(type === INPUT_TYPE.MANIFEST) {
-			this.url = new Url(input as string);
-			opening = this.openManifest(this.url.Path.toString());
-		} else {
-			this.url = new Url(input as string);
-			opening = this.openContainer(CONTAINER_PATH)
-				.then((result) => this.openPackaging(result));
+		let opening;
+		try {
+			const type = what || this.determineType(input);
+
+			if (type === INPUT_TYPE.BINARY) {
+				this.archived = true;
+				this.url = new Url("/", "");
+				opening = this.openEpub(input);
+			} else if (type === INPUT_TYPE.BASE64) {
+				this.archived = true;
+				this.url = new Url("/", "");
+				opening = this.openEpub(input, type);
+			} else if (type === INPUT_TYPE.EPUB) {
+				this.archived = true;
+				this.url = new Url("/", "");
+				opening = this.request(input as string, "binary", this.settings.requestCredentials, this.settings.requestHeaders)
+					.then((result) => this.openEpub(result as string | ArrayBuffer));
+			} else if(type === INPUT_TYPE.OPF) {
+				this.url = new Url(input as string);
+				opening = this.openPackaging(this.url.Path.toString());
+			} else if(type === INPUT_TYPE.MANIFEST) {
+				this.url = new Url(input as string);
+				opening = this.openManifest(this.url.Path.toString());
+			} else {
+				this.url = new Url(input as string);
+				opening = this.openContainer(CONTAINER_PATH)
+					.then((result) => this.openPackaging(result));
+			}
+		} catch (error) {
+			return Promise.reject(fail(error));
 		}
 
-		return opening;
+		return opening.catch((error) => {
+			throw fail(error);
+		});
 	}
 
 	/**
