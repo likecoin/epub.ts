@@ -103,6 +103,10 @@ class Rendition implements IEventEmitter<RenditionEvents> {
 	_reanchorTimer: ReturnType<typeof setTimeout> | undefined;
 	_reanchoring = false;
 
+	// Recovers relocated/locationChanged when the rendition is displayed into a
+	// hidden/zero-size container. See _observeContainerResize().
+	_containerResizeObserver: ResizeObserver | undefined;
+
 	declare on: IEventEmitter<RenditionEvents>["on"];
 	declare off: IEventEmitter<RenditionEvents>["off"];
 	declare emit: IEventEmitter<RenditionEvents>["emit"];
@@ -360,6 +364,8 @@ class Rendition implements IEventEmitter<RenditionEvents> {
 				"width"  : this.settings.width as number,
 				"height" : this.settings.height as number
 			});
+
+			this._observeContainerResize();
 
 			/**
 			 * Emit that rendering has attached to an element
@@ -631,6 +637,50 @@ class Rendition implements IEventEmitter<RenditionEvents> {
 			this.display(epubcfi || this.location.start.cfi);
 		}
 
+	}
+
+	/**
+	 * Watch the container so a rendition displayed into a hidden/zero-size
+	 * element re-reports its location once the element becomes measurable.
+	 * Only acts before the first location is established; once a location
+	 * exists the observer disconnects on its next callback and the normal
+	 * resize path handles subsequent changes.
+	 * @private
+	 */
+	_observeContainerResize(): void {
+		if (typeof ResizeObserver === "undefined") {
+			return;
+		}
+		if (this._containerResizeObserver || !this.manager || !this.manager.container) {
+			return;
+		}
+		const container = this.manager.container;
+		// Gate recovery on a real unmeasurable→measurable transition so a
+		// container sized from the start doesn't double-emit relocated.
+		let seenUnmeasured = false;
+		this._containerResizeObserver = new ResizeObserver(() => {
+			if (!this.manager || !this.manager.isRendered()) {
+				return;
+			}
+			if (this.location) {
+				this._containerResizeObserver?.disconnect();
+				this._containerResizeObserver = undefined;
+				return;
+			}
+			const bounds = container.getBoundingClientRect();
+			const usable = bounds.width > 0 && bounds.height > 0;
+			if (!usable) {
+				seenUnmeasured = true;
+				return;
+			}
+			if (seenUnmeasured) {
+				// reportLocation() is async and may bail without setting
+				// this.location, so leave teardown to the guard above and let
+				// each measurable resize retry until a location sticks.
+				this.reportLocation();
+			}
+		});
+		this._containerResizeObserver.observe(container);
 	}
 
 	/**
@@ -999,6 +1049,11 @@ class Rendition implements IEventEmitter<RenditionEvents> {
 	destroy(): void {
 		this.q.clear();
 		this._disarmReanchor();
+
+		if (this._containerResizeObserver) {
+			this._containerResizeObserver.disconnect();
+			this._containerResizeObserver = undefined;
+		}
 
 		if (this.manager) {
 			this.manager.off(EVENTS.MANAGERS.ADDED);
