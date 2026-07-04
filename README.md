@@ -102,6 +102,34 @@ fileInput.addEventListener("change", async (event) => {
 });
 ```
 
+### Use with a `<script>` tag (UMD / WebView)
+
+For environments without a bundler — a plain HTML page, or a `react-native-webview`
+loading local files — use the UMD build. It exposes a global `ePub` and expects
+`JSZip` to be loaded first, mirroring the classic epubjs drop-in:
+
+```html
+<script src="jszip.min.js"></script>
+<script src="epub.umd.js"></script>
+<script>
+	const book = ePub("book.epub");
+	const rendition = book.renderTo("viewer", { width: 600, height: 400 });
+	rendition.display();
+</script>
+```
+
+The bundle lives at `dist/epub.umd.js` — copy it locally, or load it from a CDN
+via `https://unpkg.com/@likecoin/epub-ts/dist/epub.umd.js`. In a bundler, prefer
+the standard entrypoint instead, which resolves to the ES module build:
+`import ePub from "@likecoin/epub-ts"`.
+
+Loading a book from a `file://` URL (e.g. a local `.epub` bundled into a WebView)
+is supported: `fetch` can't read the `file:` scheme, so such requests fall back to
+`XMLHttpRequest`. The host must grant file access (on Android WebView, enable
+`allowFileAccess` / `allowFileAccessFromFileURLs`). Alternatively, read the file
+yourself and hand epub.ts an `ArrayBuffer` — `ePub(arrayBuffer)` skips the network
+entirely and works everywhere.
+
 ### Parse on Node.js (no browser needed)
 
 Extract metadata, table of contents, and chapter HTML server-side. Requires [`linkedom`](https://github.com/WebReflection/linkedom):
@@ -158,6 +186,7 @@ Full documentation: [likecoin.github.io/epub.ts](https://likecoin.github.io/epub
 | Modern browsers | `@likecoin/epub-ts` | Chrome 80+, Edge 80+, Firefox 74+, Safari 13.4+ (ES2020, Q1 2020) |
 | Insecure contexts | `@likecoin/epub-ts` | `http://` intranet and `file://` deployments supported — runtime APIs gated behind secure contexts (`crypto.randomUUID`) are feature-detected with fallbacks |
 | Vite / webpack | `@likecoin/epub-ts` | ESM or CJS |
+| `<script>` tag / WebView | `dist/epub.umd.js` | UMD global `ePub`; load `JSZip` first. Reads `file://` books via XHR fallback |
 | Node.js 18+ | `@likecoin/epub-ts/node` | Parsing only (no rendering); requires `linkedom` peer dep |
 
 ## Development
