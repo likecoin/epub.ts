@@ -156,6 +156,11 @@ describe("request", () => {
 			});
 		});
 
+		it("should reject with a clear EpubError when XMLHttpRequest is unavailable", async () => {
+			globalThis.XMLHttpRequest = undefined as unknown as typeof XMLHttpRequest;
+			await expect(request("file:///x.txt", "text")).rejects.toThrow(/XMLHttpRequest is unavailable/i);
+		});
+
 		it("should reject immediately if the signal is already aborted", async () => {
 			const controller = new AbortController();
 			controller.abort();

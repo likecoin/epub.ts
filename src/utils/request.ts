@@ -18,6 +18,14 @@ function requestXhr(
   signal?: AbortSignal,
 ): Promise<unknown> {
   return new Promise((resolve, reject) => {
+    // This is the fallback for file:// URLs and fetch-less runtimes; if the
+    // runtime also lacks XMLHttpRequest (e.g. Node without a polyfill), fail
+    // clearly instead of throwing a cryptic "XMLHttpRequest is not a constructor".
+    if (typeof XMLHttpRequest === "undefined") {
+      reject(new EpubError("XMLHttpRequest is unavailable in this environment"));
+      return;
+    }
+
     if (signal && signal.aborted) {
       reject(new DOMException("Aborted", "AbortError"));
       return;
