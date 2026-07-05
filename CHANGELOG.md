@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.6.8 (2026-07-05)
+
+### Features
+
+- Load `file://` books through an `XMLHttpRequest` fallback. `fetch()` cannot read the `file:` scheme, so a local `.epub` in a `react-native-webview` or `file://` deployment never loaded — and because nothing rendered, `relocated`/`locationChanged` never fired. `file://` URLs (and fetch-less runtimes) now route through `XMLHttpRequest`, treating status `0` (`file:` only) as success and bridging `AbortSignal` to `xhr.abort()`. It reuses `handleResponse`/`createBlob` from the core path and rejects with a clear `EpubError` when `XMLHttpRequest` is unavailable
+- Expose the UMD bundle via a `./umd` export (plus a `./dist/*` glob) so the existing build is reachable for `<script>`-tag and `react-native-webview` drop-in use. The README documents the drop-in alongside `file://` loading notes; in a bundler, point at the standard ESM entrypoint rather than the UMD subpath
+
+### Bug fixes
+
+- Book open failures now surface the real cause and fail fast. The generic "Cannot load book" message masked the underlying error and never rejected `opening`/`loading`, so `book.opened` and `book.ready` hung forever instead of surfacing the cause (e.g. "JSZip lib not loaded" when the UMD bundle is loaded without JSZip). The underlying error is now emitted as the cause and the pending open/load promises are rejected so awaiting callers fail fast. Synchronous setup throws (e.g. `Archive` construction when JSZip is missing) route through the same handler so `open()` always rejects rather than throwing before its promise chain is built. The error message bounds its input — long strings are truncated and `ArrayBuffer`/`Blob` inputs are summarized by size/type rather than stringified
+- Re-report location when a hidden container becomes visible. A rendition displayed into a `display:none` / zero-size element has no visible views, so `reportLocation()` can't emit and `relocated`/`locationChanged` never fire; the stage only listens to window `resize` (and only for non-fixed sizes), so later revealing the container never re-reported — a common `react-native-webview` / mount-before-measure case. The container is now observed directly and `reportLocation()` fires once it gains a real size, but only on a genuine unmeasurable→measurable transition and only until the first location is established, after which the observer self-disconnects
+- Fail clearly when `XMLHttpRequest` is unavailable. The XHR fallback hit a bare `new XMLHttpRequest()` when the runtime also lacked `XMLHttpRequest` (e.g. Node without a polyfill), throwing a cryptic "is not a constructor". It now rejects with a clear `EpubError`
+
+### Refactor
+
+- Read container size from the `ResizeObserver` entry instead of forcing a reflow. The container recovery callback re-read layout via `getBoundingClientRect()` on every fire — a forced reflow inside a `ResizeObserver` callback, which can trigger further resize notifications. It now uses the `contentRect` the observer already delivers, and the disconnect/clear dance is centralized in a `_disconnectContainerObserver()` helper (matching `_disarmReanchor`) so the callback and `destroy()` share one idiom
+
 ## 0.6.7 (2026-06-20)
 
 ### Bug fixes
