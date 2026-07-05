@@ -574,12 +574,12 @@ describe("Rendition", () => {
 	describe("container resize recovery", () => {
 		const RESIZE_CFI = "epubcfi(/6/12!/4[A-5]/2/114/1:0)";
 		const RealResizeObserver = globalThis.ResizeObserver;
-		let capturedCallback: (() => void) | undefined;
+		let capturedCallback: ((entries: ResizeObserverEntry[]) => void) | undefined;
 
 		beforeEach(() => {
 			capturedCallback = undefined;
 			globalThis.ResizeObserver = class {
-				constructor(cb: () => void) { capturedCallback = cb; }
+				constructor(cb: (entries: ResizeObserverEntry[]) => void) { capturedCallback = cb; }
 				observe() {}
 				unobserve() {}
 				disconnect() {}
@@ -591,11 +591,15 @@ describe("Rendition", () => {
 			vi.restoreAllMocks();
 		});
 
-		function setup(rect: { width: number; height: number }): { rendition: Rendition } {
+		function fire(rect: { width: number; height: number }): void {
+			capturedCallback!([{ contentRect: rect } as ResizeObserverEntry]);
+		}
+
+		function setup(): { rendition: Rendition } {
 			const rendition = new Rendition(createMockBook());
 			rendition.q.clear();
 			rendition.manager = {
-				container: { getBoundingClientRect: () => rect } as unknown as HTMLElement,
+				container: {} as unknown as HTMLElement,
 				isRendered: vi.fn().mockReturnValue(true),
 				off: vi.fn(),
 				destroy: vi.fn(),
@@ -605,40 +609,34 @@ describe("Rendition", () => {
 		}
 
 		it("does not report when the container is measurable from the start", () => {
-			const { rendition } = setup({ width: 600, height: 400 });
+			const { rendition } = setup();
 			rendition._observeContainerResize();
 
-			capturedCallback!();
+			fire({ width: 600, height: 400 });
 
 			expect(rendition.reportLocation).not.toHaveBeenCalled();
 		});
 
 		it("reports once the container transitions from zero-size to measurable", () => {
-			const rect = { width: 0, height: 0 };
-			const { rendition } = setup(rect);
+			const { rendition } = setup();
 			rendition._observeContainerResize();
 
-			capturedCallback!();
+			fire({ width: 0, height: 0 });
 			expect(rendition.reportLocation).not.toHaveBeenCalled();
 
-			rect.width = 600;
-			rect.height = 400;
-			capturedCallback!();
+			fire({ width: 600, height: 400 });
 
 			expect(rendition.reportLocation).toHaveBeenCalledTimes(1);
 		});
 
 		it("stops recovering and self-disconnects once a location is established", () => {
-			const rect = { width: 0, height: 0 };
-			const { rendition } = setup(rect);
+			const { rendition } = setup();
 			rendition._observeContainerResize();
 			const disconnectSpy = vi.spyOn(rendition._containerResizeObserver!, "disconnect");
 
-			capturedCallback!();
+			fire({ width: 0, height: 0 });
 			rendition.location = { start: { cfi: RESIZE_CFI } } as unknown as Rendition["location"];
-			rect.width = 600;
-			rect.height = 400;
-			capturedCallback!();
+			fire({ width: 600, height: 400 });
 
 			expect(rendition.reportLocation).not.toHaveBeenCalled();
 			expect(disconnectSpy).toHaveBeenCalled();
@@ -646,7 +644,7 @@ describe("Rendition", () => {
 		});
 
 		it("disconnects the observer on destroy", () => {
-			const { rendition } = setup({ width: 0, height: 0 });
+			const { rendition } = setup();
 			rendition._observeContainerResize();
 			const disconnectSpy = vi.spyOn(rendition._containerResizeObserver!, "disconnect");
 
