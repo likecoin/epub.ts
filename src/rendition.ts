@@ -658,17 +658,19 @@ class Rendition implements IEventEmitter<RenditionEvents> {
 		// Gate recovery on a real unmeasurable→measurable transition so a
 		// container sized from the start doesn't double-emit relocated.
 		let seenUnmeasured = false;
-		this._containerResizeObserver = new ResizeObserver(() => {
+		this._containerResizeObserver = new ResizeObserver((entries) => {
 			if (!this.manager || !this.manager.isRendered()) {
 				return;
 			}
 			if (this.location) {
-				this._containerResizeObserver?.disconnect();
-				this._containerResizeObserver = undefined;
+				this._disconnectContainerObserver();
 				return;
 			}
-			const bounds = container.getBoundingClientRect();
-			const usable = bounds.width > 0 && bounds.height > 0;
+			const entry = entries[entries.length - 1];
+			if (!entry) {
+				return;
+			}
+			const usable = entry.contentRect.width > 0 && entry.contentRect.height > 0;
 			if (!usable) {
 				seenUnmeasured = true;
 				return;
@@ -681,6 +683,17 @@ class Rendition implements IEventEmitter<RenditionEvents> {
 			}
 		});
 		this._containerResizeObserver.observe(container);
+	}
+
+	/**
+	 * Disconnect and clear the container resize observer.
+	 * @private
+	 */
+	_disconnectContainerObserver(): void {
+		if (this._containerResizeObserver) {
+			this._containerResizeObserver.disconnect();
+			this._containerResizeObserver = undefined;
+		}
 	}
 
 	/**
@@ -1050,10 +1063,7 @@ class Rendition implements IEventEmitter<RenditionEvents> {
 		this.q.clear();
 		this._disarmReanchor();
 
-		if (this._containerResizeObserver) {
-			this._containerResizeObserver.disconnect();
-			this._containerResizeObserver = undefined;
-		}
+		this._disconnectContainerObserver();
 
 		if (this.manager) {
 			this.manager.off(EVENTS.MANAGERS.ADDED);
