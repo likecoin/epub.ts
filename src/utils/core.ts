@@ -396,6 +396,34 @@ export function handleResponse(response: string | Blob, type?: string): Document
 }
 
 /**
+ * Whether a type token is one {@link handleResponse} recognizes (and so parses
+ * into a document/object rather than returning raw).
+ * @param {string} [type]
+ * @returns {boolean}
+ * @memberof Core
+ */
+export function isKnownRequestType(type?: string): boolean {
+	return !!type && (["json", "xhtml", "html", "htm"].includes(type) || isXml(type));
+}
+
+/**
+ * Map a manifest media-type to a {@link handleResponse} type token, so a
+ * resource can be parsed by its declared type when its filename extension is
+ * missing or unrecognized. Returns undefined for non-document media-types.
+ * @param {string} [mediaType]
+ * @returns {string | undefined}
+ * @memberof Core
+ */
+export function mediaTypeToRequestType(mediaType?: string): string | undefined {
+	if (!mediaType) return undefined;
+	const mime = mediaType.split(";")[0]!.trim().toLowerCase();
+	if (mime === "application/xhtml+xml") return "xhtml";
+	if (mime === "text/html") return "html";
+	if (mime === "text/xml" || mime === "application/xml" || mime.endsWith("+xml")) return "xml";
+	return undefined;
+}
+
+/**
  * Error subclass for EPUB-related errors
  * @class
  * @memberof Core

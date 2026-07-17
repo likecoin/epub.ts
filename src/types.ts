@@ -99,6 +99,8 @@ export interface SpineItem {
 	properties: string[];
 	linear: string;
 	id?: string;
+	/** Manifest media-type, used to parse the resource when its extension is unknown */
+	mediaType?: string;
 	next: () => Section | undefined;
 	prev: () => Section | undefined;
 }

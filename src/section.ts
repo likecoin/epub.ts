@@ -1,6 +1,7 @@
 import EpubCFI from "./epubcfi";
 import Hook from "./utils/hook";
-import { sprint } from "./utils/core";
+import { sprint, isKnownRequestType, mediaTypeToRequestType } from "./utils/core";
+import Path from "./utils/path";
 import { replaceBase } from "./utils/replacements";
 import Request from "./utils/request";
 import type { SpineItem, GlobalLayout, SearchResult, RequestFunction } from "./types";
@@ -28,6 +29,7 @@ class Section {
 	contents: Element | undefined;
 	output: string | undefined;
 	request!: RequestFunction;
+	mediaType: string | undefined;
 
 	constructor(item: SpineItem, hooks?: { serialize: Hook; content: Hook }){
 		this.idref = item.idref;
@@ -37,6 +39,7 @@ class Section {
 		this.href = item.href;
 		this.url = item.url;
 		this.canonical = item.canonical;
+		this.mediaType = item.mediaType;
 		this.next = item.next;
 		this.prev = item.prev;
 
@@ -67,7 +70,12 @@ class Section {
 			return this.contents;
 		}
 
-		const xml = await request(this.url!, undefined, undefined, undefined, signal);
+		// A recognized filename extension wins (preserves lenient html vs strict
+		// xhtml parsing); the manifest media-type only fills in when the
+		// extension is missing or unknown (e.g. an extensionless split resource).
+		const ext = new Path(this.url!).extension;
+		const type = isKnownRequestType(ext) ? ext : mediaTypeToRequestType(this.mediaType);
+		const xml = await request(this.url!, type, undefined, undefined, signal);
 
 		this.document = xml as Document;
 		this.contents = (xml as Document).documentElement;
