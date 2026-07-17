@@ -536,7 +536,10 @@ export function parse(markup: string, mime: string): Document {
 		markup = markup.slice(1);
 	}
 
-	const ParserCtor = configuredDOMParser ?? (globalThis.DOMParser as DOMParserConstructor);
+	const ParserCtor = configuredDOMParser ?? (globalThis.DOMParser as DOMParserConstructor | undefined);
+	if (!ParserCtor) {
+		throw new EpubError("DOMParser is unavailable in this environment; import from \"@likecoin/epub-ts/node\" or call setDOMParser() to provide one.");
+	}
 	return new ParserCtor().parseFromString(markup, mime as DOMParserSupportedType);
 }
 

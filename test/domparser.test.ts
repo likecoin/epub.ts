@@ -41,4 +41,15 @@ describe("setDOMParser", () => {
 		expect(called).toBe(false);
 		expect(doc.querySelector("p")?.textContent).toBe("bye");
 	});
+
+	it("throws a clear error when no DOMParser is available", () => {
+		const original = globalThis.DOMParser;
+		(globalThis as unknown as { DOMParser?: unknown }).DOMParser = undefined;
+		try {
+			setDOMParser(undefined);
+			expect(() => parse("<p>x</p>", "text/html")).toThrow(/DOMParser is unavailable/);
+		} finally {
+			(globalThis as unknown as { DOMParser?: unknown }).DOMParser = original;
+		}
+	});
 });
