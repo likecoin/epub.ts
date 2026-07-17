@@ -313,12 +313,9 @@ class Packaging {
 
 		const el = found[0]!;
 
-		if(el.childNodes.length){
-			return el.childNodes[0]!.nodeValue ?? "";
-		}
-
-		return "";
-
+		// textContent, not childNodes[0], so entity references don't truncate the
+		// value: linkedom splits "A &amp; B" into ["A ", entity, " B"] child nodes
+		return el.textContent ?? "";
 	}
 
 	/**
@@ -331,11 +328,7 @@ class Packaging {
 	getPropertyText(xml: Element, property: string): string {
 		const el = qsp(xml, "meta", {"property":property});
 
-		if(el && el.childNodes.length){
-			return el.childNodes[0]!.nodeValue ?? "";
-		}
-
-		return "";
+		return el?.textContent ?? "";
 	}
 
 	/**
