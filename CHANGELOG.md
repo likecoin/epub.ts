@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.6.9 (2026-07-18)
+
+### Features
+
+- Allow injecting a `DOMParser` to sidestep LinkeDOM hangs. Some real-world EPUBs drive LinkeDOM's synchronous parser into a busy loop that never returns, forcing Node consumers to isolate each book in a subprocess. A new `setDOMParser` (and a `BookOptions.domParser` shortcut) lets `jsdom` be swapped in without monkey-patching `globalThis.DOMParser`. The override is process-global, consistent with how the parse path already reads the global `DOMParser`, and covers both book-open and render parsing since both funnel through `core.parse`
+- Parse spine resources by manifest `media-type` when the extension is unknown. `Section.load` inferred the parse type solely from the URL extension, so an extensionless or oddly-named spine resource (e.g. `chapter.html_split_001`) fell through to a raw string and `Section.load` read `documentElement` off it, throwing in the content hooks. The manifest `media-type` is now propagated to `Section` and used as a fallback when the extension yields no known parse token. A recognized extension still wins, so lenient `html` vs strict `xhtml` parsing is unchanged for normal books
+
+### Bug fixes
+
+- Match prefixed OPF elements under namespace-blind parsers. Legacy EPUB 2 packages that use prefixed element names (`<opf:metadata>`, `<opf:manifest>`, `<opf:item>`, `<opf:itemref>`, …) open in the browser but rejected with "No Metadata Found" on the Node/linkedom path: linkedom has no XML namespace support, so it keeps the literal `opf:` on tag names and the unprefixed selectors never match. `qs`/`qsa`/`qsp` now have a miss-path fallback — when the plain selector finds nothing, they retry with the prefix linkedom left on the document root (`<opf:package>` → `opf\:metadata`). Namespace-aware parsers match on the first try, so their behavior is unchanged. Mirrors the existing `dc:` fallback in `getElementText` and lets consumers drop the whole-EPUB `opf:` normalization workaround
+- Read metadata via `textContent` so entities don't truncate values. On the Node/linkedom path, an entity reference becomes its own child node, so "Bookshops &amp; Bonedust" parses as `["Bookshops ", entity, " Bonedust"]`. `getElementText`/`getPropertyText` read only `childNodes[0]`, truncating the value at the first entity ("Bookshops"). Reading `textContent` concatenates and decodes the whole value. Browsers keep it a single text node, so their output is unchanged
+- Resolve `uniqueIdentifier` under namespace-blind parsers. `findUniqueIdentifier` required localName `identifier` in the Dublin Core namespace, but linkedom keeps the `dc:` prefix on the local name and mis-assigns the namespace, so prefixed EPUB 2 books came back with an empty `uniqueIdentifier`. It now strips any prefix, also accepts a `dc:`-prefixed tag, and reads `textContent` so entity references don't truncate the value
+- Fail clearly in `parse()` when no `DOMParser` is available. When both a configured `DOMParser` and `globalThis.DOMParser` are absent (e.g. Node without the `/node` entry and without `setDOMParser`), callers now get an actionable `EpubError` instead of a cryptic "ParserCtor is not a constructor" `TypeError`
+
 ## 0.6.8 (2026-07-05)
 
 ### Features
