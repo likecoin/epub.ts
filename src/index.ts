@@ -17,7 +17,7 @@ import Annotations from "./annotations";
 import Themes from "./themes";
 import Mapping from "./mapping";
 import Container from "./container";
-import { EpubError } from "./utils/core";
+import { EpubError, setDOMParser } from "./utils/core";
 import ePub from "./epub";
 
 export default ePub;
@@ -42,6 +42,7 @@ export {
 	Annotations,
 	Themes,
 	Mapping,
+	setDOMParser,
 };
 export * from "./types";
 export type { BookEvents } from "./book";

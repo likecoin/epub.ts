@@ -1,5 +1,5 @@
 import EventEmitter from "./utils/event-emitter";
-import {extend, defer, EpubError} from "./utils/core";
+import {extend, defer, EpubError, setDOMParser} from "./utils/core";
 import Url from "./utils/url";
 import Path from "./utils/path";
 import Spine from "./spine";
@@ -73,6 +73,7 @@ const INPUT_TYPE = {
  * @param {method} [options.canonical] optional function to determine canonical urls for a path
  * @param {string} [options.openAs] optional string to determine the input type
  * @param {string} [options.store=false] cache the contents in local storage, value should be the name of the reader
+ * @param {function} [options.domParser] optional DOMParser constructor to use instead of the global one (e.g. jsdom in Node); process-global, see setDOMParser
  * @returns {Book}
  * @example new Book("/path/to/book.epub", {})
  * @example new Book({ replacements: "blobUrl" })
@@ -132,11 +133,16 @@ class Book implements IEventEmitter<BookEvents> {
 			replacements: undefined,
 			canonical: undefined,
 			openAs: undefined,
-			store: undefined
+			store: undefined,
+			domParser: undefined
 		});
 
 		extend(this.settings, options);
 
+		// Must run before any parsing; setDOMParser state is process-global.
+		if (this.settings.domParser) {
+			setDOMParser(this.settings.domParser);
+		}
 
 		// Promises
 		this.opening = new defer<Book>();

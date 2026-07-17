@@ -3,6 +3,8 @@
  * @module Core
 */
 
+import type { DOMParserConstructor } from "../types";
+
 /**
  * @returns {function} requestAnimationFrame
  * @memberof Core
@@ -475,6 +477,24 @@ export function type(obj: unknown): string {
 }
 
 /**
+ * A DOMParser constructor injected via {@link setDOMParser}. Preferred over the
+ * global `DOMParser` when set. Undefined means "use `globalThis.DOMParser`".
+ */
+let configuredDOMParser: DOMParserConstructor | undefined;
+
+/**
+ * Override the DOMParser used by {@link parse}. Lets a Node consumer inject
+ * jsdom in place of the default (LinkeDOM), which can synchronously hang on
+ * some real-world EPUBs. This is process-global state, not per-Book — the last
+ * value set wins. Pass `undefined` to restore the global `DOMParser`.
+ * @param {DOMParserConstructor | undefined} parser
+ * @memberof Core
+ */
+export function setDOMParser(parser: DOMParserConstructor | undefined): void {
+	configuredDOMParser = parser;
+}
+
+/**
  * Parse xml (or html) markup
  * @param {string} markup
  * @param {string} mime
@@ -488,7 +508,8 @@ export function parse(markup: string, mime: string): Document {
 		markup = markup.slice(1);
 	}
 
-	return new DOMParser().parseFromString(markup, mime as DOMParserSupportedType);
+	const ParserCtor = configuredDOMParser ?? (globalThis.DOMParser as DOMParserConstructor);
+	return new ParserCtor().parseFromString(markup, mime as DOMParserSupportedType);
 }
 
 /**

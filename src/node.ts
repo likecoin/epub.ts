@@ -29,6 +29,7 @@ if (typeof globalThis.document === "undefined") {
 	(globalThis as typeof globalThis & { document: Document }).document = document as Document;
 }
 
+export { setDOMParser } from "./utils/core";
 export { default as Book } from "./book";
 export { default as EpubCFI } from "./epubcfi";
 export { default as Container } from "./container";

@@ -112,6 +112,12 @@ export interface PageListItem {
 }
 
 // ===== Book =====
+/**
+ * A DOMParser-like constructor. Used to inject an alternative parser (e.g.
+ * jsdom) in place of the default one via `setDOMParser` or `BookOptions.domParser`.
+ */
+export type DOMParserConstructor = { new (): { parseFromString(markup: string, mimeType: string): Document } };
+
 export interface BookOptions {
 	requestMethod?: RequestFunction;
 	requestCredentials?: boolean;
@@ -121,6 +127,8 @@ export interface BookOptions {
 	canonical?: (path: string) => string;
 	openAs?: string;
 	store?: string | boolean;
+	/** Alternative DOMParser to inject; delegates to `setDOMParser` (process-global — see its docs). */
+	domParser?: DOMParserConstructor;
 }
 
 // ===== Rendition =====
