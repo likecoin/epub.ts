@@ -513,6 +513,31 @@ export function parse(markup: string, mime: string): Document {
 }
 
 /**
+ * Rewrite a type selector to target a prefixed element name for parsers
+ * without XML namespace support (e.g. linkedom), which keep the literal prefix
+ * on tag names (`<opf:metadata>` stays `opf:metadata`) instead of exposing a
+ * local name. The prefix is read from the document root (`<opf:package>` →
+ * `opf`), so e.g. "metadata" becomes "opf\\:metadata". Only the leading type is
+ * rewritten, not combinators, so callers must pass a single tag (optionally with
+ * attribute filters), as every current call site does. Returns undefined when
+ * the selector does not lead with an element type, or the root is unprefixed
+ * (namespace-aware parsers and plain documents — the normal selector already
+ * matched there).
+ */
+function prefixedSelector(el: Document | Element, sel: string): string | undefined {
+	if (!/^[A-Za-z]/.test(sel)) {
+		return undefined;
+	}
+	const doc = "documentElement" in el ? el : el.ownerDocument;
+	const tag = doc?.documentElement?.tagName;
+	const colon = tag ? tag.indexOf(":") : -1;
+	if (colon <= 0) {
+		return undefined;
+	}
+	return `${tag!.slice(0, colon)}\\:${sel}`;
+}
+
+/**
  * querySelector wrapper
  * @param {element} el
  * @param {string} sel selector string
@@ -523,7 +548,12 @@ export function qs(el: Document | Element, sel: string): Element | null {
 	if (!el) {
 		throw new Error("No Element Provided");
 	}
-	return el.querySelector(sel);
+	const found = el.querySelector(sel);
+	if (found) {
+		return found;
+	}
+	const prefixed = prefixedSelector(el, sel);
+	return prefixed ? el.querySelector(prefixed) : null;
 }
 
 /**
@@ -534,7 +564,12 @@ export function qs(el: Document | Element, sel: string): Element | null {
  * @memberof Core
  */
 export function qsa(el: Document | Element, sel: string): NodeListOf<Element> {
-	return el.querySelectorAll(sel);
+	const found = el.querySelectorAll(sel);
+	if (found.length) {
+		return found;
+	}
+	const prefixed = prefixedSelector(el, sel);
+	return prefixed ? el.querySelectorAll(prefixed) : found;
 }
 
 /**
@@ -551,7 +586,7 @@ export function qsp(el: Document | Element, sel: string, props: Record<string, s
 		sel += prop + "~='" + props[prop] + "'";
 	}
 	sel += "]";
-	return el.querySelector(sel) ?? undefined;
+	return qs(el, sel) ?? undefined;
 }
 
 /**
