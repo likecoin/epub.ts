@@ -1,6 +1,8 @@
 import {qs, qsa, qsp, indexOfElementNode} from "./utils/core";
 import type { PackagingMetadataObject, PackagingSpineItem, PackagingManifestItem, PackagingManifestObject, PackagingObject, NavItem } from "./types";
 
+const DC_NS = "http://purl.org/dc/elements/1.1/";
+
 export interface WebPubManifest {
 	metadata: PackagingMetadataObject;
 	readingOrder?: PackagingSpineItem[];
@@ -215,8 +217,16 @@ class Packaging {
 			return "";
 		}
 
-		if (identifier.localName === "identifier" && identifier.namespaceURI === "http://purl.org/dc/elements/1.1/") {
-			return identifier.childNodes.length > 0 ? (identifier.childNodes[0]!.nodeValue ?? "").trim() : "";
+		// A namespace-aware parser exposes the clean local name; only a
+		// namespace-blind parser (e.g. linkedom) leaves the "dc:" prefix on
+		// localName and mis-assigns the namespace, so a colon in localName marks
+		// that case and lets us accept its prefix in lieu of the namespace.
+		const colon = identifier.localName.indexOf(":");
+		const localName = colon === -1 ? identifier.localName : identifier.localName.slice(colon + 1);
+		const isDc = identifier.namespaceURI === DC_NS || (colon !== -1 && identifier.localName.slice(0, colon) === "dc");
+		if (localName === "identifier" && isDc) {
+			// textContent, not childNodes[0], so entity references don't truncate it
+			return (identifier.textContent ?? "").trim();
 		}
 
 		return "";
@@ -302,7 +312,7 @@ class Packaging {
 	 * @return {string} text
 	 */
 	getElementText(xml: Element, tag: string): string {
-		let found = xml.getElementsByTagNameNS("http://purl.org/dc/elements/1.1/", tag);
+		let found = xml.getElementsByTagNameNS(DC_NS, tag);
 
 		// Fallback for parsers without XML namespace support (e.g. linkedom)
 		if (!found || found.length === 0) {

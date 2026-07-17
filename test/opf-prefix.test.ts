@@ -47,4 +47,8 @@ describe("Legacy opf: element prefixes (linkedom compatibility)", () => {
 		expect(packaging.coverPath).toBe("cover.png");
 		expect(packaging.ncxPath).toBe("toc.ncx");
 	});
+
+	it("resolves the unique identifier from a prefixed dc:identifier", () => {
+		expect(packaging.uniqueIdentifier).toBe("urn:uuid:prefixed-123");
+	});
 });
