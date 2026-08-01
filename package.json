@@ -1,6 +1,6 @@
 {
   "name": "@likecoin/epub-ts",
-  "version": "0.6.9",
+  "version": "0.6.10",
   "description": "Drop-in epubjs replacement — fully typed, 1 dependency, actively maintained",
   "keywords": [
     "epub",

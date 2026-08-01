@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.6.10 (2026-08-01)
+
+### Features
+
+- `Locations.locationFromHref()` resolves a TOC href to a location index, so readers can show page numbers beside navigation entries without re-parsing every section. Pre-paginated books return the spine index; unresolvable hrefs return `-1` ([#29](https://github.com/likecoin/epub.ts/issues/29))
+
+### Bug fixes
+
+- Per-itemref `rendition:layout-*` properties in the spine now override the package-level default, so fixed pages in a mostly-reflowable book are scaled to fit instead of column-paginated. Applies to layout formatting, view geometry, image clamping and `Locations.isPrePaginated()`
+- `Contents.writingMode()` reads the styled element instead of `documentElement`. Books declaring `writing-mode: vertical-rl` on `<body>` (calibre's default output) were detected as horizontal, which height-locked the iframe and skipped the rest of every chapter ([#31](https://github.com/likecoin/epub.ts/issues/31))
+
 ## 0.6.9 (2026-07-18)
 
 ### Features
