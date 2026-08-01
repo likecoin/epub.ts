@@ -2,7 +2,7 @@
 
 ## At a glance
 
-- **1032+ tests passing** across 40 test files
+- **1080 tests passing** across 45 test files
 - **1 runtime dependency** (`jszip`)
 - **~6 intentional `any` types** remaining (3 in event emitter infrastructure, 2 in `EventMap` type definition, 1 in `HookCallback`)
 - **0 `Function` types** in code — all 33 replaced with `HookCallback`, `ViewManagerConstructor`, `ViewConstructor`, `EventListener`, or typed function signatures

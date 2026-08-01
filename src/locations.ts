@@ -38,6 +38,7 @@ class Locations implements IEventEmitter<LocationsEvents> {
 	_wordCounter: number;
 	_currentCfi: string | undefined;
 	processingTimeout: ReturnType<typeof setTimeout> | number | undefined;
+	layout: string | undefined;
 
 	constructor(spine: Spine, request: RequestFunction, pause?: number) {
 		this.spine = spine;
@@ -60,6 +61,7 @@ class Locations implements IEventEmitter<LocationsEvents> {
 
 		this._currentCfi ="";
 		this.processingTimeout = undefined;
+		this.layout = undefined;
 	}
 
 	/**
@@ -369,6 +371,64 @@ class Locations implements IEventEmitter<LocationsEvents> {
 	}
 
 	/**
+	 * Check if a section is pre-paginated, honoring per-item overrides
+	 * @private
+	 * @param {Section} section
+	 * @return {boolean}
+	 */
+	isPrePaginated(section: Section): boolean {
+		const properties = section.properties ?? [];
+
+		if (properties.includes("rendition:layout-pre-paginated")) {
+			return true;
+		}
+
+		if (properties.includes("rendition:layout-reflowable")) {
+			return false;
+		}
+
+		return this.layout === "pre-paginated";
+	}
+
+	/**
+	 * Get a location index from a navigation href
+	 *
+	 * Resolves to the first location of the section the href points at, so
+	 * entries sharing a section (`chapter.xhtml#a` and `chapter.xhtml#b`)
+	 * return the same index. Before locations are generated, pre-paginated
+	 * sections still resolve, since each one is exactly one page.
+	 * @param {string} href
+	 * @return {number} location index, or -1 if it cannot be resolved
+	 */
+	locationFromHref(href: string): number {
+		const section = this.spine?.get(href);
+
+		if (!section || section.index === undefined) {
+			return -1;
+		}
+
+		if (!this._locations || this._locations.length === 0) {
+			return this.isPrePaginated(section) ? section.index : -1;
+		}
+
+		if (!section.cfiBase) {
+			return -1;
+		}
+
+		// A "/0" step parses to index -1, below every real step, so the probe
+		// sorts ahead of all locations in its own section. Landing in a later
+		// section therefore means this one produced no locations at all.
+		const loc = this.locationFromCfi(`epubcfi(${section.cfiBase}!/0)`);
+		const found = this._locations[loc];
+
+		if (!found || this.epubcfi!.parse(found).spinePos !== section.index) {
+			return -1;
+		}
+
+		return loc;
+	}
+
+	/**
 	 * Get a percentage position in locations from an EpubCFI
 	 * @param {EpubCFI} cfi
 	 * @return {number}
@@ -525,6 +585,7 @@ class Locations implements IEventEmitter<LocationsEvents> {
 
 		this.break = undefined;
 		this._current = undefined;
+		this.layout = undefined;
 
 		this.currentLocation = undefined;
 		this._currentCfi = undefined;

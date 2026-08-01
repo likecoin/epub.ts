@@ -575,6 +575,14 @@ class Book implements IEventEmitter<BookEvents> {
 
 		this.spine.unpack(this.packaging, (path: string, absolute?: boolean): string => this.resolve(path, absolute), (path: string): string => this.canonical(path));
 
+		// Fixed layout may be declared by rendition:layout or, failing that, by
+		// the iBooks display options loaded above.
+		this.loaded.displayOptions.then((displayOptions) => {
+			this.locations.layout = displayOptions.fixedLayout === "true"
+				? "pre-paginated"
+				: this.packaging.metadata.layout;
+		});
+
 		this.resources = new Resources(this.packaging.manifest, {
 			archive: this.archive,
 			resolver: (path: string, absolute?: boolean): string => this.resolve(path, absolute),

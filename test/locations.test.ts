@@ -1,17 +1,23 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeAll } from "vitest";
 import fs from "fs";
 import path from "path";
 import Locations from "../src/locations";
+import Book from "../src/book";
+import EpubCFI from "../src/epubcfi";
 import * as core from "../src/utils/core";
 import { EVENTS } from "../src/utils/constants";
+import { getFixtureUrl } from "./helpers";
 import type Spine from "../src/spine";
+import type Section from "../src/section";
 import type { RequestFunction } from "../src/types";
 
 const fixturesDir = path.resolve(__dirname, "fixtures");
 
-function createMockSpine(): Spine {
+function createMockSpine(sections: Record<string, Partial<Section>> = {}): Spine {
 	return {
 		each: vi.fn(),
+		get: (href: string): Section | null =>
+			(sections[href.split("#")[0]!] as Section) ?? null,
 	} as unknown as Spine;
 }
 
@@ -159,6 +165,112 @@ describe("Locations", () => {
 			loc.load(["epubcfi(/6/2!/4/2/1:0)", "epubcfi(/6/4!/4/2/1:0)", "epubcfi(/6/6!/4/2/1:0)"]);
 			const result = loc.locationFromCfi("epubcfi(/6/4!/4/2/1:0)");
 			expect(result).toBe(1);
+		});
+	});
+
+	describe("locationFromHref()", () => {
+		const reflowable = {
+			"one.xhtml": { index: 0, cfiBase: "/6/2", properties: [] },
+			"gap.xhtml": { index: 1, cfiBase: "/6/4", properties: [] },
+			"three.xhtml": { index: 2, cfiBase: "/6/6", properties: [] }
+		};
+
+		function createSpined(sections: Record<string, Partial<Section>> = reflowable): Locations {
+			return new Locations(createMockSpine(sections), createMockRequest(), 50);
+		}
+
+		it("returns -1 for an unknown href", () => {
+			const loc = createSpined();
+			loc.load(["epubcfi(/6/2!/4/2/1:0)", "epubcfi(/6/6!/4/2/1:0)"]);
+			expect(loc.locationFromHref("missing.xhtml")).toBe(-1);
+		});
+
+		it("returns -1 before locations are generated", () => {
+			const loc = createSpined();
+			expect(loc.locationFromHref("three.xhtml")).toBe(-1);
+		});
+
+		it("returns the first location index of the section", () => {
+			const loc = createSpined();
+			loc.load(["epubcfi(/6/2!/4/2/1:0)", "epubcfi(/6/6!/4/2/1:0)", "epubcfi(/6/6!/4/2/1:150)"]);
+			expect(loc.locationFromHref("three.xhtml")).toBe(1);
+		});
+
+		it("returns -1 when the section produced no locations", () => {
+			const loc = createSpined();
+			// gap.xhtml (/6/4) sits between two sections that did produce
+			// locations; it must not borrow the following section's index.
+			loc.load(["epubcfi(/6/2!/4/2/1:0)", "epubcfi(/6/6!/4/2/1:0)"]);
+			expect(loc.locationFromHref("gap.xhtml")).toBe(-1);
+		});
+
+		describe("pre-paginated", () => {
+			it("returns the spine index without generated locations", () => {
+				const loc = createSpined();
+				loc.layout = "pre-paginated";
+				expect(loc.locationFromHref("three.xhtml")).toBe(2);
+			});
+
+			it("honors a per-item pre-paginated override in a reflowable book", () => {
+				const loc = createSpined({
+					"fixed.xhtml": { index: 4, cfiBase: "/6/10", properties: ["rendition:layout-pre-paginated"] }
+				});
+				expect(loc.locationFromHref("fixed.xhtml")).toBe(4);
+			});
+
+			it("honors a per-item reflowable override in a pre-paginated book", () => {
+				const loc = createSpined({
+					"flowing.xhtml": { index: 1, cfiBase: "/6/4", properties: ["rendition:layout-reflowable"] }
+				});
+				loc.layout = "pre-paginated";
+				expect(loc.locationFromHref("flowing.xhtml")).toBe(-1);
+			});
+
+			it("prefers generated locations over the spine index", () => {
+				const loc = createSpined();
+				loc.layout = "pre-paginated";
+				loc.load(["epubcfi(/6/2!/4/2/1:0)", "epubcfi(/6/6!/4/2/1:0)"]);
+				// three.xhtml is spine index 2, but location index 1
+				expect(loc.locationFromHref("three.xhtml")).toBe(1);
+			});
+		});
+
+		describe("against a real book", () => {
+			let book: Book;
+			let generated: string[];
+
+			beforeAll(async () => {
+				book = new Book(getFixtureUrl("/alice/OPS/package.opf"));
+				await book.ready;
+				generated = await book.locations.generate(1000);
+			});
+
+			it("resolves to a location inside the target section", () => {
+				const section = book.spine.get("chapter_005.xhtml")!;
+				const index = book.locations.locationFromHref("chapter_005.xhtml");
+
+				expect(index).toBeGreaterThan(0);
+				expect(new EpubCFI(generated[index]!).spinePos).toBe(section.index);
+				expect(new EpubCFI(generated[index - 1]!).spinePos).toBeLessThan(section.index!);
+			});
+
+			it("ignores the fragment, resolving to the section's first location", () => {
+				expect(book.locations.locationFromHref("chapter_005.xhtml#pgepubid00008"))
+					.toBe(book.locations.locationFromHref("chapter_005.xhtml"));
+			});
+
+			it("resolves from loaded locations without reloading sections", async () => {
+				const other = new Book(getFixtureUrl("/alice/OPS/package.opf"));
+				await other.ready;
+				other.locations.load(book.locations.save());
+
+				expect(other.locations.locationFromHref("chapter_005.xhtml"))
+					.toBe(book.locations.locationFromHref("chapter_005.xhtml"));
+			});
+
+			it("takes the layout from packaging metadata", () => {
+				expect(book.locations.layout).toBe(book.packaging.metadata.layout);
+			});
 		});
 	});
 

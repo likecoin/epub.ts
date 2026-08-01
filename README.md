@@ -154,6 +154,26 @@ const section = book.spine.first();
 const html = await section.render(book.archive.request.bind(book.archive));
 ```
 
+### Show page numbers in the table of contents
+
+`locations.locationFromHref()` maps a navigation href to a generated location index, so a table of contents can show approximate page numbers:
+
+```typescript
+await book.locations.generate(1000); // ~1000 characters per page
+
+const toc = book.navigation.toc.map(item => {
+	const index = book.locations.locationFromHref(item.href);
+	return { ...item, page: index === -1 ? undefined : index + 1 };
+});
+```
+
+Notes:
+
+- The index is 0-based, so add 1 for a page number. It returns `-1` when the href cannot be resolved.
+- Page numbers depend on the `chars` value passed to `generate()` — they are estimates for navigation, not the publisher's printed pages. When a book ships a real `page-list`, use [`book.pageList`](#api-reference) instead.
+- Entries are resolved per section, so two entries pointing into the same file (`chapter.xhtml#a` and `chapter.xhtml#b`) share a page number.
+- Pre-paginated (fixed-layout) books resolve without calling `generate()` — each section is exactly one page, so the spine index is returned. Once locations exist they take precedence, so the result is always an index into `locations`.
+
 ## Named exports
 
 ```js
