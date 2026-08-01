@@ -6,6 +6,7 @@ import EventEmitter from "./utils/event-emitter";
 import type { IEventEmitter, RequestFunction } from "./types";
 import type Spine from "./spine";
 import type Section from "./section";
+import { sectionLayoutName } from "./layout";
 
 const _hasIdleCallback: boolean =
 	typeof requestIdleCallback === "function" && typeof cancelIdleCallback === "function";
@@ -377,17 +378,7 @@ class Locations implements IEventEmitter<LocationsEvents> {
 	 * @return {boolean}
 	 */
 	isPrePaginated(section: Section): boolean {
-		const properties = section.properties ?? [];
-
-		if (properties.includes("rendition:layout-pre-paginated")) {
-			return true;
-		}
-
-		if (properties.includes("rendition:layout-reflowable")) {
-			return false;
-		}
-
-		return this.layout === "pre-paginated";
+		return sectionLayoutName(section, this.layout) === "pre-paginated";
 	}
 
 	/**

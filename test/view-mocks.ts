@@ -2,6 +2,11 @@ import { vi } from "vitest";
 import type Section from "../src/section";
 import type Layout from "../src/layout";
 
+/** A bare Section stub carrying only itemref properties. */
+export function sectionWith(properties?: string[]): Section {
+	return { properties } as unknown as Section;
+}
+
 export function createMockSection(index: number = 0): Section {
 	return {
 		index,

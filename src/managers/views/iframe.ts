@@ -8,6 +8,7 @@ import type { Mark } from "../../marks-pane";
 import type { IEventEmitter, ViewSettings, ReframeBounds, RequestFunction } from "../../types";
 import type Section from "../../section";
 import type Layout from "../../layout";
+import { sectionLayoutName } from "../../layout";
 
 export interface IframeViewEvents extends Record<string, any[]> {
 	"axis": [string];
@@ -114,6 +115,10 @@ class IframeView implements IEventEmitter<IframeViewEvents> {
 		this.underlines = {};
 		this.marks = {};
 
+	}
+
+	private get isFixedLayout(): boolean {
+		return sectionLayoutName(this.section, this.layout.name) === "pre-paginated";
 	}
 
 	container(axis?: string): HTMLElement {
@@ -308,7 +313,7 @@ class IframeView implements IEventEmitter<IframeViewEvents> {
 		const width = _width || this.settings.width!;
 		const height = _height || this.settings.height!;
 
-		if(this.layout.name === "pre-paginated") {
+		if(this.isFixedLayout) {
 			this.lock("both", width, height);
 		} else if(this.settings.axis === "horizontal") {
 			this.lock("height", width, height);
@@ -370,7 +375,7 @@ class IframeView implements IEventEmitter<IframeViewEvents> {
 
 		this._expanding = true;
 
-		if(this.layout.name === "pre-paginated") {
+		if(this.isFixedLayout) {
 			width = this.layout.columnWidth;
 			height = this.layout.height;
 		}
@@ -537,7 +542,7 @@ class IframeView implements IEventEmitter<IframeViewEvents> {
 				this._contentDirty = true;
 				this.expand();
 				if (this.contents) {
-					this.layout.format(this.contents);
+					this.layout.format(this.contents, this.section);
 				}
 			}
 		});
@@ -551,7 +556,7 @@ class IframeView implements IEventEmitter<IframeViewEvents> {
 				this._contentDirty = false;
 				this.expand();
 				if (this.contents) {
-					this.layout.format(this.contents);
+					this.layout.format(this.contents, this.section);
 				}
 			}
 		});
@@ -563,7 +568,7 @@ class IframeView implements IEventEmitter<IframeViewEvents> {
 		this.layout = layout;
 
 		if (this.contents) {
-			this.layout.format(this.contents);
+			this.layout.format(this.contents, this.section);
 			this._contentDirty = true;
 			this.expand();
 		}
@@ -834,7 +839,7 @@ class IframeView implements IEventEmitter<IframeViewEvents> {
 	placeMark(element: HTMLElement, range: Range): void {
 		let top, right, left;
 
-		if(this.layout.name === "pre-paginated" ||
+		if(this.isFixedLayout ||
 			this.settings.axis !== "horizontal") {
 			const pos = range.getBoundingClientRect();
 			top = pos.top;

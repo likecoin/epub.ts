@@ -18,6 +18,27 @@ export interface LayoutEvents extends Record<string, any[]> {
 	"updated": [LayoutProps, Partial<LayoutProps>];
 }
 
+/**
+ * Resolve the layout a section renders with, honoring the per-itemref
+ * `rendition:layout-*` override from the spine over the package-level default.
+ * @param {Section} [section]
+ * @param {string} [fallback] the book-wide layout name, may be undefined if not yet resolved
+ * @return {string|undefined} the section's override, else fallback
+ */
+export function sectionLayoutName(section: Section | null | undefined, fallback: string | undefined): string | undefined {
+	const properties = section?.properties ?? [];
+
+	if (properties.includes("rendition:layout-pre-paginated")) {
+		return "pre-paginated";
+	}
+
+	if (properties.includes("rendition:layout-reflowable")) {
+		return "reflowable";
+	}
+
+	return fallback;
+}
+
 class Layout implements IEventEmitter<LayoutEvents> {
 	declare on: IEventEmitter<LayoutEvents>["on"];
 	declare off: IEventEmitter<LayoutEvents>["off"];
@@ -217,9 +238,15 @@ class Layout implements IEventEmitter<LayoutEvents> {
 	format(contents: Contents, section?: Section, axis?: string): void {
 		let formating;
 
-		if (this.name === "pre-paginated") {
-			formating = contents.fit(this.columnWidth, this.height, section);
-		} else if (this._flow === "paginated") {
+		const name = sectionLayoutName(section, this.name);
+
+		// Only an explicit false declines, so a Contents predating the boolean
+		// return still takes the fixed-layout path.
+		if (name === "pre-paginated" && contents.fit(this.columnWidth, this.height, section) !== false) {
+			return;
+		}
+
+		if (this._flow === "paginated") {
 			formating = contents.columns(this.width, this.height, this.columnWidth, this.gap, this.settings.direction);
 		} else if (axis && axis === "horizontal") {
 			formating = contents.size(undefined, this.height);

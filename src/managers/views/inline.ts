@@ -5,6 +5,7 @@ import Contents from "../../contents";
 import { EVENTS } from "../../utils/constants";
 import type Section from "../../section";
 import type Layout from "../../layout";
+import { sectionLayoutName } from "../../layout";
 import type { IEventEmitter, ViewSettings, RequestFunction, SizeObject, ReframeBounds } from "../../types";
 
 export interface InlineViewEvents extends Record<string, any[]> {
@@ -182,7 +183,7 @@ class InlineView implements IEventEmitter<InlineViewEvents> {
 			.then(() => {
 
 				// apply the layout function to the contents
-				this.settings.layout.format(this.contents!);
+				this.settings.layout.format(this.contents!, this.section);
 
 				// Expand the iframe to the full size of the content
 				// this.expand();
@@ -211,7 +212,7 @@ class InlineView implements IEventEmitter<InlineViewEvents> {
 		const width = _width || this.settings.width!;
 		const height = _height || this.settings.height!;
 
-		if(this.layout.name === "pre-paginated") {
+		if(sectionLayoutName(this.section, this.layout.name) === "pre-paginated") {
 			this.lock("both", width, height);
 		} else if(this.settings.axis === "horizontal") {
 			this.lock("height", width, height);
@@ -350,7 +351,7 @@ class InlineView implements IEventEmitter<InlineViewEvents> {
 		this.document = this.frame!.ownerDocument;
 		this.window = this.document.defaultView!;
 
-		this.contents = new Contents(this.document, this.frame!);
+		this.contents = new Contents(this.document, this.frame!, this.section.cfiBase, this.section.index);
 
 		this.rendering = false;
 

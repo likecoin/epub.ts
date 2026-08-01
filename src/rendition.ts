@@ -3,7 +3,7 @@ import { extend, defer, isFloat } from "./utils/core";
 import Hook from "./utils/hook";
 import EpubCFI from "./epubcfi";
 import Queue from "./utils/queue";
-import Layout from "./layout";
+import Layout, { sectionLayoutName } from "./layout";
 // import Mapping from "./mapping";
 import Themes from "./themes";
 import type Contents from "./contents";
@@ -1178,7 +1178,11 @@ class Rendition implements IEventEmitter<RenditionEvents> {
 	 */
 	adjustImages(contents: Contents): Promise<void> {
 
-		if (this._layout!.name === "pre-paginated") {
+		const section = this.book.spine.get(contents.sectionIndex);
+
+		// Column-fitting rules would clamp a fixed-layout page's artwork to the
+		// column width inside its viewport-sized, scaled document.
+		if (sectionLayoutName(section, this._layout!.name) === "pre-paginated") {
 			return new Promise<void>(function(resolve){
 				resolve();
 			});

@@ -7,6 +7,7 @@ import EpubCFI from "../src/epubcfi";
 import * as core from "../src/utils/core";
 import { EVENTS } from "../src/utils/constants";
 import { getFixtureUrl } from "./helpers";
+import { sectionWith } from "./view-mocks";
 import type Spine from "../src/spine";
 import type Section from "../src/section";
 import type { RequestFunction } from "../src/types";
@@ -471,6 +472,37 @@ describe("Locations", () => {
 			expect(loc.break).toBeUndefined();
 			expect(loc._current).toBeUndefined();
 			expect(loc._currentCfi).toBeUndefined();
+		});
+	});
+
+	describe("isPrePaginated()", () => {
+		function withLayout(layout?: string): Locations {
+			const loc = createLocations();
+			loc.layout = layout;
+			return loc;
+		}
+
+		it("should follow the book layout when the section has no override", () => {
+			expect(withLayout("pre-paginated").isPrePaginated(sectionWith([]))).toBe(true);
+			expect(withLayout("reflowable").isPrePaginated(sectionWith([]))).toBe(false);
+		});
+
+		it("should default to reflowable when the book layout is unset", () => {
+			expect(withLayout().isPrePaginated(sectionWith([]))).toBe(false);
+		});
+
+		it("should honor a per-itemref pre-paginated override", () => {
+			const section = sectionWith(["rendition:layout-pre-paginated", "rendition:spread-none"]);
+			expect(withLayout("reflowable").isPrePaginated(section)).toBe(true);
+		});
+
+		it("should honor a per-itemref reflowable override", () => {
+			const section = sectionWith(["rendition:layout-reflowable"]);
+			expect(withLayout("pre-paginated").isPrePaginated(section)).toBe(false);
+		});
+
+		it("should tolerate a section with undefined properties", () => {
+			expect(withLayout("pre-paginated").isPrePaginated(sectionWith())).toBe(true);
 		});
 	});
 

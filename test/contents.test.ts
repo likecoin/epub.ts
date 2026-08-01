@@ -205,6 +205,39 @@ describe("Contents", () => {
 		});
 	});
 
+	describe("fit()", () => {
+		afterEach(() => {
+			document.querySelectorAll("meta[name='viewport']").forEach(el => el.remove());
+		});
+
+		function setViewport(content: string): void {
+			const meta = document.createElement("meta");
+			meta.setAttribute("name", "viewport");
+			meta.setAttribute("content", content);
+			document.head.appendChild(meta);
+		}
+
+		it("should scale contents when the viewport declares dimensions", () => {
+			setViewport("width=1400, height=1986");
+			const { contents, container } = createContents();
+			expect(contents.fit(700, 993)).toBe(true);
+			expect(container.style.transform).toContain("scale(0.5)");
+		});
+
+		it("should decline without a viewport meta", () => {
+			const { contents, container } = createContents();
+			expect(contents.fit(700, 993)).toBe(false);
+			expect(container.style.transform).toBe("");
+		});
+
+		it("should decline when the viewport declares no usable dimensions", () => {
+			setViewport("width=device-width, initial-scale=1");
+			const { contents, container } = createContents();
+			expect(contents.fit(700, 993)).toBe(false);
+			expect(container.style.transform).toBe("");
+		});
+	});
+
 	describe("addClass() / removeClass()", () => {
 		it("should add class to content element", () => {
 			const { contents, container } = createContents();

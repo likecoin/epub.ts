@@ -194,6 +194,16 @@ describe("IframeView", () => {
 			expect(view.lockedWidth).toBeDefined();
 		});
 
+		it("should lock both when the section overrides to pre-paginated", () => {
+			const section = createMockSection();
+			section.properties = ["rendition:layout-pre-paginated", "rendition:spread-none"];
+			const view = createView(section);
+			view.create();
+			view.size(800, 600);
+			expect(view.lockedWidth).toBeDefined();
+			expect(view.lockedHeight).toBeDefined();
+		});
+
 		it("should update settings width and height", () => {
 			const view = createView();
 			view.create();
@@ -432,6 +442,25 @@ describe("IframeView", () => {
 			expect(view.contents!.textHeight).toHaveBeenCalledOnce();
 			expect(view._textHeight).toBe(2000);
 			expect(view._contentDirty).toBe(false);
+		});
+
+		it("should take layout dimensions when the section overrides to pre-paginated", () => {
+			const section = createMockSection();
+			section.properties = ["rendition:layout-pre-paginated", "rendition:spread-none"];
+			const view = createView(section);
+			const layout = view.layout;
+			view.create();
+			view.displayed = true;
+			view._contentDirty = true;
+			view.contents = {
+				textWidth: vi.fn().mockReturnValue(1200),
+				textHeight: vi.fn().mockReturnValue(600),
+			} as any;
+			view.expand();
+			// Fixed pages are sized by the layout, never measured and rounded up
+			// to column multiples.
+			expect(view.contents!.textWidth).not.toHaveBeenCalled();
+			expect(view._width).toBe(layout.columnWidth);
 		});
 	});
 

@@ -5,6 +5,9 @@ import ContinuousViewManager from "../src/managers/continuous/index";
 import IframeView from "../src/managers/views/iframe";
 import type Book from "../src/book";
 import type Section from "../src/section";
+import type Contents from "../src/contents";
+import type { GlobalLayout } from "../src/types";
+import { sectionWith } from "./view-mocks";
 
 function createMockBook(): Book {
 	return {
@@ -392,6 +395,67 @@ describe("Rendition", () => {
 			const meta = doc.querySelector("meta[name='dc.relation.ispartof']");
 			expect(meta).not.toBeNull();
 			expect(meta!.getAttribute("content")).toBe("test-id-123");
+		});
+	});
+
+	describe("adjustImages()", () => {
+		function createMockContents(): { contents: Contents; addStylesheetRules: ReturnType<typeof vi.fn> } {
+			const addStylesheetRules = vi.fn();
+			const content = document.createElement("div");
+			const contents = {
+				sectionIndex: 3,
+				content,
+				window: { getComputedStyle: () => ({ paddingTop: "0px", paddingBottom: "0px", paddingLeft: "0px", paddingRight: "0px" }) },
+				addStylesheetRules,
+			} as unknown as Contents;
+			return { contents, addStylesheetRules };
+		}
+
+		function createRendition(layout: string, section?: Section): Rendition {
+			const book = createMockBook();
+			(book.spine.get as ReturnType<typeof vi.fn>).mockReturnValue(section ?? null);
+			const rendition = new Rendition(book);
+			// The constructor queues book.opened + start(); drop them so a queued
+			// start() can't replace _layout with a metadata-derived one.
+			rendition.q.clear();
+			rendition.layout({ layout, spread: "none" } as GlobalLayout);
+			rendition._layout!.calculate(800, 1200, 20);
+			return rendition;
+		}
+
+		it("should clamp images to the column width for a reflowable section", async () => {
+			const { contents, addStylesheetRules } = createMockContents();
+			await createRendition("reflowable", sectionWith([])).adjustImages(contents);
+			expect(addStylesheetRules).toHaveBeenCalledWith(expect.objectContaining({
+				img: expect.objectContaining({ "max-width": "800px!important" }),
+				svg: expect.objectContaining({ "max-width": "800px!important" }),
+			}));
+		});
+
+		it("should skip a pre-paginated book", async () => {
+			const { contents, addStylesheetRules } = createMockContents();
+			await createRendition("pre-paginated", sectionWith([])).adjustImages(contents);
+			expect(addStylesheetRules).not.toHaveBeenCalled();
+		});
+
+		it("should skip a section overriding to pre-paginated in a reflowable book", async () => {
+			const section = sectionWith(["rendition:layout-pre-paginated", "rendition:spread-none"]);
+			const { contents, addStylesheetRules } = createMockContents();
+			await createRendition("reflowable", section).adjustImages(contents);
+			expect(addStylesheetRules).not.toHaveBeenCalled();
+		});
+
+		it("should inject for a section overriding to reflowable in a fixed book", async () => {
+			const section = sectionWith(["rendition:layout-reflowable"]);
+			const { contents, addStylesheetRules } = createMockContents();
+			await createRendition("pre-paginated", section).adjustImages(contents);
+			expect(addStylesheetRules).toHaveBeenCalled();
+		});
+
+		it("should fall back to the book layout when the section is unresolvable", async () => {
+			const { contents, addStylesheetRules } = createMockContents();
+			await createRendition("pre-paginated").adjustImages(contents);
+			expect(addStylesheetRules).not.toHaveBeenCalled();
 		});
 	});
 

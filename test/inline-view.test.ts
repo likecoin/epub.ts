@@ -526,7 +526,17 @@ describe("InlineView", () => {
 		it("should call layout.format on contents", async () => {
 			const view = createView();
 			await view.render(vi.fn());
-			expect((view.layout as unknown as { format: ReturnType<typeof vi.fn> }).format).toHaveBeenCalledWith(view.contents);
+			expect((view.layout as unknown as { format: ReturnType<typeof vi.fn> }).format).toHaveBeenCalledWith(view.contents, view.section);
+		});
+
+		it("should identify contents with the section index and cfiBase", async () => {
+			// Consumers key off contents.sectionIndex to resolve the section back
+			// out of the spine; defaulting it to 0 mis-identifies every page.
+			const section = createMockSection(4);
+			const view = createView(section);
+			await view.render(vi.fn());
+			expect(view.contents!.sectionIndex).toBe(4);
+			expect(view.contents!.cfiBase).toBe(section.cfiBase);
 		});
 
 		it("should show the view by default", async () => {

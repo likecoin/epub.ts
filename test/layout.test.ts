@@ -1,5 +1,15 @@
-import { describe, it, expect } from "vitest";
-import Layout from "../src/layout";
+import { describe, it, expect, vi } from "vitest";
+import Layout, { sectionLayoutName } from "../src/layout";
+import type Contents from "../src/contents";
+import { sectionWith } from "./view-mocks";
+
+function createMockContents(fits: boolean = true) {
+	return {
+		fit: vi.fn().mockReturnValue(fits),
+		columns: vi.fn(),
+		size: vi.fn(),
+	};
+}
 
 describe("Layout", () => {
 
@@ -172,6 +182,103 @@ describe("Layout", () => {
 			const result = layout.count(2000);
 			expect(result.spreads).toBe(5);
 			expect(result.pages).toBe(5);
+		});
+	});
+
+	describe("sectionLayoutName()", () => {
+		it("should fall back to the global layout without a section", () => {
+			expect(sectionLayoutName(undefined, "reflowable")).toBe("reflowable");
+			expect(sectionLayoutName(undefined, "pre-paginated")).toBe("pre-paginated");
+		});
+
+		it("should fall back to the global layout without rendition properties", () => {
+			expect(sectionLayoutName(sectionWith(["page-spread-right"]), "reflowable")).toBe("reflowable");
+		});
+
+		it("should honor a per-itemref pre-paginated override", () => {
+			const section = sectionWith(["rendition:layout-pre-paginated", "rendition:spread-none"]);
+			expect(sectionLayoutName(section, "reflowable")).toBe("pre-paginated");
+		});
+
+		it("should honor a per-itemref reflowable override", () => {
+			expect(sectionLayoutName(sectionWith(["rendition:layout-reflowable"]), "pre-paginated")).toBe("reflowable");
+		});
+
+		it("should tolerate a section with no properties", () => {
+			expect(sectionLayoutName(sectionWith(), "reflowable")).toBe("reflowable");
+		});
+	});
+
+	describe("format()", () => {
+		it("should paginate a reflowable section of a reflowable book", () => {
+			const layout = new Layout({});
+			layout.calculate(800, 600, 20);
+			const contents = createMockContents();
+			layout.format(contents as unknown as Contents, sectionWith([]));
+
+			expect(contents.columns).toHaveBeenCalled();
+			expect(contents.fit).not.toHaveBeenCalled();
+		});
+
+		it("should fit a pre-paginated section of a reflowable book", () => {
+			const layout = new Layout({});
+			layout.calculate(800, 600, 20);
+			const contents = createMockContents();
+			const section = sectionWith(["rendition:layout-pre-paginated", "rendition:spread-none"]);
+			layout.format(contents as unknown as Contents, section);
+
+			expect(contents.fit).toHaveBeenCalledWith(layout.columnWidth, layout.height, section);
+			expect(contents.columns).not.toHaveBeenCalled();
+		});
+
+		it("should paginate a reflowable section of a pre-paginated book", () => {
+			const layout = new Layout({ layout: "pre-paginated" });
+			layout.calculate(800, 600);
+			const contents = createMockContents();
+			layout.format(contents as unknown as Contents, sectionWith(["rendition:layout-reflowable"]));
+
+			expect(contents.columns).toHaveBeenCalled();
+			expect(contents.fit).not.toHaveBeenCalled();
+		});
+
+		it("should fall back to the global layout when no section is passed", () => {
+			const layout = new Layout({ layout: "pre-paginated" });
+			layout.calculate(800, 600);
+			const contents = createMockContents();
+			layout.format(contents as unknown as Contents);
+
+			expect(contents.fit).toHaveBeenCalled();
+			expect(contents.columns).not.toHaveBeenCalled();
+		});
+
+		it("should paginate when fit() declines for want of a viewport", () => {
+			const layout = new Layout({});
+			layout.calculate(800, 600, 20);
+			const contents = createMockContents(false);
+			layout.format(contents as unknown as Contents, sectionWith(["rendition:layout-pre-paginated"]));
+
+			expect(contents.fit).toHaveBeenCalled();
+			expect(contents.columns).toHaveBeenCalled();
+		});
+
+		it("should treat a void-returning fit() as fitted", () => {
+			const layout = new Layout({ layout: "pre-paginated" });
+			layout.calculate(800, 600);
+			const contents = { fit: vi.fn(), columns: vi.fn(), size: vi.fn() };
+			layout.format(contents as unknown as Contents);
+
+			expect(contents.fit).toHaveBeenCalled();
+			expect(contents.columns).not.toHaveBeenCalled();
+		});
+
+		it("should size instead of paginate in scrolled flow when fit() declines", () => {
+			const layout = new Layout({ flow: "scrolled" });
+			layout.calculate(800, 600);
+			const contents = createMockContents(false);
+			layout.format(contents as unknown as Contents, sectionWith(["rendition:layout-pre-paginated"]), "horizontal");
+
+			expect(contents.size).toHaveBeenCalledWith(undefined, layout.height);
+			expect(contents.columns).not.toHaveBeenCalled();
 		});
 	});
 });

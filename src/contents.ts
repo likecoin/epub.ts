@@ -1158,11 +1158,19 @@ class Contents implements IEventEmitter<ContentsEvents> {
 	 * Fit contents into a fixed width and height
 	 * @param {number} width
 	 * @param {number} height
+	 * @return {boolean} whether the contents could be fitted
 	 */
-	fit(width: number, height: number, section?: Section): void {
+	fit(width: number, height: number, section?: Section): boolean {
 		const viewport = this.viewport();
 		const viewportWidth = parseInt(viewport.width);
 		const viewportHeight = parseInt(viewport.height);
+
+		// A document declaring fixed layout without a usable viewport gives no
+		// dimensions to scale against — scaling by NaN would blank the page.
+		if (!(viewportWidth > 0) || !(viewportHeight > 0)) {
+			return false;
+		}
+
 		const widthScale = width / viewportWidth;
 		const heightScale = height / viewportHeight;
 		const scale = widthScale < heightScale ? widthScale : heightScale;
@@ -1191,13 +1199,15 @@ class Contents implements IEventEmitter<ContentsEvents> {
 			["background-color", "transparent"],
 		];
 
-		if (section && section.properties!.includes("page-spread-left")) {
+		if (section?.properties?.includes("page-spread-left")) {
 			// set margin since scale is weird
 			const marginLeft = width - (viewportWidth * scale);
 			batch.push(["margin-left", marginLeft + "px"]);
 		}
 
 		this.cssBatch(batch);
+
+		return true;
 	}
 
 	/**
