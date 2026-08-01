@@ -1235,7 +1235,11 @@ class Contents implements IEventEmitter<ContentsEvents> {
 			this.documentElement.style.writingMode = mode;
 		}
 
-		return this.window.getComputedStyle(this.documentElement).writingMode || "";
+		// Column styles are applied here, and writing-mode inherits — reading from
+		// documentElement would miss a mode declared only on the content element.
+		const content = this.content || this.document.body;
+
+		return this.window.getComputedStyle(content).writingMode || "";
 	}
 
 	/**

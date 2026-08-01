@@ -328,6 +328,12 @@ describe("Contents", () => {
 			const wm = contents.writingMode();
 			expect(typeof wm).toBe("string");
 		});
+
+		it("should detect a mode declared on the content element", () => {
+			const { contents, container } = createContents();
+			container.style.writingMode = "vertical-rl";
+			expect(contents.writingMode()).toBe("vertical-rl");
+		});
 	});
 
 	describe("layoutStyle()", () => {
