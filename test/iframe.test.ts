@@ -227,6 +227,54 @@ describe("IframeView", () => {
 		});
 	});
 
+	describe("display()", () => {
+		it("should share the in-flight promise across overlapping calls", async () => {
+			const request = vi.fn();
+			const view = createView();
+			let finishRender!: () => void;
+			const render = vi.spyOn(view, "render").mockReturnValue(
+				new Promise<void>((resolve) => { finishRender = resolve; })
+			);
+
+			const first = view.display(request);
+			const second = view.display(request);
+
+			expect(second).toBe(first);
+			expect(render).toHaveBeenCalledTimes(1);
+
+			finishRender();
+
+			await expect(first).resolves.toBe(view);
+			await expect(second).resolves.toBe(view);
+			expect(view.displayed).toBe(true);
+		});
+
+		it("should not render again once displayed", async () => {
+			const request = vi.fn();
+			const view = createView();
+			const render = vi.spyOn(view, "render").mockResolvedValue(undefined);
+
+			await view.display(request);
+			await expect(view.display(request)).resolves.toBe(view);
+
+			expect(render).toHaveBeenCalledTimes(1);
+		});
+
+		it("should allow a retry after render fails", async () => {
+			const request = vi.fn();
+			const view = createView();
+			const render = vi.spyOn(view, "render")
+				.mockRejectedValueOnce(new Error("nope"))
+				.mockResolvedValueOnce(undefined);
+
+			await expect(view.display(request)).rejects.toThrow("nope");
+			expect(view.displayed).toBe(false);
+
+			await expect(view.display(request)).resolves.toBe(view);
+			expect(render).toHaveBeenCalledTimes(2);
+		});
+	});
+
 	describe("size()", () => {
 		it("should lock both for pre-paginated layout", () => {
 			const layout = createMockLayout();

@@ -66,6 +66,7 @@ class IframeView implements IEventEmitter<IframeViewEvents> {
 	axis!: string;
 	expanded?: boolean;
 	_abortController: AbortController | undefined;
+	_displaying: Promise<IframeView> | undefined;
 
 	declare on: IEventEmitter<IframeViewEvents>["on"];
 	declare off: IEventEmitter<IframeViewEvents>["off"];
@@ -619,27 +620,33 @@ class IframeView implements IEventEmitter<IframeViewEvents> {
 	}
 
 	display(request: RequestFunction): Promise<IframeView> {
-		const displayed = new defer<IframeView>();
-
-		if (!this.displayed) {
-
-			this.render(request)
-				.then(() => {
-
-					this.emit(EVENTS.VIEWS.DISPLAYED, this);
-					this.onDisplayed(this);
-
-					this.displayed = true;
-					displayed.resolve(this);
-
-				}, (err) => {
-					displayed.reject(err);
-				});
-
-		} else {
-			displayed.resolve(this);
+		if (this.displayed) {
+			return Promise.resolve(this);
 		}
 
+		// `displayed` only flips once render() resolves, so overlapping calls
+		// would each reach load() and overwrite iframe.onload — orphaning every
+		// deferred but the last. Share the in-flight promise instead.
+		if (this._displaying) {
+			return this._displaying;
+		}
+
+		const displayed = new defer<IframeView>();
+		this._displaying = displayed.promise;
+
+		this.render(request)
+			.then(() => {
+				this.emit(EVENTS.VIEWS.DISPLAYED, this);
+				this.onDisplayed(this);
+
+				this.displayed = true;
+				this._displaying = undefined;
+				displayed.resolve(this);
+
+			}, (err) => {
+				this._displaying = undefined;
+				displayed.reject(err);
+			});
 
 		return displayed.promise;
 	}
@@ -928,6 +935,8 @@ class IframeView implements IEventEmitter<IframeViewEvents> {
 			this._abortController.abort();
 			this._abortController = undefined;
 		}
+
+		this._displaying = undefined;
 
 		for (const cfiRange in this.highlights) {
 			this.unhighlight(cfiRange);
