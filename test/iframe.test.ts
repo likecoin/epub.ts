@@ -206,6 +206,25 @@ describe("IframeView", () => {
 
 			view.element.remove();
 		});
+
+		it("should revoke the previous blob url when loaded again in blobUrl mode", () => {
+			const view = createView(undefined, { method: "blobUrl" });
+			view.create();
+			document.body.appendChild(view.element);
+
+			const revoke = vi.spyOn(URL, "revokeObjectURL");
+
+			view.load("<html><body>first</body></html>");
+			const first = view.blobUrl;
+
+			view.load("<html><body>second</body></html>");
+
+			expect(revoke).toHaveBeenCalledWith(first);
+			expect(view.blobUrl).not.toBe(first);
+
+			revoke.mockRestore();
+			view.element.remove();
+		});
 	});
 
 	describe("size()", () => {

@@ -56,7 +56,7 @@ class IframeView implements IEventEmitter<IframeViewEvents> {
 	lockedWidth!: number;
 	lockedHeight!: number;
 	prevBounds: ReframeBounds | undefined;
-	blobUrl!: string;
+	blobUrl?: string;
 	document!: Document;
 	window!: Window;
 	contents: Contents | undefined;
@@ -493,6 +493,12 @@ class IframeView implements IEventEmitter<IframeViewEvents> {
 
 		if (this.settings.method === "blobUrl") {
 			this.iframe.onload = onload;
+			// A view can be re-displayed while its first load is still in flight —
+			// the continuous manager reuses instances — so drop the previous blob
+			// instead of orphaning it for the lifetime of the document.
+			if (this.blobUrl) {
+				revokeBlobUrl(this.blobUrl);
+			}
 			this.blobUrl = createBlobUrl(contents, "application/xhtml+xml");
 			this.iframe.src = this.blobUrl;
 			this.element.appendChild(this.iframe);
@@ -937,6 +943,7 @@ class IframeView implements IEventEmitter<IframeViewEvents> {
 
 		if (this.blobUrl) {
 			revokeBlobUrl(this.blobUrl);
+			this.blobUrl = undefined;
 		}
 
 		if(this.displayed){

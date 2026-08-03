@@ -140,6 +140,7 @@ export interface RenditionOptions {
 	ignoreClass?: string;
 	manager?: string | ViewManagerConstructor | object;
 	view?: string | ViewConstructor | object;
+	method?: string;
 	flow?: string;
 	layout?: string;
 	spread?: string | boolean;

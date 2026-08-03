@@ -82,6 +82,16 @@ describe("ContinuousViewManager", () => {
 			const manager = new ContinuousViewManager(createMockManagerOptions());
 			expect(manager.viewSettings.forceEvenPages).toBe(false);
 		});
+
+		it("should pass method through to viewSettings", () => {
+			const manager = new ContinuousViewManager(createMockManagerOptions({ method: "blobUrl" }));
+			expect(manager.viewSettings.method).toBe("blobUrl");
+		});
+
+		it("should leave method undefined when not configured", () => {
+			const manager = new ContinuousViewManager(createMockManagerOptions());
+			expect(manager.viewSettings.method).toBeUndefined();
+		});
 	});
 
 	describe("updateFlow()", () => {

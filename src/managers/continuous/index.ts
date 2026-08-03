@@ -62,6 +62,7 @@ class ContinuousViewManager extends DefaultViewManager {
 			axis: this.settings.axis,
 			flow: this.settings.flow,
 			layout: this.layout,
+			method: this.settings.method, // srcdoc, blobUrl, write
 			width: 0,
 			height: 0,
 			forceEvenPages: false,

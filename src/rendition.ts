@@ -39,6 +39,7 @@ const REANCHOR_DEBOUNCE = 50;
  * @param {string} [options.ignoreClass] class for the cfi parser to ignore
  * @param {string | function | object} [options.manager='default']
  * @param {string | function} [options.view='iframe']
+ * @param {string} [options.method] how content is delivered to the iframe: srcdoc, blobUrl, write
  * @param {string} [options.layout] layout to force
  * @param {string} [options.spread] force spread value
  * @param {number} [options.minSpreadWidth] overridden by spread: none (never) / both (always)
