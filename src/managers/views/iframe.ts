@@ -485,17 +485,19 @@ class IframeView implements IEventEmitter<IframeViewEvents> {
 			return loaded;
 		}
 
-		this.iframe.onload = (event: Event): void => {
+		const onload = (event: Event): void => {
 
 			this.onLoad(event, loading);
 
 		};
 
 		if (this.settings.method === "blobUrl") {
+			this.iframe.onload = onload;
 			this.blobUrl = createBlobUrl(contents, "application/xhtml+xml");
 			this.iframe.src = this.blobUrl;
 			this.element.appendChild(this.iframe);
 		} else if(this.settings.method === "srcdoc"){
+			this.iframe.onload = onload;
 			this.iframe.srcdoc = contents;
 			this.element.appendChild(this.iframe);
 		} else {
@@ -508,6 +510,13 @@ class IframeView implements IEventEmitter<IframeViewEvents> {
 				loading.reject(new Error("No Document Available"));
 				return loaded;
 			}
+
+			// Must be attached after appendChild — a src-less iframe fires a load
+			// event for its initial about:blank document, and measuring that resolves
+			// writingMode() to "" and loses the section's stylesheets. Must be before
+			// close() — WebKit fires the written document's load event before its
+			// stylesheets have applied.
+			this.iframe.onload = onload;
 
 			this.document.open();
 			this.document.write(contents);

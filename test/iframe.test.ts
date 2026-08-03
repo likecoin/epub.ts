@@ -168,6 +168,46 @@ describe("IframeView", () => {
 		});
 	});
 
+	// jsdom never dispatches the iframe load event for written documents, so these
+	// assert attach ordering only — never that the returned promise settles.
+	describe("load()", () => {
+		it("should attach the load handler after appending the iframe in write mode", () => {
+			const view = createView(undefined, { method: "write" });
+			view.create();
+			document.body.appendChild(view.element);
+
+			const onloadAtAppend: HTMLIFrameElement["onload"][] = [];
+			const append = view.element.appendChild.bind(view.element);
+			vi.spyOn(view.element, "appendChild").mockImplementation(((node: Node) => {
+				if (node === view.iframe) {
+					onloadAtAppend.push(view.iframe!.onload);
+				}
+				return append(node);
+			}) as typeof view.element.appendChild);
+
+			view.load("<html><body><p id=\"written\">written</p></body></html>");
+
+			expect(onloadAtAppend).toEqual([null]);
+			expect(view.iframe!.onload).toBeTypeOf("function");
+			expect(view.document.querySelector("#written")).not.toBeNull();
+
+			view.element.remove();
+		});
+
+		it("should attach the load handler before navigating in srcdoc mode", () => {
+			const view = createView(undefined, { method: "srcdoc" });
+			view.create();
+			document.body.appendChild(view.element);
+
+			view.load("<html><body>srcdoc</body></html>");
+
+			expect(view.iframe!.onload).toBeTypeOf("function");
+			expect(view.iframe!.srcdoc).toContain("srcdoc");
+
+			view.element.remove();
+		});
+	});
+
 	describe("size()", () => {
 		it("should lock both for pre-paginated layout", () => {
 			const layout = createMockLayout();
