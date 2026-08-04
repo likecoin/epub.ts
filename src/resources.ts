@@ -166,17 +166,28 @@ class Resources {
 
 				return this.createUrl(absolute).
 					catch((_err: Error): string | null => {
-						// eslint-disable-next-line no-console
-						console.error(_err);
+						// a cancelled request is expected, and would log once per asset
+						if (_err && _err.name !== "AbortError") {
+							// eslint-disable-next-line no-console
+							console.error(_err);
+						}
 						return null;
 					});
 			});
 
 		return Promise.all(replacements)
 			.then( (replacementUrls) => {
-				this.replacementUrls = replacementUrls.filter((url): url is string => {
+				const created = replacementUrls.filter((url): url is string => {
 					return (typeof(url) === "string");
 				});
+
+				if (!this.settings) {
+					// destroyed mid-flight: nothing is left to revoke these later
+					created.forEach((url) => revokeBlobUrl(url));
+					return replacementUrls as string[];
+				}
+
+				this.replacementUrls = created;
 				return replacementUrls as string[];
 			});
 	}
@@ -189,7 +200,7 @@ class Resources {
 	 * @return {Promise}
 	 */
 	replaceCss(_archive?: Archive, _resolver?: (href: string, absolute?: boolean) => string): Promise<(string | void)[]> {
-		if (this.settings.replacements === "none") {
+		if (!this.settings || this.settings.replacements === "none") {
 			return Promise.resolve([]);
 		}
 
@@ -197,6 +208,11 @@ class Resources {
 		this.cssUrls.forEach((href: string) => {
 			const replacement = this.createCssFile(href)
 				.then((replacementUrl) => {
+					// an archive read isn't cancellable, so it can land after destroy()
+					if (!this.settings) {
+						if (replacementUrl) revokeBlobUrl(replacementUrl);
+						return;
+					}
 					// switch the url in the replacementUrls
 					const indexInUrls = this.urls.indexOf(href);
 					if (replacementUrl && indexInUrls > -1) {
@@ -252,6 +268,10 @@ class Resources {
 		}
 
 		return textResponse.then( (rawText) => {
+			if (!this.settings) {
+				return;
+			}
+
 			// Replacements in the css text
 			const text = substitute(rawText as string, relUrls, this.replacementUrls);
 

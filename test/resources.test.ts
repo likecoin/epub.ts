@@ -172,6 +172,33 @@ describe("Resources", () => {
 			expect(res.replacementUrls.length).toBe(0);
 			errorSpy.mockRestore();
 		});
+
+		it("should not log when the requests were aborted", async () => {
+			const request = vi.fn(() => Promise.reject(new DOMException("Aborted", "AbortError"))) as unknown as RequestFunction;
+			const resolver = (href: string) => "/resolved/" + href;
+			const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+			const res = new Resources(manifest, { replacements: "blobUrl", request, resolver });
+
+			await res.replacements();
+
+			expect(errorSpy).not.toHaveBeenCalled();
+			expect(res.replacementUrls.length).toBe(0);
+			errorSpy.mockRestore();
+		});
+
+		it("should not repopulate replacementUrls when destroyed mid-flight", async () => {
+			const pending: ((blob: Blob) => void)[] = [];
+			const request = vi.fn(() => new Promise((resolve) => { pending.push(resolve as (blob: Blob) => void); })) as unknown as RequestFunction;
+			const resolver = (href: string) => "/resolved/" + href;
+			const res = new Resources(manifest, { replacements: "blobUrl", request, resolver });
+
+			const replacements = res.replacements();
+			res.destroy();
+			pending.forEach((resolve) => resolve(new Blob(["data"])));
+
+			await expect(replacements).resolves.toBeDefined();
+			expect(res.replacementUrls).toBeUndefined();
+		});
 	});
 
 	describe("createUrl()", () => {
@@ -253,6 +280,22 @@ describe("Resources", () => {
 			// replaceCss creates a new blob URL for the css, replacing the original
 			expect(res.replacementUrls[cssIndex]).not.toBe(originalCssReplacement);
 			expect(res.replacementUrls[cssIndex]).toMatch(/^blob:/);
+		});
+
+		// An archive read can't be cancelled, so it always lands after destroy()
+		it("should not write to a destroyed Resources when the css lands late", async () => {
+			let resolveText!: (text: string) => void;
+			const request = vi.fn(() => new Promise((resolve) => { resolveText = resolve as (text: string) => void; })) as unknown as RequestFunction;
+			const resolver = (href: string) => "/OPS/" + href;
+			const res = new Resources(manifest, { replacements: "blobUrl", request, resolver });
+			res.replacementUrls = res.urls!.map(u => "blob:" + u);
+
+			const replaced = res.replaceCss();
+			res.destroy();
+			resolveText("body { color: red; }");
+
+			await expect(replaced).resolves.toBeDefined();
+			expect(res.replacementUrls).toBeUndefined();
 		});
 	});
 
