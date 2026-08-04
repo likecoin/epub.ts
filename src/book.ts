@@ -445,14 +445,15 @@ class Book implements IEventEmitter<BookEvents> {
 	/**
 	 * Load a resource from the Book
 	 * @param  {string} path path to the resource to load
+	 * @param  {string} [type] parse type to use, overriding the path extension
 	 * @return {Promise}     returns a promise with the requested resource
 	 */
-	load(path: string, _type?: string): Promise<unknown> {
+	load(path: string, type?: string): Promise<unknown> {
 		const resolved = this.resolve(path);
 		if(this.archived) {
-			return this.archive!.request(resolved);
+			return this.archive!.request(resolved, type);
 		} else {
-			return this.request(resolved, undefined, this.settings.requestCredentials, this.settings.requestHeaders);
+			return this.request(resolved, type, this.settings.requestCredentials, this.settings.requestHeaders);
 		}
 	}
 

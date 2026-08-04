@@ -117,6 +117,15 @@ describe("Archive", () => {
 				expect(result.documentElement.tagName).toBe("html");
 			});
 
+			it("should fall back to lenient parsing when XHTML is malformed", () => {
+				const result = archive.handleResponse(
+					'<html><body><p id="c">A & B<br></p></body></html>',
+					"xhtml"
+				) as Document;
+				expect(result.querySelector("parsererror")).toBeNull();
+				expect(result.querySelector("#c")?.textContent).toContain("A & B");
+			});
+
 			it("should parse HTML string into Document", () => {
 				const result = archive.handleResponse("<html><body></body></html>", "html") as Document;
 				expect(result.querySelector("body")).toBeTruthy();

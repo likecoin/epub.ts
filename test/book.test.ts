@@ -104,6 +104,29 @@ describe("Book", () => {
 		});
 	});
 
+	describe("load() type forwarding", () => {
+		it("should forward the type to the request function (unarchived)", async () => {
+			const book = new Book(getFixtureUrl("/alice/OPS/package.opf"));
+			await book.opened;
+			const spy = vi.spyOn(book, "request").mockResolvedValue("stub");
+
+			await book.load("chapter_001.xhtml", "xhtml");
+
+			expect(spy.mock.calls[0]![1]).toBe("xhtml");
+		});
+
+		it("should forward the type to the archive (archived)", async () => {
+			const book = new Book(getFixtureUrl("/alice.epub"));
+			await book.opened;
+			const spy = vi.spyOn(book.archive!, "request").mockResolvedValue("stub");
+
+			await book.load("chapter_001.xhtml", "xhtml");
+
+			expect(spy.mock.calls[0]![1]).toBe("xhtml");
+			await book.replacementsReady;
+		});
+	});
+
 	describe("Sub-object parity (archived epub)", () => {
 		let book: Book;
 

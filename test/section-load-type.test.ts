@@ -20,6 +20,9 @@ const requestReturning = (body: string) =>
 const XHTML = `<?xml version="1.0"?><html xmlns="http://www.w3.org/1999/xhtml"><body><p id="c">hi</p></body></html>`;
 // Invalid XML (bare "&", unclosed <br>) but valid, lenient HTML.
 const LOOSE_HTML = `<html><body><p id="c">A & B<br></p></body></html>`;
+// Well-formed XHTML whose self-closing <title/> the HTML parser treats as an
+// unterminated RCDATA start tag, swallowing the rest of the document.
+const SELF_CLOSING_TITLE = `<html xmlns="http://www.w3.org/1999/xhtml"><head><title/></head><body><p id="c">Hello world</p></body></html>`;
 
 describe("mediaTypeToRequestType", () => {
 	it("maps document media-types to parse tokens", () => {
@@ -54,10 +57,22 @@ describe("Section.load resource typing", () => {
 		expect(el).toBeUndefined();
 	});
 
-	it("prefers a known extension over the media-type (lenient html parse preserved)", async () => {
+	it("falls back to the lenient parser when an xhtml-declared .html file isn't well-formed", async () => {
 		const section = makeSection("chapter.html", "application/xhtml+xml");
 		const el = await section.load(requestReturning(LOOSE_HTML));
 		expect(el.querySelector("parsererror")).toBeNull();
+		expect(el.querySelector("#c")?.textContent).toContain("A & B");
+	});
+
+	it("parses an xhtml-declared .htm file strictly so <title/> doesn't swallow the body", async () => {
+		const section = makeSection("chapter.htm", "application/xhtml+xml");
+		const el = await section.load(requestReturning(SELF_CLOSING_TITLE));
+		expect(el.querySelector("#c")?.textContent).toBe("Hello world");
+	});
+
+	it("still parses an html-declared .html file leniently", async () => {
+		const section = makeSection("chapter.html", "text/html");
+		const el = await section.load(requestReturning(LOOSE_HTML));
 		expect(el.querySelector("#c")?.textContent).toContain("A & B");
 	});
 });

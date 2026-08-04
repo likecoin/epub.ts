@@ -387,7 +387,14 @@ export function handleResponse(response: string | Blob, type?: string): Document
 		return parse(response as string, "text/xml");
 	}
 	if (type === "xhtml") {
-		return parse(response as string, "application/xhtml+xml");
+		// Retail EPUBs sometimes declare application/xhtml+xml but ship markup
+		// the strict parser rejects; fall back to the lenient parser rather than
+		// handing back a document that is nothing but a parsererror.
+		const doc = parse(response as string, "application/xhtml+xml");
+		if (doc.querySelector("parsererror")) {
+			return parse(response as string, "text/html");
+		}
+		return doc;
 	}
 	if (type === "html" || type === "htm") {
 		return parse(response as string, "text/html");

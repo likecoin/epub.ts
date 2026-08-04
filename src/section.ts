@@ -73,8 +73,16 @@ class Section {
 		// A recognized filename extension wins (preserves lenient html vs strict
 		// xhtml parsing); the manifest media-type only fills in when the
 		// extension is missing or unknown (e.g. an extensionless split resource).
+		// Exception: an xhtml-declared document named .htm/.html is parsed
+		// strictly, since HTML has no self-closing syntax and would swallow the
+		// document at a tag like <title/>. handleResponse falls back to the
+		// lenient parser when the strict parse fails, so a book that genuinely
+		// needs lenient parsing still gets it.
 		const ext = new Path(this.url!).extension;
-		const type = isKnownRequestType(ext) ? ext : mediaTypeToRequestType(this.mediaType);
+		const declaredType = mediaTypeToRequestType(this.mediaType);
+		const type = declaredType === "xhtml" && (ext === "html" || ext === "htm")
+			? declaredType
+			: isKnownRequestType(ext) ? ext : declaredType;
 		const xml = await request(this.url!, type, undefined, undefined, signal);
 
 		this.document = xml as Document;
