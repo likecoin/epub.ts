@@ -228,7 +228,7 @@ class ContinuousViewManager extends DefaultViewManager {
 				if (view.displayed) {
 					view.hide();
 				}
-			} else if (!this._filling && (view.displayed || view._displaying)) {
+			} else if (!this._filling && (view.displayed || view.displaying)) {
 				this.q.enqueue(() => view.destroy());
 				scheduledDestroy = true;
 			}

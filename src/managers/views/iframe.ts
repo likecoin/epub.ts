@@ -67,6 +67,7 @@ class IframeView implements IEventEmitter<IframeViewEvents> {
 	expanded?: boolean;
 	_abortController: AbortController | undefined;
 	_displaying: Promise<IframeView> | undefined;
+	_loading: defer<Contents> | undefined;
 
 	declare on: IEventEmitter<IframeViewEvents>["on"];
 	declare off: IEventEmitter<IframeViewEvents>["off"];
@@ -280,8 +281,7 @@ class IframeView implements IEventEmitter<IframeViewEvents> {
 				});
 
 			}, (e: Error) => {
-				// Drop the cached promise so a retry re-requests; keeping a
-				// rejected one would make every later render() fail on it.
+				// A rejected promise stays rejected — cached, it would fail every later render().
 				this.sectionRender = undefined;
 
 				if (signal?.aborted || e.name === "AbortError") {
@@ -490,6 +490,10 @@ class IframeView implements IEventEmitter<IframeViewEvents> {
 			return loaded;
 		}
 
+		// Held so destroy() can settle it: the iframe's load event is the only
+		// other way out, and a destroyed view may never receive one.
+		this._loading = loading;
+
 		const onload = (event: Event): void => {
 
 			this.onLoad(event, loading);
@@ -518,6 +522,7 @@ class IframeView implements IEventEmitter<IframeViewEvents> {
 			this.document = this.iframe.contentDocument!;
 
 			if(!this.document) {
+				this._loading = undefined;
 				loading.reject(new Error("No Document Available"));
 				return loaded;
 			}
@@ -581,6 +586,7 @@ class IframeView implements IEventEmitter<IframeViewEvents> {
 			}
 		});
 
+		this._loading = undefined;
 		promise.resolve(this.contents);
 	}
 
@@ -621,6 +627,11 @@ class IframeView implements IEventEmitter<IframeViewEvents> {
 			this.contents.off(EVENTS.CONTENTS.EXPAND);
 			this.contents.off(EVENTS.CONTENTS.RESIZE);
 		}
+	}
+
+	/** True while a display() is in flight — rendered but not yet displayed. */
+	get displaying(): boolean {
+		return this._displaying !== undefined;
 	}
 
 	display(request: RequestFunction): Promise<IframeView> {
@@ -940,6 +951,18 @@ class IframeView implements IEventEmitter<IframeViewEvents> {
 			this._abortController = undefined;
 		}
 
+		// Both must run even when the view never displayed: the load event is
+		// the only thing that settles _loading, and a destroyed view either
+		// never gets one or gets one that would resurrect it.
+		if (this.iframe) {
+			this.iframe.onload = null;
+		}
+
+		if (this._loading) {
+			this._loading.reject(new DOMException("Aborted", "AbortError"));
+			this._loading = undefined;
+		}
+
 		this._displaying = undefined;
 		this.sectionRender = undefined;
 
@@ -968,9 +991,6 @@ class IframeView implements IEventEmitter<IframeViewEvents> {
 
 			this.stopExpanding = true;
 
-			if (this.iframe) {
-				this.iframe.onload = null;
-			}
 			this.element.removeChild(this.iframe!);
 
 			if (this.pane) {

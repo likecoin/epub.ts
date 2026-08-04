@@ -273,6 +273,7 @@ describe("ContinuousViewManager", () => {
 			return {
 				index,
 				displayed: true,
+				displaying: false,
 				expanded: false,
 				element: el,
 				section: { index, next: vi.fn(), prev: vi.fn() },
@@ -323,11 +324,10 @@ describe("ContinuousViewManager", () => {
 			expect((views[3]!.destroy as ReturnType<typeof vi.fn>)).not.toHaveBeenCalled();
 		});
 
-		// An off-screen view whose display is still in flight holds the request
-		// we want to abort, so it has to be destroyed even though it never
-		// displayed. Views that are neither displayed nor loading are already
-		// torn down — re-destroying them every pass would also re-arm trim().
 		it("should destroy an off-screen view whose display is still in flight", () => {
+			// The negative assertion matters: a view that is neither displayed
+			// nor loading is already torn down, and re-destroying it every pass
+			// would also re-arm the trim timeout.
 			const manager = new ContinuousViewManager(createMockManagerOptions());
 			manager.render(document.createElement("div"), { width: 800, height: 600 });
 			manager.layout = {
@@ -338,7 +338,7 @@ describe("ContinuousViewManager", () => {
 
 			const views = [0, 1, 2, 3, 4].map(makeMockView);
 			views[0]!.displayed = false;
-			views[0]!._displaying = new Promise(() => {});
+			views[0]!.displaying = true;
 			views[4]!.displayed = false;
 
 			views.forEach(v => manager.views.append(v as any));
