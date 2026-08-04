@@ -52,7 +52,7 @@ class IframeView implements IEventEmitter<IframeViewEvents> {
 	_expanding: boolean = false;
 	elementBounds!: { width: number; height: number };
 	supportsSrcdoc!: boolean;
-	sectionRender!: Promise<string>;
+	sectionRender: Promise<string> | undefined;
 	lockedWidth!: number;
 	lockedHeight!: number;
 	prevBounds: ReframeBounds | undefined;
@@ -280,6 +280,10 @@ class IframeView implements IEventEmitter<IframeViewEvents> {
 				});
 
 			}, (e: Error) => {
+				// Drop the cached promise so a retry re-requests; keeping a
+				// rejected one would make every later render() fail on it.
+				this.sectionRender = undefined;
+
 				if (signal?.aborted || e.name === "AbortError") {
 					return Promise.reject(e);
 				}
@@ -937,6 +941,7 @@ class IframeView implements IEventEmitter<IframeViewEvents> {
 		}
 
 		this._displaying = undefined;
+		this.sectionRender = undefined;
 
 		for (const cfiRange in this.highlights) {
 			this.unhighlight(cfiRange);
