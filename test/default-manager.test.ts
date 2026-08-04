@@ -337,6 +337,80 @@ describe("DefaultViewManager", () => {
 		});
 	});
 
+	// display() settles a deferred from a promise chain: any unsettled link hangs
+	// the caller and the queue waiting behind it.
+	describe("display()", () => {
+		const section = { index: 0, href: "chapter_001.xhtml", properties: [] } as unknown as Section;
+
+		function createManager(): DefaultViewManager {
+			const manager = new DefaultViewManager(createMockManagerOptions());
+			manager.render(document.createElement("div"), { width: 800, height: 600 });
+			manager.layout = {
+				calculate: vi.fn(),
+				spread: vi.fn(),
+				settings: { spread: "auto" },
+				props: {},
+				name: "reflowable",
+				divisor: 1,
+			} as unknown as Layout;
+			return manager;
+		}
+
+		it("should resolve once the view is added and shown", async () => {
+			const manager = createManager();
+			vi.spyOn(manager, "add").mockResolvedValue({} as IframeView);
+			vi.spyOn(manager, "handleNextPrePaginated").mockReturnValue(undefined);
+			const showSpy = vi.spyOn(manager.views, "show");
+
+			await expect(manager.display(section)).resolves.toBeUndefined();
+
+			expect(showSpy).toHaveBeenCalled();
+		});
+
+		it("should reject and skip the rest of the chain when adding fails", async () => {
+			const manager = createManager();
+			vi.spyOn(manager, "add").mockRejectedValue(new Error("boom"));
+			const nextPageSpy = vi.spyOn(manager, "handleNextPrePaginated");
+			const showSpy = vi.spyOn(manager.views, "show");
+
+			await expect(manager.display(section)).rejects.toThrow("boom");
+
+			expect(nextPageSpy).not.toHaveBeenCalled();
+			expect(showSpy).not.toHaveBeenCalled();
+		});
+
+		// A throw in an onFulfilled does not reach that same .then's onRejected,
+		// so this one only settles because the catch is terminal.
+		it("should reject when moving to the target throws", async () => {
+			const manager = createManager();
+			const view = {
+				locationOf: (): never => { throw new Error("locate failed"); },
+				width: vi.fn().mockReturnValue(800),
+			} as unknown as IframeView;
+			vi.spyOn(manager, "add").mockResolvedValue(view);
+			vi.spyOn(manager, "handleNextPrePaginated").mockReturnValue(undefined);
+
+			await expect(manager.display(section, "#frag")).rejects.toThrow("locate failed");
+		});
+
+		it("should reject when the pre-paginated companion page fails", async () => {
+			const manager = createManager();
+			vi.spyOn(manager, "add").mockResolvedValue({} as IframeView);
+			vi.spyOn(manager, "handleNextPrePaginated").mockRejectedValue(new Error("spread failed"));
+
+			await expect(manager.display(section)).rejects.toThrow("spread failed");
+		});
+
+		it("should reject when showing the views throws", async () => {
+			const manager = createManager();
+			vi.spyOn(manager, "add").mockResolvedValue({} as IframeView);
+			vi.spyOn(manager, "handleNextPrePaginated").mockReturnValue(undefined);
+			vi.spyOn(manager.views, "show").mockImplementation(() => { throw new Error("show failed"); });
+
+			await expect(manager.display(section)).rejects.toThrow("show failed");
+		});
+	});
+
 	describe("destroy()", () => {
 		it("should set rendered to false", () => {
 			const manager = new DefaultViewManager(createMockManagerOptions());
