@@ -83,7 +83,7 @@ class ContinuousViewManager extends DefaultViewManager {
 
 	async fill(): Promise<void> {
 		this._filling = true;
-		let result: boolean | void | Error = true;
+		let result: boolean | void = true;
 		while (result) {
 			result = await this.q.enqueue(() => {
 				return this.check();
@@ -242,15 +242,17 @@ class ContinuousViewManager extends DefaultViewManager {
 		}
 
 		if (promises.length) {
+			// Rejecting `updating` here would reject a promise nobody holds — this
+			// branch returns the chain instead — so settle the chain itself.
 			return (Promise.all(promises) as unknown as Promise<void>)
-				.catch((err: Error) => { updating.reject(err); });
+				.catch(() => {});
 		} else {
 			updating.resolve();
 			return updating.promise;
 		}
 	}
 
-	check(_offsetLeft?: number, _offsetTop?: number): Promise<boolean | void | Error> {
+	check(_offsetLeft?: number, _offsetTop?: number): Promise<boolean | void> {
 		const checking = new defer<boolean>();
 		const newViews: Promise<IframeView>[] = [];
 
@@ -311,7 +313,14 @@ class ContinuousViewManager extends DefaultViewManager {
 		}
 
 		const promises = newViews.map((viewPromise) => {
-			return viewPromise.then((view) => view.display(this.request));
+			return viewPromise.then((view) => view.display(this.request).catch((err) => {
+				// append() adds the view before it displays, and one that never
+				// displayed is invisible to update()/trim() — it would sit in the
+				// container for the manager's lifetime, holding its iframe, and
+				// become views.last() so the next check() skips the section after it.
+				this.views.remove(view);
+				throw err;
+			}));
 		});
 
 		if(newViews.length){
@@ -322,8 +331,12 @@ class ContinuousViewManager extends DefaultViewManager {
 				.then(() => {
 					// Check to see if anything new is on screen after rendering
 					return this.update(delta);
-				}, (err: Error) => {
-					return err;
+				}, () => {
+					// Swallowed on purpose: check() is floated by scrolled(),
+					// next() and prev(), so propagating would reject into nothing.
+					// fill() loops while the result is truthy, so false ends it —
+					// an Error would not, and drove it down the whole spine.
+					return false;
 				});
 		} else {
 			this.q.enqueue(() => {

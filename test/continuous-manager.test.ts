@@ -3,6 +3,7 @@ import ContinuousViewManager from "../src/managers/continuous/index";
 import type { ManagerOptions, ViewSettings } from "../src/types";
 import type Section from "../src/section";
 import type Layout from "../src/layout";
+import type IframeView from "../src/managers/views/iframe";
 import Queue from "../src/utils/queue";
 
 function createMockManagerOptions(overrides?: Partial<ManagerOptions["settings"]>): ManagerOptions {
@@ -262,6 +263,43 @@ describe("ContinuousViewManager", () => {
 			manager.snapper = { destroy: destroySpy } as any;
 			manager.destroy();
 			expect(destroySpy).toHaveBeenCalled();
+		});
+	});
+
+	describe("check()", () => {
+		// fill() loops while the result is truthy, so resolving with an Error
+		// drove it down the whole spine.
+		it("should resolve falsy and drop the view when it fails to display", async () => {
+			const manager = new ContinuousViewManager(createMockManagerOptions());
+			manager.render(document.createElement("div"), { width: 800, height: 600 });
+			manager.layout = {
+				props: { delta: 800, spread: false, name: "reflowable" },
+				width: 800,
+				height: 600,
+			} as unknown as Layout;
+
+			const nextSection = { index: 1 } as Section;
+			manager.views.append({
+				element: document.createElement("div"),
+				section: { next: (): Section => nextSection, prev: (): undefined => undefined },
+			} as unknown as IframeView);
+			const failed = {
+				element: document.createElement("div"),
+				destroy: vi.fn(),
+				display: vi.fn().mockRejectedValue(new Error("view failed")),
+			} as unknown as IframeView;
+			const appendSpy = vi.spyOn(manager, "append").mockImplementation(() => {
+				manager.views.append(failed);
+				return Promise.resolve(failed);
+			});
+
+			await expect(manager.check()).resolves.toBe(false);
+
+			// Without this the assertion above is ambiguous: check()'s other
+			// branch resolves false too, without ever appending.
+			expect(appendSpy).toHaveBeenCalledWith(nextSection);
+			expect(manager.views.all()).not.toContain(failed);
+			expect(failed.destroy).toHaveBeenCalled();
 		});
 	});
 
