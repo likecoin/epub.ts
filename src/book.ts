@@ -110,6 +110,7 @@ class Book implements IEventEmitter<BookEvents> {
 	displayOptions: DisplayOptions | undefined;
 	package: Packaging | undefined;
 	cover!: string;
+	private resourcesAbort: AbortController | undefined;
 
 	declare on: IEventEmitter<BookEvents>["on"];
 	declare off: IEventEmitter<BookEvents>["off"];
@@ -596,10 +597,17 @@ class Book implements IEventEmitter<BookEvents> {
 				: this.packaging.metadata.layout;
 		});
 
+		this.resourcesAbort && this.resourcesAbort.abort();
+		const controller = typeof AbortController !== "undefined" ? new AbortController() : undefined;
+		this.resourcesAbort = controller;
+
 		this.resources = new Resources(this.packaging.manifest, {
 			archive: this.archive,
 			resolver: (path: string, absolute?: boolean): string => this.resolve(path, absolute),
-			request: (path: string, type?: string): Promise<unknown> => this.request(path, type),
+			// load() rather than request(): asset fetches need the book's
+			// credentials and headers, and have to stop when it is destroyed.
+			request: (path: string, type?: string): Promise<unknown> =>
+				this.load(path, type, undefined, undefined, controller && controller.signal),
 			replacements: this.settings.replacements || (this.archived ? "blobUrl" : "base64")
 		});
 
@@ -808,12 +816,16 @@ class Book implements IEventEmitter<BookEvents> {
 	 * @return {Promise} completed loading urls
 	 */
 	replacements(): Promise<void> {
+		// destroy() can land between these steps
 		const ready: Promise<void> = this.resources.replacements()
-			.then(() => this.resources.replaceCss())
+			.then(() => this.resources && this.resources.replaceCss())
 			.then(() => undefined);
 
 		this.spine.hooks.serialize.register((output: string, section: Section) => {
 			return ready.then(() => {
+				if (!this.resources) {
+					return;
+				}
 				section.output = this.resources.substitute(output, section.url);
 			});
 		});
@@ -863,6 +875,12 @@ class Book implements IEventEmitter<BookEvents> {
 
 		this.isOpen = false;
 		this.isRendered = false;
+
+		// Cancel asset requests before Resources is torn down
+		if (this.resourcesAbort) {
+			this.resourcesAbort.abort();
+			this.resourcesAbort = undefined;
+		}
 
 		this.spine && this.spine.destroy();
 		this.locations && this.locations.destroy();
