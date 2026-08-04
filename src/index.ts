@@ -17,6 +17,7 @@ import Annotations from "./annotations";
 import Themes from "./themes";
 import Mapping from "./mapping";
 import Container from "./container";
+import InlineView from "./managers/views/inline";
 import { EpubError, setDOMParser } from "./utils/core";
 import ePub from "./epub";
 
@@ -42,6 +43,7 @@ export {
 	Annotations,
 	Themes,
 	Mapping,
+	InlineView,
 	setDOMParser,
 };
 export * from "./types";
