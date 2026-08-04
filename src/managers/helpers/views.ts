@@ -74,10 +74,13 @@ class Views {
 	remove(view: IframeView): void {
 		const index = this._views.indexOf(view);
 
-		if(index > -1) {
-			this._views.splice(index, 1);
-		}
+		// Idempotent: the continuous manager can erase a view and then drop the
+		// same one when its display fails. A second pass would removeChild an
+		// element that is no longer a child, and drive length negative — where
+		// the `if(!this.views.length)` guards read it as truthy.
+		if(index === -1) return;
 
+		this._views.splice(index, 1);
 
 		this.destroy(view);
 

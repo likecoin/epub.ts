@@ -134,6 +134,20 @@ describe("Views", () => {
 			views.remove(v);
 			expect(v.destroy).toHaveBeenCalled();
 		});
+
+		// check() removes the view it failed to display, and trim() may already
+		// have erased it, so the same view can arrive here twice.
+		it("should ignore a view it no longer holds", () => {
+			const views = createViews();
+			const v = createMockView(0);
+			views.append(v);
+			views.remove(v);
+
+			expect(() => views.remove(v)).not.toThrow();
+
+			expect(views.length).toBe(0);
+			expect(v.destroy).toHaveBeenCalledTimes(1);
+		});
 	});
 
 	describe("first() / last()", () => {
