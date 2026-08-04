@@ -417,6 +417,7 @@ class Rendition implements IEventEmitter<RenditionEvents> {
 		const section: Section | null = this.book.spine.get(target);
 
 		if(!section){
+			this.displaying = undefined;
 			displaying.reject(new Error("No Section Found"));
 			return displayed;
 		}
@@ -430,10 +431,15 @@ class Rendition implements IEventEmitter<RenditionEvents> {
 			this._disarmReanchor();
 		}
 
+		// Both handlers clear the marker only if it is still ours: superseding
+		// resolves this deferred early, so a newer display may already own it
+		// (see the re-anchor guard in onContentReflow) by the time we settle.
 		this.manager.display(section, target as string)
 			.then(() => {
 				displaying.resolve(section);
-				this.displaying = undefined;
+				if (this.displaying === displaying) {
+					this.displaying = undefined;
+				}
 
 				/**
 				 * Emit that a section has been displayed
@@ -444,6 +450,20 @@ class Rendition implements IEventEmitter<RenditionEvents> {
 				this.emit(EVENTS.RENDITION.DISPLAYED, section);
 				this.reportLocation();
 			}, (err: Error) => {
+				if (this.displaying === displaying) {
+					this.displaying = undefined;
+				}
+
+				// Settle before emitting: emit() runs listeners bare, so a throwing
+				// one would leave this pending — and _display's promise is what
+				// Queue waits on before running the next task. A superseded display
+				// resolves undefined, as display() does when it replaces one.
+				if (err && err.name === "AbortError") {
+					displaying.resolve(undefined);
+				} else {
+					displaying.reject(err);
+				}
+
 				/**
 				 * Emit that has been an error displaying
 				 * @event displayError
@@ -451,7 +471,12 @@ class Rendition implements IEventEmitter<RenditionEvents> {
 				 * @memberof Rendition
 				 */
 				this.emit(EVENTS.RENDITION.DISPLAY_ERROR, err);
-			});
+			})
+			// Nothing holds this chain — _display returns the deferred's promise,
+			// not this — so a throw from either handler's emit() would surface as
+			// an unhandled rejection. Both settle before emitting, so by here the
+			// caller already has its answer and only the listener's bug is left.
+			.catch(() => {});
 
 		return displayed;
 	}
@@ -635,7 +660,10 @@ class Rendition implements IEventEmitter<RenditionEvents> {
 		}, epubcfi);
 
 		if (this.location && this.location.start) {
-			this.display(epubcfi || this.location.start.cfi);
+			// Nothing awaits these internal re-displays, and the failure is
+			// already reported on displayerror, so swallow the rejection rather
+			// than leaving it unhandled.
+			this.display(epubcfi || this.location.start.cfi).catch(() => {});
 		}
 
 	}
@@ -830,7 +858,7 @@ class Rendition implements IEventEmitter<RenditionEvents> {
 
 		if (this.manager && this.manager.isRendered() && this.location) {
 			this.manager.clear();
-			this.display(this.location.start.cfi);
+			this.display(this.location.start.cfi).catch(() => {});
 		}
 	}
 
@@ -893,7 +921,7 @@ class Rendition implements IEventEmitter<RenditionEvents> {
 
 		if (this.manager && this.manager.isRendered() && this.location) {
 			this.manager.clear();
-			this.display(this.location.start.cfi);
+			this.display(this.location.start.cfi).catch(() => {});
 		}
 	}
 
@@ -1063,6 +1091,11 @@ class Rendition implements IEventEmitter<RenditionEvents> {
 	destroy(): void {
 		this.q.clear();
 		this._disarmReanchor();
+		// q.clear() only settles what never ran; a _display already dequeued and
+		// waiting on the manager holds its own deferred, and the manager is about
+		// to be torn down under it. Resolve undefined, as a superseded display does.
+		this.displaying?.resolve(undefined);
+		this.displaying = undefined;
 
 		this._disconnectContainerObserver();
 
@@ -1242,7 +1275,9 @@ class Rendition implements IEventEmitter<RenditionEvents> {
 		if (contents) {
 			contents.on(EVENTS.CONTENTS.LINK_CLICKED, (href: string) => {
 				const relative = this.book.path!.relative(href);
-				this.display(relative);
+				// An href that resolves to no section rejects before the manager
+				// runs, so displayerror hasn't been emitted for it yet.
+				this.display(relative).catch((err: Error) => this.emit(EVENTS.RENDITION.DISPLAY_ERROR, err));
 			});
 		}
 	}
