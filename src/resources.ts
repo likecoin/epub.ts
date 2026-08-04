@@ -218,6 +218,14 @@ class Resources {
 					// switch the url in the replacementUrls
 					const indexInUrls = this.urls.indexOf(href);
 					if (replacementUrl && indexInUrls > -1) {
+						// Hand the raw stylesheet's blob to destroy() rather than
+						// revoking it here: the other stylesheets in this batch were
+						// rewritten against it (an @import resolves to it), and for an
+						// archived book Archive.urlCache still re-serves it. A base64
+						// url has nothing to revoke and carries the whole stylesheet,
+						// so tracking it would just pin it until destroy().
+						const superseded = this.replacementUrls[indexInUrls];
+						if (superseded && superseded.startsWith("blob:")) this.ownedUrls.push(superseded);
 						this.replacementUrls[indexInUrls] = replacementUrl;
 					}
 				})
