@@ -30,7 +30,8 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/epub.umd.js"
     },
-    "./dist/*": "./dist/*"
+    "./dist/*.js": "./dist/*.js",
+    "./dist/*.cjs": "./dist/*.cjs"
   },
   "sideEffects": [
     "dist/epub.node.js",
