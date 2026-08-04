@@ -124,6 +124,29 @@ function requestXhr(
   });
 }
 
+// fetch() brand-checks init.signal, so an AbortSignal built by a different realm
+// (jsdom's AbortController against Node's fetch) is refused before the request is
+// sent. This is not only our own suite: any consumer running a reader under
+// jest/vitest + jsdom hits the same mismatch, so the shim ships rather than
+// living in test setup. Same-realm browsers never reach it.
+// Losing cancellation is better than losing the resource, so drop the signal and
+// retry.
+async function fetchWithSignalFallback(url: string, init: RequestInit): Promise<Response> {
+  try {
+    return await fetch(url, init);
+  } catch (e) {
+    const signal = init.signal;
+    if (!signal || (e as Error).name !== "TypeError" || !/signal/i.test((e as Error).message)) {
+      throw e;
+    }
+    if (signal.aborted) {
+      throw new DOMException("Aborted", "AbortError");
+    }
+    const { signal: _dropped, ...rest } = init;
+    return fetch(url, rest);
+  }
+}
+
 async function request(
   url: string,
   type?: string,
@@ -170,7 +193,7 @@ async function request(
 
   let response: Response;
   try {
-    response = await fetch(url, init);
+    response = await fetchWithSignalFallback(url, init);
   } catch (e) {
     // Preserve AbortError verbatim so callers can detect intentional cancellation.
     if ((e as Error).name === "AbortError") {
