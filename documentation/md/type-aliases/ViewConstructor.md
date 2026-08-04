@@ -8,7 +8,7 @@
 
 > **ViewConstructor** = (`section`, `options?`) => `any`
 
-Defined in: src/types.ts:237
+Defined in: src/types.ts:248
 
 ## Parameters
 

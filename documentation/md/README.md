@@ -14,6 +14,7 @@
 - [DisplayOptions](classes/DisplayOptions.md)
 - [EpubCFI](classes/EpubCFI.md)
 - [EpubError](classes/EpubError.md)
+- [InlineView](classes/InlineView.md)
 - [Layout](classes/Layout.md)
 - [Locations](classes/Locations.md)
 - [Mapping](classes/Mapping.md)
@@ -75,6 +76,7 @@
 
 ## Type Aliases
 
+- [DOMParserConstructor](type-aliases/DOMParserConstructor.md)
 - [EventMap](type-aliases/EventMap.md)
 - [RequestFunction](type-aliases/RequestFunction.md)
 - [ViewConstructor](type-aliases/ViewConstructor.md)
@@ -83,3 +85,4 @@
 ## Functions
 
 - [default](functions/default.md)
+- [setDOMParser](functions/setDOMParser.md)

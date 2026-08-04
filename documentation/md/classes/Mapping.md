@@ -6,7 +6,7 @@
 
 # Class: Mapping
 
-Defined in: src/mapping.ts:15
+Defined in: src/mapping.ts:18
 
 Map text locations to CFI ranges
 
@@ -30,9 +30,9 @@ toggle developer highlighting
 
 ### Constructor
 
-> **new Mapping**(`layout`, `direction?`, `axis?`, `dev?`): `Mapping`
+> **new Mapping**(`layout`, `direction?`, `axis?`, `dev?`, `measurer?`): `Mapping`
 
-Defined in: src/mapping.ts:21
+Defined in: src/mapping.ts:25
 
 #### Parameters
 
@@ -52,6 +52,10 @@ Defined in: src/mapping.ts:21
 
 `boolean` = `false`
 
+##### measurer?
+
+`TextMeasurer`
+
 #### Returns
 
 `Mapping`
@@ -62,7 +66,15 @@ Defined in: src/mapping.ts:21
 
 > **\_dev**: `boolean`
 
-Defined in: src/mapping.ts:19
+Defined in: src/mapping.ts:22
+
+***
+
+### \_measurer
+
+> **\_measurer**: `TextMeasurer` \| `null`
+
+Defined in: src/mapping.ts:23
 
 ***
 
@@ -70,7 +82,7 @@ Defined in: src/mapping.ts:19
 
 > **direction**: `string`
 
-Defined in: src/mapping.ts:18
+Defined in: src/mapping.ts:21
 
 ***
 
@@ -78,7 +90,7 @@ Defined in: src/mapping.ts:18
 
 > **horizontal**: `boolean`
 
-Defined in: src/mapping.ts:17
+Defined in: src/mapping.ts:20
 
 ***
 
@@ -86,7 +98,7 @@ Defined in: src/mapping.ts:17
 
 > **layout**: [`LayoutProps`](../interfaces/LayoutProps.md)
 
-Defined in: src/mapping.ts:16
+Defined in: src/mapping.ts:19
 
 ## Methods
 
@@ -94,7 +106,7 @@ Defined in: src/mapping.ts:16
 
 > **axis**(`axis?`): `boolean`
 
-Defined in: src/mapping.ts:498
+Defined in: src/mapping.ts:862
 
 Set the axis for mapping
 
@@ -118,7 +130,7 @@ is it horizontal?
 
 > **findRanges**(`view`): [`RangePair`](../interfaces/RangePair.md)[]
 
-Defined in: src/mapping.ts:102
+Defined in: src/mapping.ts:138
 
 #### Parameters
 
@@ -136,7 +148,7 @@ Defined in: src/mapping.ts:102
 
 > **page**(`contents`, `cfiBase`, `start`, `end`): [`EpubCFIPair`](../interfaces/EpubCFIPair.md) \| `undefined`
 
-Defined in: src/mapping.ts:45
+Defined in: src/mapping.ts:50
 
 Find CFI pairs for a page
 
@@ -176,7 +188,7 @@ position to end at
 
 > **rangeListToCfiList**(`cfiBase`, `columns`): [`EpubCFIPair`](../interfaces/EpubCFIPair.md)[]
 
-Defined in: src/mapping.ts:479
+Defined in: src/mapping.ts:843
 
 #### Parameters
 
@@ -198,7 +210,7 @@ Defined in: src/mapping.ts:479
 
 > **section**(`view`): [`EpubCFIPair`](../interfaces/EpubCFIPair.md)[]
 
-Defined in: src/mapping.ts:31
+Defined in: src/mapping.ts:36
 
 Find CFI pairs for entire section at once
 

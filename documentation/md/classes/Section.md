@@ -6,7 +6,7 @@
 
 # Class: Section
 
-Defined in: src/section.ts:15
+Defined in: src/section.ts:16
 
 Represents a Section of the Book
 
@@ -26,7 +26,7 @@ hooks for serialize and content
 
 > **new Section**(`item`, `hooks?`): `Section`
 
-Defined in: src/section.ts:32
+Defined in: src/section.ts:34
 
 #### Parameters
 
@@ -54,7 +54,7 @@ Defined in: src/section.ts:32
 
 > **canonical**: `string`
 
-Defined in: src/section.ts:22
+Defined in: src/section.ts:23
 
 ***
 
@@ -62,7 +62,7 @@ Defined in: src/section.ts:22
 
 > **cfiBase**: `string` \| `undefined`
 
-Defined in: src/section.ts:25
+Defined in: src/section.ts:26
 
 ***
 
@@ -70,7 +70,7 @@ Defined in: src/section.ts:25
 
 > **contents**: `Element` \| `undefined`
 
-Defined in: src/section.ts:28
+Defined in: src/section.ts:29
 
 ***
 
@@ -78,7 +78,7 @@ Defined in: src/section.ts:28
 
 > **document**: `Document` \| `undefined`
 
-Defined in: src/section.ts:27
+Defined in: src/section.ts:28
 
 ***
 
@@ -86,7 +86,7 @@ Defined in: src/section.ts:27
 
 > **hooks**: \{ `content`: `Hook`; `serialize`: `Hook`; \} \| `undefined`
 
-Defined in: src/section.ts:26
+Defined in: src/section.ts:27
 
 ***
 
@@ -94,7 +94,7 @@ Defined in: src/section.ts:26
 
 > **href**: `string` \| `undefined`
 
-Defined in: src/section.ts:20
+Defined in: src/section.ts:21
 
 ***
 
@@ -102,7 +102,7 @@ Defined in: src/section.ts:20
 
 > **idref**: `string` \| `undefined`
 
-Defined in: src/section.ts:16
+Defined in: src/section.ts:17
 
 ***
 
@@ -110,7 +110,7 @@ Defined in: src/section.ts:16
 
 > **index**: `number` \| `undefined`
 
-Defined in: src/section.ts:19
+Defined in: src/section.ts:20
 
 ***
 
@@ -118,7 +118,15 @@ Defined in: src/section.ts:19
 
 > **linear**: `boolean` \| `undefined`
 
-Defined in: src/section.ts:17
+Defined in: src/section.ts:18
+
+***
+
+### mediaType
+
+> **mediaType**: `string` \| `undefined`
+
+Defined in: src/section.ts:32
 
 ***
 
@@ -126,7 +134,7 @@ Defined in: src/section.ts:17
 
 > **next**: () => `Section` \| `undefined` \| `undefined`
 
-Defined in: src/section.ts:23
+Defined in: src/section.ts:24
 
 ***
 
@@ -134,7 +142,7 @@ Defined in: src/section.ts:23
 
 > **output**: `string` \| `undefined`
 
-Defined in: src/section.ts:29
+Defined in: src/section.ts:30
 
 ***
 
@@ -142,7 +150,7 @@ Defined in: src/section.ts:29
 
 > **prev**: () => `Section` \| `undefined` \| `undefined`
 
-Defined in: src/section.ts:24
+Defined in: src/section.ts:25
 
 ***
 
@@ -150,7 +158,7 @@ Defined in: src/section.ts:24
 
 > **properties**: `string`[] \| `undefined`
 
-Defined in: src/section.ts:18
+Defined in: src/section.ts:19
 
 ***
 
@@ -158,7 +166,7 @@ Defined in: src/section.ts:18
 
 > **request**: [`RequestFunction`](../type-aliases/RequestFunction.md)
 
-Defined in: src/section.ts:30
+Defined in: src/section.ts:31
 
 ***
 
@@ -166,7 +174,7 @@ Defined in: src/section.ts:30
 
 > **url**: `string` \| `undefined`
 
-Defined in: src/section.ts:21
+Defined in: src/section.ts:22
 
 ## Methods
 
@@ -174,7 +182,7 @@ Defined in: src/section.ts:21
 
 > **cfiFromElement**(`el`): `string`
 
-Defined in: src/section.ts:267
+Defined in: src/section.ts:283
 
 Get a CFI from an Element in the Section
 
@@ -196,7 +204,7 @@ cfi an EpubCFI string
 
 > **cfiFromRange**(`_range`): `string`
 
-Defined in: src/section.ts:258
+Defined in: src/section.ts:274
 
 Get a CFI from a Range in the Section
 
@@ -218,7 +226,7 @@ cfi an EpubCFI string
 
 > **destroy**(): `void`
 
-Defined in: src/section.ts:280
+Defined in: src/section.ts:296
 
 #### Returns
 
@@ -230,7 +238,7 @@ Defined in: src/section.ts:280
 
 > **find**(`_query`): [`SearchResult`](../interfaces/SearchResult.md)[]
 
-Defined in: src/section.ts:106
+Defined in: src/section.ts:122
 
 Find a string in a section
 
@@ -252,9 +260,9 @@ A list of matches, with form {cfi, excerpt}
 
 ### load()
 
-> **load**(`_request?`): `Promise`\<`Element`\>
+> **load**(`_request?`, `signal?`): `Promise`\<`Element`\>
 
-Defined in: src/section.ts:63
+Defined in: src/section.ts:66
 
 Load the section from its url
 
@@ -265,6 +273,10 @@ Load the section from its url
 [`RequestFunction`](../type-aliases/RequestFunction.md)
 
 a request method to use for loading
+
+##### signal?
+
+`AbortSignal`
 
 #### Returns
 
@@ -278,7 +290,7 @@ a promise with the xml document
 
 > **reconcileLayoutSettings**(`globalLayout`): `Record`\<`string`, `string`\>
 
-Defined in: src/section.ts:229
+Defined in: src/section.ts:245
 
 Reconciles the current chapters layout properties with
 the global layout properties.
@@ -301,9 +313,9 @@ layoutProperties Object with layout properties
 
 ### render()
 
-> **render**(`_request?`): `Promise`\<`string`\>
+> **render**(`_request?`, `signal?`): `Promise`\<`string`\>
 
-Defined in: src/section.ts:92
+Defined in: src/section.ts:108
 
 Render the contents of a section
 
@@ -314,6 +326,10 @@ Render the contents of a section
 [`RequestFunction`](../type-aliases/RequestFunction.md)
 
 a request method to use for loading
+
+##### signal?
+
+`AbortSignal`
 
 #### Returns
 
@@ -327,7 +343,7 @@ output a serialized XML Document
 
 > **search**(`_query`, `maxSeqEle?`): [`SearchResult`](../interfaces/SearchResult.md)[]
 
-Defined in: src/section.ts:165
+Defined in: src/section.ts:181
 
 Search a string in multiple sequential Element of the section.
 
@@ -357,7 +373,7 @@ A list of matches, with form {cfi, excerpt}
 
 > **unload**(): `void`
 
-Defined in: src/section.ts:274
+Defined in: src/section.ts:290
 
 Unload the section document
 

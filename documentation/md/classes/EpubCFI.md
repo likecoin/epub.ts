@@ -124,7 +124,7 @@ Defined in: src/epubcfi.ts:27
 
 > **collapse**(`toStart?`): `void`
 
-Defined in: src/epubcfi.ts:1050
+Defined in: src/epubcfi.ts:1049
 
 Collapse a CFI Range to a single CFI Position
 
@@ -144,7 +144,7 @@ Collapse a CFI Range to a single CFI Position
 
 > **compare**(`cfiOne`, `cfiTwo`): `number`
 
-Defined in: src/epubcfi.ts:345
+Defined in: src/epubcfi.ts:344
 
 Compare which of two CFIs is earlier in the text
 
@@ -170,7 +170,7 @@ First is earlier = -1, Second is earlier = 1, They are equal = 0
 
 > **equalStep**(`stepA`, `stepB`): `boolean`
 
-Defined in: src/epubcfi.ts:499
+Defined in: src/epubcfi.ts:498
 
 #### Parameters
 
@@ -192,7 +192,7 @@ Defined in: src/epubcfi.ts:499
 
 > **filter**(`anchor`, `ignoreClass`): `false` \| `Node`
 
-Defined in: src/epubcfi.ts:637
+Defined in: src/epubcfi.ts:636
 
 #### Parameters
 
@@ -214,7 +214,7 @@ Defined in: src/epubcfi.ts:637
 
 > **filteredPosition**(`anchor`, `ignoreClass`): `number`
 
-Defined in: src/epubcfi.ts:764
+Defined in: src/epubcfi.ts:763
 
 #### Parameters
 
@@ -236,7 +236,7 @@ Defined in: src/epubcfi.ts:764
 
 > **filteredStep**(`node`, `ignoreClass`): [`EpubCFIStep`](../interfaces/EpubCFIStep.md) \| `undefined`
 
-Defined in: src/epubcfi.ts:432
+Defined in: src/epubcfi.ts:431
 
 #### Parameters
 
@@ -258,7 +258,7 @@ Defined in: src/epubcfi.ts:432
 
 > **findNode**(`steps`, `_doc?`, `ignoreClass?`): `Node` \| `undefined`
 
-Defined in: src/epubcfi.ts:889
+Defined in: src/epubcfi.ts:888
 
 #### Parameters
 
@@ -284,7 +284,7 @@ Defined in: src/epubcfi.ts:889
 
 > **fixMiss**(`steps`, `offset`, `_doc?`, `ignoreClass?`): `object`
 
-Defined in: src/epubcfi.ts:906
+Defined in: src/epubcfi.ts:905
 
 #### Parameters
 
@@ -322,7 +322,7 @@ Defined in: src/epubcfi.ts:906
 
 > **fromNode**(`anchor`, `base`, `ignoreClass?`): `Partial`\<`Pick`\<`EpubCFI`, `"spinePos"` \| `"range"` \| `"base"` \| `"path"` \| `"start"` \| `"end"`\>\>
 
-Defined in: src/epubcfi.ts:615
+Defined in: src/epubcfi.ts:614
 
 Create a CFI object from a Node
 
@@ -352,7 +352,7 @@ cfi
 
 > **fromRange**(`range`, `base`, `ignoreClass?`): `Partial`\<`Pick`\<`EpubCFI`, `"spinePos"` \| `"range"` \| `"base"` \| `"path"` \| `"start"` \| `"end"`\>\>
 
-Defined in: src/epubcfi.ts:520
+Defined in: src/epubcfi.ts:519
 
 Create a CFI object from a Range
 
@@ -382,7 +382,7 @@ cfi
 
 > **generateChapterComponent**(`_spineNodeIndex`, `_pos`, `id?`): `string`
 
-Defined in: src/epubcfi.ts:1032
+Defined in: src/epubcfi.ts:1031
 
 #### Parameters
 
@@ -408,7 +408,7 @@ Defined in: src/epubcfi.ts:1032
 
 > **getChapterComponent**(`cfiStr`): `string`
 
-Defined in: src/epubcfi.ts:233
+Defined in: src/epubcfi.ts:232
 
 #### Parameters
 
@@ -426,7 +426,7 @@ Defined in: src/epubcfi.ts:233
 
 > **getCharecterOffsetComponent**(`cfiStr`): `string`
 
-Defined in: src/epubcfi.ts:265
+Defined in: src/epubcfi.ts:264
 
 #### Parameters
 
@@ -444,7 +444,7 @@ Defined in: src/epubcfi.ts:265
 
 > **getPathComponent**(`cfiStr`): `string` \| `undefined`
 
-Defined in: src/epubcfi.ts:240
+Defined in: src/epubcfi.ts:239
 
 #### Parameters
 
@@ -462,7 +462,7 @@ Defined in: src/epubcfi.ts:240
 
 > **getRange**(`cfiStr`): `false` \| \[`string`, `string`\]
 
-Defined in: src/epubcfi.ts:251
+Defined in: src/epubcfi.ts:250
 
 #### Parameters
 
@@ -480,7 +480,7 @@ Defined in: src/epubcfi.ts:251
 
 > **isCfiString**(`str`): `boolean`
 
-Defined in: src/epubcfi.ts:1022
+Defined in: src/epubcfi.ts:1021
 
 Check if a string is wrapped with "epubcfi()"
 
@@ -500,7 +500,7 @@ Check if a string is wrapped with "epubcfi()"
 
 > **joinSteps**(`steps`): `string`
 
-Defined in: src/epubcfi.ts:270
+Defined in: src/epubcfi.ts:269
 
 #### Parameters
 
@@ -518,7 +518,7 @@ Defined in: src/epubcfi.ts:270
 
 > **normalizedMap**(`children`, `nodeType`, `ignoreClass`): `Record`\<`number`, `number`\>
 
-Defined in: src/epubcfi.ts:713
+Defined in: src/epubcfi.ts:712
 
 #### Parameters
 
@@ -566,7 +566,7 @@ cfi
 
 > **parseComponent**(`componentStr`): [`EpubCFIComponent`](../interfaces/EpubCFIComponent.md)
 
-Defined in: src/epubcfi.ts:151
+Defined in: src/epubcfi.ts:150
 
 #### Parameters
 
@@ -584,7 +584,7 @@ Defined in: src/epubcfi.ts:151
 
 > **parseStep**(`stepStr`): [`EpubCFIStep`](../interfaces/EpubCFIStep.md) \| `undefined`
 
-Defined in: src/epubcfi.ts:179
+Defined in: src/epubcfi.ts:178
 
 #### Parameters
 
@@ -602,7 +602,7 @@ Defined in: src/epubcfi.ts:179
 
 > **parseTerminal**(`termialStr`): `object`
 
-Defined in: src/epubcfi.ts:210
+Defined in: src/epubcfi.ts:209
 
 #### Parameters
 
@@ -628,7 +628,7 @@ Defined in: src/epubcfi.ts:210
 
 > **patchOffset**(`anchor`, `offset`, `ignoreClass`): `number`
 
-Defined in: src/epubcfi.ts:680
+Defined in: src/epubcfi.ts:679
 
 #### Parameters
 
@@ -654,7 +654,7 @@ Defined in: src/epubcfi.ts:680
 
 > **pathTo**(`node`, `offset`, `ignoreClass?`): [`EpubCFIComponent`](../interfaces/EpubCFIComponent.md)
 
-Defined in: src/epubcfi.ts:451
+Defined in: src/epubcfi.ts:450
 
 #### Parameters
 
@@ -680,7 +680,7 @@ Defined in: src/epubcfi.ts:451
 
 > **position**(`anchor`): `number`
 
-Defined in: src/epubcfi.ts:748
+Defined in: src/epubcfi.ts:747
 
 #### Parameters
 
@@ -698,7 +698,7 @@ Defined in: src/epubcfi.ts:748
 
 > **segmentString**(`segment`): `string`
 
-Defined in: src/epubcfi.ts:296
+Defined in: src/epubcfi.ts:295
 
 #### Parameters
 
@@ -716,7 +716,7 @@ Defined in: src/epubcfi.ts:296
 
 > **step**(`node`): [`EpubCFIStep`](../interfaces/EpubCFIStep.md)
 
-Defined in: src/epubcfi.ts:421
+Defined in: src/epubcfi.ts:420
 
 #### Parameters
 
@@ -734,7 +734,7 @@ Defined in: src/epubcfi.ts:421
 
 > **stepsToQuerySelector**(`steps`): `string`
 
-Defined in: src/epubcfi.ts:821
+Defined in: src/epubcfi.ts:820
 
 #### Parameters
 
@@ -752,7 +752,7 @@ Defined in: src/epubcfi.ts:821
 
 > **stepsToXpath**(`steps`): `string`
 
-Defined in: src/epubcfi.ts:787
+Defined in: src/epubcfi.ts:786
 
 #### Parameters
 
@@ -770,7 +770,7 @@ Defined in: src/epubcfi.ts:787
 
 > **textNodes**(`container`, `ignoreClass?`): `Node`[]
 
-Defined in: src/epubcfi.ts:841
+Defined in: src/epubcfi.ts:840
 
 #### Parameters
 
@@ -792,7 +792,7 @@ Defined in: src/epubcfi.ts:841
 
 > **toRange**(`_doc?`, `ignoreClass?`): `Range` \| `null`
 
-Defined in: src/epubcfi.ts:949
+Defined in: src/epubcfi.ts:948
 
 Creates a DOM range representing a CFI
 
@@ -818,7 +818,7 @@ document referenced in the base
 
 > **toString**(): `string`
 
-Defined in: src/epubcfi.ts:316
+Defined in: src/epubcfi.ts:315
 
 Convert CFI to a epubcfi(...) string
 
@@ -834,7 +834,7 @@ epubcfi
 
 > **walkToNode**(`steps`, `_doc?`, `ignoreClass?`): `Node` \| `undefined`
 
-Defined in: src/epubcfi.ts:853
+Defined in: src/epubcfi.ts:852
 
 #### Parameters
 

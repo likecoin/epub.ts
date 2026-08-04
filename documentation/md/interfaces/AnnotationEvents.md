@@ -6,7 +6,7 @@
 
 # Interface: AnnotationEvents
 
-Defined in: src/annotations.ts:238
+Defined in: src/annotations.ts:236
 
 Annotation object
 
@@ -54,7 +54,7 @@ CSS styles to assign to annotation
 
 > **attach**: \[`object` \| `null` \| `undefined`\]
 
-Defined in: src/annotations.ts:239
+Defined in: src/annotations.ts:237
 
 ***
 
@@ -62,4 +62,4 @@ Defined in: src/annotations.ts:239
 
 > **detach**: \[\]
 
-Defined in: src/annotations.ts:240
+Defined in: src/annotations.ts:238

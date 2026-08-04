@@ -158,10 +158,9 @@ iterate over annotations in the store
 
 > **hide**(): `void`
 
-Defined in: src/annotations.ts:219
+Defined in: src/annotations.ts:217
 
 [Not Implemented] Hide annotations
-@TODO: needs implementation in View
 
 #### Returns
 
@@ -281,10 +280,9 @@ Type of annotation to add: "highlight", "underline", "mark"
 
 > **show**(): `void`
 
-Defined in: src/annotations.ts:211
+Defined in: src/annotations.ts:210
 
 [Not Implemented] Show annotations
-@TODO: needs implementation in View
 
 #### Returns
 

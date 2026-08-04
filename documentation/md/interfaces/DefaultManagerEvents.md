@@ -6,7 +6,7 @@
 
 # Interface: DefaultManagerEvents
 
-Defined in: src/managers/default/index.ts:15
+Defined in: src/managers/default/index.ts:16
 
 ## Extends
 
@@ -22,7 +22,15 @@ Defined in: src/managers/default/index.ts:15
 
 > **added**: \[`IframeView`\]
 
-Defined in: src/managers/default/index.ts:19
+Defined in: src/managers/default/index.ts:20
+
+***
+
+### displayerror
+
+> **displayerror**: \[`Error`\]
+
+Defined in: src/managers/default/index.ts:24
 
 ***
 
@@ -30,7 +38,7 @@ Defined in: src/managers/default/index.ts:19
 
 > **orientationchange**: \[`number`\]
 
-Defined in: src/managers/default/index.ts:18
+Defined in: src/managers/default/index.ts:19
 
 ***
 
@@ -38,7 +46,7 @@ Defined in: src/managers/default/index.ts:18
 
 > **removed**: \[`IframeView`\]
 
-Defined in: src/managers/default/index.ts:22
+Defined in: src/managers/default/index.ts:23
 
 ***
 
@@ -46,7 +54,7 @@ Defined in: src/managers/default/index.ts:22
 
 > **resize**: \[[`Section`](../classes/Section.md)\]
 
-Defined in: src/managers/default/index.ts:16
+Defined in: src/managers/default/index.ts:17
 
 ***
 
@@ -54,7 +62,7 @@ Defined in: src/managers/default/index.ts:16
 
 > **resized**: \[\{ `height`: `number`; `width`: `number`; \}, `string`?\]
 
-Defined in: src/managers/default/index.ts:17
+Defined in: src/managers/default/index.ts:18
 
 ***
 
@@ -62,7 +70,7 @@ Defined in: src/managers/default/index.ts:17
 
 > **scroll**: \[\{ `left`: `number`; `top`: `number`; \}\]
 
-Defined in: src/managers/default/index.ts:20
+Defined in: src/managers/default/index.ts:21
 
 ***
 
@@ -70,4 +78,4 @@ Defined in: src/managers/default/index.ts:20
 
 > **scrolled**: \[\{ `left`: `number`; `top`: `number`; \}\]
 
-Defined in: src/managers/default/index.ts:21
+Defined in: src/managers/default/index.ts:22

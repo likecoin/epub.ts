@@ -6,7 +6,7 @@
 
 # Interface: Location
 
-Defined in: src/types.ts:165
+Defined in: src/types.ts:176
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: src/types.ts:165
 
 > `optional` **atEnd**: `boolean`
 
-Defined in: src/types.ts:169
+Defined in: src/types.ts:180
 
 ***
 
@@ -22,7 +22,7 @@ Defined in: src/types.ts:169
 
 > `optional` **atStart**: `boolean`
 
-Defined in: src/types.ts:168
+Defined in: src/types.ts:179
 
 ***
 
@@ -30,7 +30,7 @@ Defined in: src/types.ts:168
 
 > **end**: [`DisplayedLocation`](DisplayedLocation.md)
 
-Defined in: src/types.ts:167
+Defined in: src/types.ts:178
 
 ***
 
@@ -38,4 +38,4 @@ Defined in: src/types.ts:167
 
 > **start**: [`DisplayedLocation`](DisplayedLocation.md)
 
-Defined in: src/types.ts:166
+Defined in: src/types.ts:177

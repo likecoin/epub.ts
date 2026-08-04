@@ -6,7 +6,7 @@
 
 # Interface: ManagerOptions
 
-Defined in: src/types.ts:271
+Defined in: src/types.ts:282
 
 ## Extends
 
@@ -18,7 +18,7 @@ Defined in: src/types.ts:271
 
 > `optional` **afterScrolledTimeout**: `number`
 
-Defined in: src/types.ts:282
+Defined in: src/types.ts:293
 
 ***
 
@@ -26,7 +26,7 @@ Defined in: src/types.ts:282
 
 > `optional` **allowPopups**: `boolean`
 
-Defined in: src/types.ts:259
+Defined in: src/types.ts:270
 
 #### Inherited from
 
@@ -38,7 +38,7 @@ Defined in: src/types.ts:259
 
 > `optional` **allowScriptedContent**: `boolean`
 
-Defined in: src/types.ts:258
+Defined in: src/types.ts:269
 
 #### Inherited from
 
@@ -50,7 +50,7 @@ Defined in: src/types.ts:258
 
 > `optional` **axis**: `string`
 
-Defined in: src/types.ts:249
+Defined in: src/types.ts:260
 
 #### Inherited from
 
@@ -62,7 +62,7 @@ Defined in: src/types.ts:249
 
 > `optional` **direction**: `string`
 
-Defined in: src/types.ts:250
+Defined in: src/types.ts:261
 
 #### Inherited from
 
@@ -74,7 +74,7 @@ Defined in: src/types.ts:250
 
 > `optional` **flow**: `string`
 
-Defined in: src/types.ts:251
+Defined in: src/types.ts:262
 
 #### Inherited from
 
@@ -86,7 +86,7 @@ Defined in: src/types.ts:251
 
 > `optional` **forceEvenPages**: `boolean`
 
-Defined in: src/types.ts:256
+Defined in: src/types.ts:267
 
 #### Inherited from
 
@@ -98,7 +98,7 @@ Defined in: src/types.ts:256
 
 > `optional` **forceRight**: `boolean`
 
-Defined in: src/types.ts:257
+Defined in: src/types.ts:268
 
 #### Inherited from
 
@@ -110,7 +110,7 @@ Defined in: src/types.ts:257
 
 > `optional` **fullsize**: `boolean`
 
-Defined in: src/types.ts:275
+Defined in: src/types.ts:286
 
 ***
 
@@ -118,7 +118,7 @@ Defined in: src/types.ts:275
 
 > `optional` **gap**: `number`
 
-Defined in: src/types.ts:283
+Defined in: src/types.ts:294
 
 ***
 
@@ -126,7 +126,7 @@ Defined in: src/types.ts:283
 
 > `optional` **globalLayoutProperties**: [`GlobalLayout`](GlobalLayout.md)
 
-Defined in: src/types.ts:260
+Defined in: src/types.ts:271
 
 #### Inherited from
 
@@ -138,7 +138,7 @@ Defined in: src/types.ts:260
 
 > `optional` **height**: `number`
 
-Defined in: src/types.ts:255
+Defined in: src/types.ts:266
 
 #### Inherited from
 
@@ -150,7 +150,7 @@ Defined in: src/types.ts:255
 
 > `optional` **hidden**: `boolean`
 
-Defined in: src/types.ts:274
+Defined in: src/types.ts:285
 
 ***
 
@@ -158,7 +158,7 @@ Defined in: src/types.ts:274
 
 > `optional` **ignoreClass**: `string`
 
-Defined in: src/types.ts:248
+Defined in: src/types.ts:259
 
 #### Inherited from
 
@@ -170,7 +170,7 @@ Defined in: src/types.ts:248
 
 > `optional` **infinite**: `boolean`
 
-Defined in: src/types.ts:272
+Defined in: src/types.ts:283
 
 ***
 
@@ -178,7 +178,7 @@ Defined in: src/types.ts:272
 
 > `optional` **layout**: [`LayoutProps`](LayoutProps.md)
 
-Defined in: src/types.ts:252
+Defined in: src/types.ts:263
 
 #### Inherited from
 
@@ -190,7 +190,7 @@ Defined in: src/types.ts:252
 
 > `optional` **method**: `string`
 
-Defined in: src/types.ts:253
+Defined in: src/types.ts:264
 
 #### Inherited from
 
@@ -202,7 +202,7 @@ Defined in: src/types.ts:253
 
 > `optional` **offset**: `number`
 
-Defined in: src/types.ts:281
+Defined in: src/types.ts:292
 
 ***
 
@@ -210,7 +210,7 @@ Defined in: src/types.ts:281
 
 > `optional` **offsetDelta**: `number`
 
-Defined in: src/types.ts:284
+Defined in: src/types.ts:295
 
 ***
 
@@ -218,7 +218,7 @@ Defined in: src/types.ts:284
 
 > `optional` **overflow**: `string`
 
-Defined in: src/types.ts:273
+Defined in: src/types.ts:284
 
 ***
 
@@ -226,7 +226,7 @@ Defined in: src/types.ts:273
 
 > `optional` **queue**: `Queue`
 
-Defined in: src/types.ts:286
+Defined in: src/types.ts:297
 
 ***
 
@@ -234,7 +234,7 @@ Defined in: src/types.ts:286
 
 > `optional` **request**: [`RequestFunction`](../type-aliases/RequestFunction.md)
 
-Defined in: src/types.ts:278
+Defined in: src/types.ts:289
 
 ***
 
@@ -242,7 +242,7 @@ Defined in: src/types.ts:278
 
 > `optional` **resizeOnOrientationChange**: `boolean`
 
-Defined in: src/types.ts:285
+Defined in: src/types.ts:296
 
 ***
 
@@ -250,7 +250,7 @@ Defined in: src/types.ts:285
 
 > `optional` **rtlScrollType**: `string`
 
-Defined in: src/types.ts:280
+Defined in: src/types.ts:291
 
 ***
 
@@ -258,7 +258,7 @@ Defined in: src/types.ts:280
 
 > `optional` **settings**: [`RenditionOptions`](RenditionOptions.md)
 
-Defined in: src/types.ts:287
+Defined in: src/types.ts:298
 
 ***
 
@@ -266,7 +266,7 @@ Defined in: src/types.ts:287
 
 > `optional` **size**: [`SizeObject`](SizeObject.md)
 
-Defined in: src/types.ts:279
+Defined in: src/types.ts:290
 
 ***
 
@@ -274,7 +274,7 @@ Defined in: src/types.ts:279
 
 > `optional` **snap**: `boolean` \| `object`
 
-Defined in: src/types.ts:276
+Defined in: src/types.ts:287
 
 ***
 
@@ -282,7 +282,7 @@ Defined in: src/types.ts:276
 
 > `optional` **view**: `string` \| `object` \| [`ViewConstructor`](../type-aliases/ViewConstructor.md)
 
-Defined in: src/types.ts:277
+Defined in: src/types.ts:288
 
 ***
 
@@ -290,7 +290,7 @@ Defined in: src/types.ts:277
 
 > `optional` **width**: `number`
 
-Defined in: src/types.ts:254
+Defined in: src/types.ts:265
 
 #### Inherited from
 

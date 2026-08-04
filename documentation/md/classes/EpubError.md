@@ -6,7 +6,7 @@
 
 # Class: EpubError
 
-Defined in: src/utils/core.ts:397
+Defined in: src/utils/core.ts:438
 
 Error subclass for EPUB-related errors
 
@@ -22,9 +22,9 @@ Core
 
 ### Constructor
 
-> **new EpubError**(`message`, `status?`): `EpubError`
+> **new EpubError**(`message`, `status?`, `cause?`): `EpubError`
 
-Defined in: src/utils/core.ts:399
+Defined in: src/utils/core.ts:441
 
 #### Parameters
 
@@ -36,6 +36,10 @@ Defined in: src/utils/core.ts:399
 
 `number`
 
+##### cause?
+
+`unknown`
+
 #### Returns
 
 `EpubError`
@@ -45,6 +49,14 @@ Defined in: src/utils/core.ts:399
 `Error.constructor`
 
 ## Properties
+
+### cause?
+
+> `optional` **cause**: `unknown`
+
+Defined in: src/utils/core.ts:440
+
+***
 
 ### message
 
@@ -86,7 +98,7 @@ Defined in: node\_modules/typescript/lib/lib.es5.d.ts:1078
 
 > `optional` **status**: `number`
 
-Defined in: src/utils/core.ts:398
+Defined in: src/utils/core.ts:439
 
 ***
 

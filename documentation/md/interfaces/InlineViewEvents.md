@@ -6,7 +6,7 @@
 
 # Interface: InlineViewEvents
 
-Defined in: src/managers/views/inline.ts:10
+Defined in: src/managers/views/inline.ts:11
 
 ## Extends
 
@@ -20,17 +20,17 @@ Defined in: src/managers/views/inline.ts:10
 
 ### displayed
 
-> **displayed**: \[`InlineView`\]
+> **displayed**: \[[`InlineView`](../classes/InlineView.md)\]
 
-Defined in: src/managers/views/inline.ts:14
+Defined in: src/managers/views/inline.ts:15
 
 ***
 
 ### hidden
 
-> **hidden**: \[`InlineView`\]
+> **hidden**: \[[`InlineView`](../classes/InlineView.md)\]
 
-Defined in: src/managers/views/inline.ts:16
+Defined in: src/managers/views/inline.ts:17
 
 ***
 
@@ -38,7 +38,7 @@ Defined in: src/managers/views/inline.ts:16
 
 > **loaderror**: \[`unknown`\]
 
-Defined in: src/managers/views/inline.ts:11
+Defined in: src/managers/views/inline.ts:12
 
 ***
 
@@ -46,7 +46,7 @@ Defined in: src/managers/views/inline.ts:11
 
 > **rendered**: \[[`Section`](../classes/Section.md)\]
 
-Defined in: src/managers/views/inline.ts:12
+Defined in: src/managers/views/inline.ts:13
 
 ***
 
@@ -54,12 +54,12 @@ Defined in: src/managers/views/inline.ts:12
 
 > **resized**: \[\{ `height`: `number`; `width`: `number`; \}\]
 
-Defined in: src/managers/views/inline.ts:13
+Defined in: src/managers/views/inline.ts:14
 
 ***
 
 ### shown
 
-> **shown**: \[`InlineView`\]
+> **shown**: \[[`InlineView`](../classes/InlineView.md)\]
 
-Defined in: src/managers/views/inline.ts:15
+Defined in: src/managers/views/inline.ts:16

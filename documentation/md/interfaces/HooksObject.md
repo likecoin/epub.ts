@@ -6,7 +6,7 @@
 
 # Interface: HooksObject
 
-Defined in: src/types.ts:291
+Defined in: src/types.ts:302
 
 ## Indexable
 

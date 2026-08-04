@@ -6,7 +6,7 @@
 
 # Interface: ViewSettings
 
-Defined in: src/types.ts:247
+Defined in: src/types.ts:258
 
 ## Extended by
 
@@ -18,7 +18,7 @@ Defined in: src/types.ts:247
 
 > `optional` **allowPopups**: `boolean`
 
-Defined in: src/types.ts:259
+Defined in: src/types.ts:270
 
 ***
 
@@ -26,7 +26,7 @@ Defined in: src/types.ts:259
 
 > `optional` **allowScriptedContent**: `boolean`
 
-Defined in: src/types.ts:258
+Defined in: src/types.ts:269
 
 ***
 
@@ -34,7 +34,7 @@ Defined in: src/types.ts:258
 
 > `optional` **axis**: `string`
 
-Defined in: src/types.ts:249
+Defined in: src/types.ts:260
 
 ***
 
@@ -42,7 +42,7 @@ Defined in: src/types.ts:249
 
 > `optional` **direction**: `string`
 
-Defined in: src/types.ts:250
+Defined in: src/types.ts:261
 
 ***
 
@@ -50,7 +50,7 @@ Defined in: src/types.ts:250
 
 > `optional` **flow**: `string`
 
-Defined in: src/types.ts:251
+Defined in: src/types.ts:262
 
 ***
 
@@ -58,7 +58,7 @@ Defined in: src/types.ts:251
 
 > `optional` **forceEvenPages**: `boolean`
 
-Defined in: src/types.ts:256
+Defined in: src/types.ts:267
 
 ***
 
@@ -66,7 +66,7 @@ Defined in: src/types.ts:256
 
 > `optional` **forceRight**: `boolean`
 
-Defined in: src/types.ts:257
+Defined in: src/types.ts:268
 
 ***
 
@@ -74,7 +74,7 @@ Defined in: src/types.ts:257
 
 > `optional` **globalLayoutProperties**: [`GlobalLayout`](GlobalLayout.md)
 
-Defined in: src/types.ts:260
+Defined in: src/types.ts:271
 
 ***
 
@@ -82,7 +82,7 @@ Defined in: src/types.ts:260
 
 > `optional` **height**: `number`
 
-Defined in: src/types.ts:255
+Defined in: src/types.ts:266
 
 ***
 
@@ -90,7 +90,7 @@ Defined in: src/types.ts:255
 
 > `optional` **ignoreClass**: `string`
 
-Defined in: src/types.ts:248
+Defined in: src/types.ts:259
 
 ***
 
@@ -98,7 +98,7 @@ Defined in: src/types.ts:248
 
 > `optional` **layout**: [`LayoutProps`](LayoutProps.md)
 
-Defined in: src/types.ts:252
+Defined in: src/types.ts:263
 
 ***
 
@@ -106,7 +106,7 @@ Defined in: src/types.ts:252
 
 > `optional` **method**: `string`
 
-Defined in: src/types.ts:253
+Defined in: src/types.ts:264
 
 ***
 
@@ -114,4 +114,4 @@ Defined in: src/types.ts:253
 
 > `optional` **width**: `number`
 
-Defined in: src/types.ts:254
+Defined in: src/types.ts:265

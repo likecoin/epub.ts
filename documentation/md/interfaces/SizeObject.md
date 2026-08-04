@@ -6,7 +6,7 @@
 
 # Interface: SizeObject
 
-Defined in: src/types.ts:240
+Defined in: src/types.ts:251
 
 ## Extended by
 
@@ -18,7 +18,7 @@ Defined in: src/types.ts:240
 
 > **height**: `number`
 
-Defined in: src/types.ts:240
+Defined in: src/types.ts:251
 
 ***
 
@@ -26,4 +26,4 @@ Defined in: src/types.ts:240
 
 > **width**: `number`
 
-Defined in: src/types.ts:240
+Defined in: src/types.ts:251

@@ -6,7 +6,7 @@
 
 # Class: Layout
 
-Defined in: src/layout.ts:21
+Defined in: src/layout.ts:42
 
 ## Implements
 
@@ -18,7 +18,7 @@ Defined in: src/layout.ts:21
 
 > **new Layout**(`settings`): `Layout`
 
-Defined in: src/layout.ts:42
+Defined in: src/layout.ts:63
 
 #### Parameters
 
@@ -36,7 +36,7 @@ Defined in: src/layout.ts:42
 
 > **\_evenSpreads**: `boolean`
 
-Defined in: src/layout.ts:30
+Defined in: src/layout.ts:51
 
 ***
 
@@ -44,7 +44,7 @@ Defined in: src/layout.ts:30
 
 > **\_flow**: `string`
 
-Defined in: src/layout.ts:31
+Defined in: src/layout.ts:52
 
 ***
 
@@ -52,7 +52,7 @@ Defined in: src/layout.ts:31
 
 > **\_minSpreadWidth**: `number`
 
-Defined in: src/layout.ts:29
+Defined in: src/layout.ts:50
 
 ***
 
@@ -60,7 +60,7 @@ Defined in: src/layout.ts:29
 
 > **\_spread**: `boolean`
 
-Defined in: src/layout.ts:28
+Defined in: src/layout.ts:49
 
 ***
 
@@ -68,7 +68,7 @@ Defined in: src/layout.ts:28
 
 > **columnWidth**: `number`
 
-Defined in: src/layout.ts:36
+Defined in: src/layout.ts:57
 
 ***
 
@@ -76,7 +76,7 @@ Defined in: src/layout.ts:36
 
 > **delta**: `number`
 
-Defined in: src/layout.ts:35
+Defined in: src/layout.ts:56
 
 ***
 
@@ -84,7 +84,7 @@ Defined in: src/layout.ts:35
 
 > **divisor**: `number`
 
-Defined in: src/layout.ts:38
+Defined in: src/layout.ts:59
 
 ***
 
@@ -92,7 +92,7 @@ Defined in: src/layout.ts:38
 
 > **emit**: \<`K`\>(`type`, ...`args`) => `void`
 
-Defined in: src/layout.ts:24
+Defined in: src/layout.ts:45
 
 #### Type Parameters
 
@@ -124,7 +124,7 @@ Defined in: src/layout.ts:24
 
 > **gap**: `number`
 
-Defined in: src/layout.ts:37
+Defined in: src/layout.ts:58
 
 ***
 
@@ -132,7 +132,7 @@ Defined in: src/layout.ts:37
 
 > **height**: `number`
 
-Defined in: src/layout.ts:33
+Defined in: src/layout.ts:54
 
 ***
 
@@ -140,7 +140,7 @@ Defined in: src/layout.ts:33
 
 > **name**: `string`
 
-Defined in: src/layout.ts:27
+Defined in: src/layout.ts:48
 
 ***
 
@@ -148,7 +148,7 @@ Defined in: src/layout.ts:27
 
 > **off**: \<`K`\>(`type`, `fn?`) => `void`
 
-Defined in: src/layout.ts:23
+Defined in: src/layout.ts:44
 
 #### Type Parameters
 
@@ -180,7 +180,7 @@ Defined in: src/layout.ts:23
 
 > **on**: \<`K`\>(`type`, `fn`) => `void`
 
-Defined in: src/layout.ts:22
+Defined in: src/layout.ts:43
 
 #### Type Parameters
 
@@ -212,7 +212,7 @@ Defined in: src/layout.ts:22
 
 > **pageWidth**: `number`
 
-Defined in: src/layout.ts:39
+Defined in: src/layout.ts:60
 
 ***
 
@@ -220,7 +220,7 @@ Defined in: src/layout.ts:39
 
 > **props**: [`LayoutProps`](../interfaces/LayoutProps.md)
 
-Defined in: src/layout.ts:40
+Defined in: src/layout.ts:61
 
 ***
 
@@ -228,7 +228,7 @@ Defined in: src/layout.ts:40
 
 > **settings**: [`LayoutSettings`](../interfaces/LayoutSettings.md)
 
-Defined in: src/layout.ts:26
+Defined in: src/layout.ts:47
 
 ***
 
@@ -236,7 +236,7 @@ Defined in: src/layout.ts:26
 
 > **spreadWidth**: `number`
 
-Defined in: src/layout.ts:34
+Defined in: src/layout.ts:55
 
 ***
 
@@ -244,7 +244,7 @@ Defined in: src/layout.ts:34
 
 > **width**: `number`
 
-Defined in: src/layout.ts:32
+Defined in: src/layout.ts:53
 
 ## Methods
 
@@ -252,7 +252,7 @@ Defined in: src/layout.ts:32
 
 > **calculate**(`_width`, `_height`, `_gap?`): `void`
 
-Defined in: src/layout.ts:130
+Defined in: src/layout.ts:151
 
 Calculate the dimensions of the pagination
 
@@ -286,7 +286,7 @@ width of the gap between columns
 
 > **count**(`totalLength`, `pageLength?`): `object`
 
-Defined in: src/layout.ts:239
+Defined in: src/layout.ts:266
 
 Count number of pages
 
@@ -318,7 +318,7 @@ Count number of pages
 
 > **flow**(`flow?`): `string`
 
-Defined in: src/layout.ts:87
+Defined in: src/layout.ts:108
 
 Switch the flow between paginated and scrolled
 
@@ -342,7 +342,7 @@ simplified flow
 
 > **format**(`contents`, `section?`, `axis?`): `void`
 
-Defined in: src/layout.ts:217
+Defined in: src/layout.ts:238
 
 Apply Css to a Document
 
@@ -370,7 +370,7 @@ Apply Css to a Document
 
 > **spread**(`spread?`, `min?`): `boolean`
 
-Defined in: src/layout.ts:109
+Defined in: src/layout.ts:130
 
 Switch between using spreads or not, and set the
 width at which they switch to single.

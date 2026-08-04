@@ -6,7 +6,7 @@
 
 # Interface: StageOptions
 
-Defined in: src/types.ts:296
+Defined in: src/types.ts:307
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: src/types.ts:296
 
 > `optional` **axis**: `string`
 
-Defined in: src/types.ts:301
+Defined in: src/types.ts:312
 
 ***
 
@@ -22,7 +22,7 @@ Defined in: src/types.ts:301
 
 > `optional` **dir**: `string`
 
-Defined in: src/types.ts:304
+Defined in: src/types.ts:315
 
 ***
 
@@ -30,7 +30,7 @@ Defined in: src/types.ts:304
 
 > `optional` **direction**: `string`
 
-Defined in: src/types.ts:303
+Defined in: src/types.ts:314
 
 ***
 
@@ -38,7 +38,7 @@ Defined in: src/types.ts:303
 
 > `optional` **fullsize**: `boolean`
 
-Defined in: src/types.ts:302
+Defined in: src/types.ts:313
 
 ***
 
@@ -46,7 +46,7 @@ Defined in: src/types.ts:302
 
 > `optional` **height**: `string` \| `number`
 
-Defined in: src/types.ts:298
+Defined in: src/types.ts:309
 
 ***
 
@@ -54,7 +54,7 @@ Defined in: src/types.ts:298
 
 > `optional` **hidden**: `boolean`
 
-Defined in: src/types.ts:300
+Defined in: src/types.ts:311
 
 ***
 
@@ -62,7 +62,7 @@ Defined in: src/types.ts:300
 
 > `optional` **overflow**: `string` \| `boolean`
 
-Defined in: src/types.ts:299
+Defined in: src/types.ts:310
 
 ***
 
@@ -70,7 +70,7 @@ Defined in: src/types.ts:299
 
 > `optional` **width**: `string` \| `number`
 
-Defined in: src/types.ts:297
+Defined in: src/types.ts:308
 
 ***
 
@@ -78,4 +78,4 @@ Defined in: src/types.ts:297
 
 > `optional` **writingMode**: `string`
 
-Defined in: src/types.ts:305
+Defined in: src/types.ts:316

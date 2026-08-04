@@ -6,7 +6,7 @@
 
 # Interface: ThemeEntry
 
-Defined in: src/types.ts:244
+Defined in: src/types.ts:255
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: src/types.ts:244
 
 > `optional` **injected**: `boolean`
 
-Defined in: src/types.ts:244
+Defined in: src/types.ts:255
 
 ***
 
@@ -22,7 +22,7 @@ Defined in: src/types.ts:244
 
 > `optional` **rules**: `Record`\<`string`, `Record`\<`string`, `string`\>\>
 
-Defined in: src/types.ts:244
+Defined in: src/types.ts:255
 
 ***
 
@@ -30,7 +30,7 @@ Defined in: src/types.ts:244
 
 > `optional` **serialized**: `string`
 
-Defined in: src/types.ts:244
+Defined in: src/types.ts:255
 
 ***
 
@@ -38,4 +38,4 @@ Defined in: src/types.ts:244
 
 > `optional` **url**: `string`
 
-Defined in: src/types.ts:244
+Defined in: src/types.ts:255

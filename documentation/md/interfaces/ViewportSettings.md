@@ -6,7 +6,7 @@
 
 # Interface: ViewportSettings
 
-Defined in: src/types.ts:197
+Defined in: src/types.ts:208
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: src/types.ts:197
 
 > **height**: `string`
 
-Defined in: src/types.ts:199
+Defined in: src/types.ts:210
 
 ***
 
@@ -22,7 +22,7 @@ Defined in: src/types.ts:199
 
 > **maximum**: `string`
 
-Defined in: src/types.ts:203
+Defined in: src/types.ts:214
 
 ***
 
@@ -30,7 +30,7 @@ Defined in: src/types.ts:203
 
 > **minimum**: `string`
 
-Defined in: src/types.ts:202
+Defined in: src/types.ts:213
 
 ***
 
@@ -38,7 +38,7 @@ Defined in: src/types.ts:202
 
 > **scalable**: `string`
 
-Defined in: src/types.ts:201
+Defined in: src/types.ts:212
 
 ***
 
@@ -46,7 +46,7 @@ Defined in: src/types.ts:201
 
 > **scale**: `string`
 
-Defined in: src/types.ts:200
+Defined in: src/types.ts:211
 
 ***
 
@@ -54,4 +54,4 @@ Defined in: src/types.ts:200
 
 > **width**: `string`
 
-Defined in: src/types.ts:198
+Defined in: src/types.ts:209

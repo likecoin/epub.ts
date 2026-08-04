@@ -6,7 +6,7 @@
 
 # Interface: RangePair
 
-Defined in: src/types.ts:212
+Defined in: src/types.ts:223
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: src/types.ts:212
 
 > **end**: `Range`
 
-Defined in: src/types.ts:214
+Defined in: src/types.ts:225
 
 ***
 
@@ -22,4 +22,4 @@ Defined in: src/types.ts:214
 
 > **start**: `Range`
 
-Defined in: src/types.ts:213
+Defined in: src/types.ts:224

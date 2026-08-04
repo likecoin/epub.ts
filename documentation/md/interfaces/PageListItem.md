@@ -6,7 +6,7 @@
 
 # Interface: PageListItem
 
-Defined in: src/types.ts:107
+Defined in: src/types.ts:109
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: src/types.ts:107
 
 > `optional` **cfi**: `string`
 
-Defined in: src/types.ts:110
+Defined in: src/types.ts:112
 
 ***
 
@@ -22,7 +22,7 @@ Defined in: src/types.ts:110
 
 > **href**: `string`
 
-Defined in: src/types.ts:108
+Defined in: src/types.ts:110
 
 ***
 
@@ -30,7 +30,7 @@ Defined in: src/types.ts:108
 
 > `optional` **packageUrl**: `string`
 
-Defined in: src/types.ts:111
+Defined in: src/types.ts:113
 
 ***
 
@@ -38,4 +38,4 @@ Defined in: src/types.ts:111
 
 > **page**: `number`
 
-Defined in: src/types.ts:109
+Defined in: src/types.ts:111

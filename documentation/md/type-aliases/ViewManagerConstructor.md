@@ -8,7 +8,7 @@
 
 > **ViewManagerConstructor** = (`options`) => `any`
 
-Defined in: src/types.ts:236
+Defined in: src/types.ts:247
 
 ## Parameters
 

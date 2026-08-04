@@ -6,7 +6,7 @@
 
 # Interface: LocationsEvents
 
-Defined in: src/locations.ts:16
+Defined in: src/locations.ts:20
 
 Find Locations for a Book
 
@@ -30,4 +30,4 @@ Find Locations for a Book
 
 > **changed**: \[\{ `percentage`: `number`; \}\]
 
-Defined in: src/locations.ts:17
+Defined in: src/locations.ts:21

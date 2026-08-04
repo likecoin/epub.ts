@@ -6,7 +6,7 @@
 
 # Interface: EpubCFIStep
 
-Defined in: src/types.ts:218
+Defined in: src/types.ts:229
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: src/types.ts:218
 
 > **id**: `string` \| `null`
 
-Defined in: src/types.ts:219
+Defined in: src/types.ts:230
 
 ***
 
@@ -22,7 +22,7 @@ Defined in: src/types.ts:219
 
 > **index**: `number`
 
-Defined in: src/types.ts:222
+Defined in: src/types.ts:233
 
 ***
 
@@ -30,7 +30,7 @@ Defined in: src/types.ts:222
 
 > **tagName**: `string`
 
-Defined in: src/types.ts:220
+Defined in: src/types.ts:231
 
 ***
 
@@ -38,4 +38,4 @@ Defined in: src/types.ts:220
 
 > **type**: `string`
 
-Defined in: src/types.ts:221
+Defined in: src/types.ts:232

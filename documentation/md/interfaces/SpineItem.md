@@ -66,11 +66,21 @@ Defined in: src/types.ts:100
 
 ***
 
+### mediaType?
+
+> `optional` **mediaType**: `string`
+
+Defined in: src/types.ts:103
+
+Manifest media-type, used to parse the resource when its extension is unknown
+
+***
+
 ### next()
 
 > **next**: () => [`Section`](../classes/Section.md) \| `undefined`
 
-Defined in: src/types.ts:102
+Defined in: src/types.ts:104
 
 #### Returns
 
@@ -82,7 +92,7 @@ Defined in: src/types.ts:102
 
 > **prev**: () => [`Section`](../classes/Section.md) \| `undefined`
 
-Defined in: src/types.ts:103
+Defined in: src/types.ts:105
 
 #### Returns
 

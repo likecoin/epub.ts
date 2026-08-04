@@ -6,7 +6,7 @@
 
 # Interface: EpubCFIComponent
 
-Defined in: src/types.ts:225
+Defined in: src/types.ts:236
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: src/types.ts:225
 
 > **steps**: [`EpubCFIStep`](EpubCFIStep.md)[]
 
-Defined in: src/types.ts:226
+Defined in: src/types.ts:237
 
 ***
 
@@ -22,7 +22,7 @@ Defined in: src/types.ts:226
 
 > **terminal**: `object`
 
-Defined in: src/types.ts:227
+Defined in: src/types.ts:238
 
 #### assertion
 

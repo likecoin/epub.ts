@@ -124,7 +124,7 @@ Defined in: src/spine.ts:20
 
 > **destroy**(): `void`
 
-Defined in: src/spine.ts:267
+Defined in: src/spine.ts:268
 
 #### Returns
 
@@ -136,7 +136,7 @@ Defined in: src/spine.ts:267
 
 > **each**(`fn`): `void`
 
-Defined in: src/spine.ts:228
+Defined in: src/spine.ts:229
 
 Loop over the Sections in the Spine
 
@@ -158,7 +158,7 @@ forEach
 
 > **first**(): [`Section`](Section.md) \| `undefined`
 
-Defined in: src/spine.ts:236
+Defined in: src/spine.ts:237
 
 Find the first Section in the Spine
 
@@ -174,7 +174,7 @@ first section
 
 > **get**(`target?`): [`Section`](Section.md) \| `null`
 
-Defined in: src/spine.ts:136
+Defined in: src/spine.ts:137
 
 Get an item from the spine
 
@@ -214,7 +214,7 @@ spine.get("#id1234");
 
 > **last**(): [`Section`](Section.md) \| `undefined`
 
-Defined in: src/spine.ts:254
+Defined in: src/spine.ts:255
 
 Find the last Section in the Spine
 

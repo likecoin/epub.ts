@@ -6,7 +6,7 @@
 
 # Interface: IframeViewEvents
 
-Defined in: src/managers/views/iframe.ts:12
+Defined in: src/managers/views/iframe.ts:13
 
 ## Extends
 
@@ -22,7 +22,7 @@ Defined in: src/managers/views/iframe.ts:12
 
 > **axis**: \[`string`\]
 
-Defined in: src/managers/views/iframe.ts:13
+Defined in: src/managers/views/iframe.ts:14
 
 ***
 
@@ -30,7 +30,7 @@ Defined in: src/managers/views/iframe.ts:13
 
 > **displayed**: \[`IframeView`\]
 
-Defined in: src/managers/views/iframe.ts:18
+Defined in: src/managers/views/iframe.ts:19
 
 ***
 
@@ -38,7 +38,7 @@ Defined in: src/managers/views/iframe.ts:18
 
 > **hidden**: \[`IframeView`\]
 
-Defined in: src/managers/views/iframe.ts:20
+Defined in: src/managers/views/iframe.ts:21
 
 ***
 
@@ -46,7 +46,7 @@ Defined in: src/managers/views/iframe.ts:20
 
 > **loaderror**: \[`unknown`\]
 
-Defined in: src/managers/views/iframe.ts:15
+Defined in: src/managers/views/iframe.ts:16
 
 ***
 
@@ -54,7 +54,7 @@ Defined in: src/managers/views/iframe.ts:15
 
 > **markClicked**: \[`string`, `object` \| `undefined`\]
 
-Defined in: src/managers/views/iframe.ts:21
+Defined in: src/managers/views/iframe.ts:22
 
 ***
 
@@ -62,7 +62,7 @@ Defined in: src/managers/views/iframe.ts:21
 
 > **rendered**: \[[`Section`](../classes/Section.md)\]
 
-Defined in: src/managers/views/iframe.ts:16
+Defined in: src/managers/views/iframe.ts:17
 
 ***
 
@@ -70,7 +70,7 @@ Defined in: src/managers/views/iframe.ts:16
 
 > **resized**: \[[`ReframeBounds`](ReframeBounds.md)\]
 
-Defined in: src/managers/views/iframe.ts:17
+Defined in: src/managers/views/iframe.ts:18
 
 ***
 
@@ -78,7 +78,7 @@ Defined in: src/managers/views/iframe.ts:17
 
 > **shown**: \[`IframeView`\]
 
-Defined in: src/managers/views/iframe.ts:19
+Defined in: src/managers/views/iframe.ts:20
 
 ***
 
@@ -86,4 +86,4 @@ Defined in: src/managers/views/iframe.ts:19
 
 > **writingMode**: \[`string`\]
 
-Defined in: src/managers/views/iframe.ts:14
+Defined in: src/managers/views/iframe.ts:15

@@ -6,7 +6,7 @@
 
 # Interface: BookOptions
 
-Defined in: src/types.ts:115
+Defined in: src/types.ts:123
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: src/types.ts:115
 
 > `optional` **canonical**: (`path`) => `string`
 
-Defined in: src/types.ts:121
+Defined in: src/types.ts:129
 
 #### Parameters
 
@@ -28,11 +28,21 @@ Defined in: src/types.ts:121
 
 ***
 
+### domParser?
+
+> `optional` **domParser**: [`DOMParserConstructor`](../type-aliases/DOMParserConstructor.md)
+
+Defined in: src/types.ts:133
+
+Alternative DOMParser to inject; delegates to `setDOMParser` (process-global — see its docs).
+
+***
+
 ### encoding?
 
 > `optional` **encoding**: `string`
 
-Defined in: src/types.ts:119
+Defined in: src/types.ts:127
 
 ***
 
@@ -40,7 +50,7 @@ Defined in: src/types.ts:119
 
 > `optional` **openAs**: `string`
 
-Defined in: src/types.ts:122
+Defined in: src/types.ts:130
 
 ***
 
@@ -48,7 +58,7 @@ Defined in: src/types.ts:122
 
 > `optional` **replacements**: `string`
 
-Defined in: src/types.ts:120
+Defined in: src/types.ts:128
 
 ***
 
@@ -56,7 +66,7 @@ Defined in: src/types.ts:120
 
 > `optional` **requestCredentials**: `boolean`
 
-Defined in: src/types.ts:117
+Defined in: src/types.ts:125
 
 ***
 
@@ -64,7 +74,7 @@ Defined in: src/types.ts:117
 
 > `optional` **requestHeaders**: `Record`\<`string`, `string`\>
 
-Defined in: src/types.ts:118
+Defined in: src/types.ts:126
 
 ***
 
@@ -72,7 +82,7 @@ Defined in: src/types.ts:118
 
 > `optional` **requestMethod**: [`RequestFunction`](../type-aliases/RequestFunction.md)
 
-Defined in: src/types.ts:116
+Defined in: src/types.ts:124
 
 ***
 
@@ -80,4 +90,4 @@ Defined in: src/types.ts:116
 
 > `optional` **store**: `string` \| `boolean`
 
-Defined in: src/types.ts:123
+Defined in: src/types.ts:131

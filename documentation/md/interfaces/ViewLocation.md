@@ -6,7 +6,7 @@
 
 # Interface: ViewLocation
 
-Defined in: src/types.ts:263
+Defined in: src/types.ts:274
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: src/types.ts:263
 
 > **href**: `string`
 
-Defined in: src/types.ts:265
+Defined in: src/types.ts:276
 
 ***
 
@@ -22,7 +22,7 @@ Defined in: src/types.ts:265
 
 > **index**: `number`
 
-Defined in: src/types.ts:264
+Defined in: src/types.ts:275
 
 ***
 
@@ -30,7 +30,7 @@ Defined in: src/types.ts:264
 
 > **mapping**: [`EpubCFIPair`](EpubCFIPair.md)
 
-Defined in: src/types.ts:268
+Defined in: src/types.ts:279
 
 ***
 
@@ -38,7 +38,7 @@ Defined in: src/types.ts:268
 
 > **pages**: `number`[]
 
-Defined in: src/types.ts:266
+Defined in: src/types.ts:277
 
 ***
 
@@ -46,4 +46,4 @@ Defined in: src/types.ts:266
 
 > **totalPages**: `number`
 
-Defined in: src/types.ts:267
+Defined in: src/types.ts:278

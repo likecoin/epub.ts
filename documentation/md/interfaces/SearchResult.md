@@ -6,7 +6,7 @@
 
 # Interface: SearchResult
 
-Defined in: src/types.ts:320
+Defined in: src/types.ts:331
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: src/types.ts:320
 
 > **cfi**: `string`
 
-Defined in: src/types.ts:321
+Defined in: src/types.ts:332
 
 ***
 
@@ -22,4 +22,4 @@ Defined in: src/types.ts:321
 
 > **excerpt**: `string`
 
-Defined in: src/types.ts:322
+Defined in: src/types.ts:333

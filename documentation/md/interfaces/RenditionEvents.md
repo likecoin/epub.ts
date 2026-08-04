@@ -6,7 +6,7 @@
 
 # Interface: RenditionEvents
 
-Defined in: src/rendition.ts:47
+Defined in: src/rendition.ts:54
 
 Displays an Epub as a series of Views for each Section.
 Requires Manager and View class to handle specifics of rendering
@@ -27,6 +27,10 @@ class for the cfi parser to ignore
 ## Param
 
 ## Param
+
+## Param
+
+how content is delivered to the iframe: srcdoc, blobUrl, write
 
 ## Param
 
@@ -82,15 +86,15 @@ enable opening popup in content
 
 > **attached**: \[\]
 
-Defined in: src/rendition.ts:49
+Defined in: src/rendition.ts:56
 
 ***
 
 ### displayed
 
-> **displayed**: \[[`Section`](../classes/Section.md) \| `undefined`\]
+> **displayed**: \[[`Section`](../classes/Section.md)\]
 
-Defined in: src/rendition.ts:50
+Defined in: src/rendition.ts:57
 
 ***
 
@@ -98,7 +102,7 @@ Defined in: src/rendition.ts:50
 
 > **displayerror**: \[`Error`\]
 
-Defined in: src/rendition.ts:51
+Defined in: src/rendition.ts:58
 
 ***
 
@@ -106,7 +110,7 @@ Defined in: src/rendition.ts:51
 
 > **layout**: \[[`LayoutProps`](LayoutProps.md), `Partial`\<[`LayoutProps`](LayoutProps.md)\>\]
 
-Defined in: src/rendition.ts:60
+Defined in: src/rendition.ts:67
 
 ***
 
@@ -114,7 +118,7 @@ Defined in: src/rendition.ts:60
 
 > **locationChanged**: \[\{ `end`: `string`; `href`: `string`; `index`: `number`; `percentage`: `number` \| `undefined`; `start`: `string`; \}\]
 
-Defined in: src/rendition.ts:56
+Defined in: src/rendition.ts:63
 
 ***
 
@@ -122,7 +126,7 @@ Defined in: src/rendition.ts:56
 
 > **markClicked**: \[`string`, `object` \| `undefined`, [`Contents`](../classes/Contents.md)\]
 
-Defined in: src/rendition.ts:58
+Defined in: src/rendition.ts:65
 
 ***
 
@@ -130,7 +134,7 @@ Defined in: src/rendition.ts:58
 
 > **orientationchange**: \[`number`\]
 
-Defined in: src/rendition.ts:55
+Defined in: src/rendition.ts:62
 
 ***
 
@@ -138,7 +142,7 @@ Defined in: src/rendition.ts:55
 
 > **relocated**: \[[`Location`](Location.md)\]
 
-Defined in: src/rendition.ts:57
+Defined in: src/rendition.ts:64
 
 ***
 
@@ -146,7 +150,7 @@ Defined in: src/rendition.ts:57
 
 > **removed**: \[[`Section`](../classes/Section.md), `IframeView`\]
 
-Defined in: src/rendition.ts:53
+Defined in: src/rendition.ts:60
 
 ***
 
@@ -154,7 +158,7 @@ Defined in: src/rendition.ts:53
 
 > **rendered**: \[[`Section`](../classes/Section.md), `IframeView`\]
 
-Defined in: src/rendition.ts:52
+Defined in: src/rendition.ts:59
 
 ***
 
@@ -162,7 +166,7 @@ Defined in: src/rendition.ts:52
 
 > **resized**: \[\{ `height`: `number`; `width`: `number`; \}, `string`?\]
 
-Defined in: src/rendition.ts:54
+Defined in: src/rendition.ts:61
 
 ***
 
@@ -170,7 +174,7 @@ Defined in: src/rendition.ts:54
 
 > **selected**: \[`string`, [`Contents`](../classes/Contents.md)\]
 
-Defined in: src/rendition.ts:59
+Defined in: src/rendition.ts:66
 
 ***
 
@@ -178,4 +182,4 @@ Defined in: src/rendition.ts:59
 
 > **started**: \[\]
 
-Defined in: src/rendition.ts:48
+Defined in: src/rendition.ts:55

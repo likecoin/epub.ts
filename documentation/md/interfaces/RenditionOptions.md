@@ -6,7 +6,7 @@
 
 # Interface: RenditionOptions
 
-Defined in: src/types.ts:127
+Defined in: src/types.ts:137
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: src/types.ts:127
 
 > `optional` **allowPopups**: `boolean`
 
-Defined in: src/types.ts:145
+Defined in: src/types.ts:156
 
 ***
 
@@ -22,7 +22,7 @@ Defined in: src/types.ts:145
 
 > `optional` **allowScriptedContent**: `boolean`
 
-Defined in: src/types.ts:144
+Defined in: src/types.ts:155
 
 ***
 
@@ -30,7 +30,7 @@ Defined in: src/types.ts:144
 
 > `optional` **defaultDirection**: `string`
 
-Defined in: src/types.ts:143
+Defined in: src/types.ts:154
 
 ***
 
@@ -38,7 +38,7 @@ Defined in: src/types.ts:143
 
 > `optional` **direction**: `string`
 
-Defined in: src/types.ts:147
+Defined in: src/types.ts:158
 
 ***
 
@@ -46,7 +46,7 @@ Defined in: src/types.ts:147
 
 > `optional` **flow**: `string`
 
-Defined in: src/types.ts:133
+Defined in: src/types.ts:144
 
 ***
 
@@ -54,7 +54,7 @@ Defined in: src/types.ts:133
 
 > `optional` **gap**: `number`
 
-Defined in: src/types.ts:149
+Defined in: src/types.ts:160
 
 ***
 
@@ -62,7 +62,7 @@ Defined in: src/types.ts:149
 
 > `optional` **globalLayoutProperties**: [`GlobalLayout`](GlobalLayout.md)
 
-Defined in: src/types.ts:146
+Defined in: src/types.ts:157
 
 ***
 
@@ -70,7 +70,7 @@ Defined in: src/types.ts:146
 
 > `optional` **height**: `string` \| `number`
 
-Defined in: src/types.ts:129
+Defined in: src/types.ts:139
 
 ***
 
@@ -78,7 +78,7 @@ Defined in: src/types.ts:129
 
 > `optional` **ignoreClass**: `string`
 
-Defined in: src/types.ts:130
+Defined in: src/types.ts:140
 
 ***
 
@@ -86,7 +86,7 @@ Defined in: src/types.ts:130
 
 > `optional` **infinite**: `boolean`
 
-Defined in: src/types.ts:140
+Defined in: src/types.ts:151
 
 ***
 
@@ -94,7 +94,7 @@ Defined in: src/types.ts:140
 
 > `optional` **layout**: `string`
 
-Defined in: src/types.ts:134
+Defined in: src/types.ts:145
 
 ***
 
@@ -102,7 +102,15 @@ Defined in: src/types.ts:134
 
 > `optional` **manager**: `string` \| `object` \| [`ViewManagerConstructor`](../type-aliases/ViewManagerConstructor.md)
 
-Defined in: src/types.ts:131
+Defined in: src/types.ts:141
+
+***
+
+### method?
+
+> `optional` **method**: `string`
+
+Defined in: src/types.ts:143
 
 ***
 
@@ -110,7 +118,7 @@ Defined in: src/types.ts:131
 
 > `optional` **minSpreadWidth**: `number`
 
-Defined in: src/types.ts:136
+Defined in: src/types.ts:147
 
 ***
 
@@ -118,7 +126,7 @@ Defined in: src/types.ts:136
 
 > `optional` **orientation**: `string`
 
-Defined in: src/types.ts:148
+Defined in: src/types.ts:159
 
 ***
 
@@ -126,7 +134,7 @@ Defined in: src/types.ts:148
 
 > `optional` **overflow**: `string`
 
-Defined in: src/types.ts:141
+Defined in: src/types.ts:152
 
 ***
 
@@ -134,7 +142,7 @@ Defined in: src/types.ts:141
 
 > `optional` **resizeOnOrientationChange**: `boolean`
 
-Defined in: src/types.ts:138
+Defined in: src/types.ts:149
 
 ***
 
@@ -142,7 +150,7 @@ Defined in: src/types.ts:138
 
 > `optional` **script**: `string`
 
-Defined in: src/types.ts:139
+Defined in: src/types.ts:150
 
 ***
 
@@ -150,7 +158,7 @@ Defined in: src/types.ts:139
 
 > `optional` **snap**: `boolean` \| `object`
 
-Defined in: src/types.ts:142
+Defined in: src/types.ts:153
 
 ***
 
@@ -158,7 +166,7 @@ Defined in: src/types.ts:142
 
 > `optional` **spread**: `string` \| `boolean`
 
-Defined in: src/types.ts:135
+Defined in: src/types.ts:146
 
 ***
 
@@ -166,7 +174,7 @@ Defined in: src/types.ts:135
 
 > `optional` **stylesheet**: `string`
 
-Defined in: src/types.ts:137
+Defined in: src/types.ts:148
 
 ***
 
@@ -174,7 +182,7 @@ Defined in: src/types.ts:137
 
 > `optional` **view**: `string` \| `object` \| [`ViewConstructor`](../type-aliases/ViewConstructor.md)
 
-Defined in: src/types.ts:132
+Defined in: src/types.ts:142
 
 ***
 
@@ -182,4 +190,4 @@ Defined in: src/types.ts:132
 
 > `optional` **width**: `string` \| `number`
 
-Defined in: src/types.ts:128
+Defined in: src/types.ts:138

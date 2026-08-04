@@ -350,7 +350,7 @@ readonly \[`"keydown"`, `"keyup"`, `"keypress"`, `"mouseup"`, `"mousedown"`, `"m
 
 > **\_getStylesheetNode**(`key?`): `false` \| `HTMLStyleElement`
 
-Defined in: src/contents.ts:759
+Defined in: src/contents.ts:760
 
 #### Parameters
 
@@ -368,7 +368,7 @@ Defined in: src/contents.ts:759
 
 > **addClass**(`className`): `void`
 
-Defined in: src/contents.ts:883
+Defined in: src/contents.ts:884
 
 Add a class to the contents container
 
@@ -388,7 +388,7 @@ Add a class to the contents container
 
 > **addScript**(`src`): `Promise`\<`boolean`\>
 
-Defined in: src/contents.ts:851
+Defined in: src/contents.ts:852
 
 Append a script tag to the document head
 
@@ -412,7 +412,7 @@ loaded
 
 > **addStylesheet**(`src`): `Promise`\<`boolean`\>
 
-Defined in: src/contents.ts:723
+Defined in: src/contents.ts:724
 
 Append a stylesheet link to the document head
 
@@ -434,7 +434,7 @@ url
 
 > **addStylesheetCss**(`serializedCss`, `key?`): `boolean`
 
-Defined in: src/contents.ts:781
+Defined in: src/contents.ts:782
 
 Append stylesheet css
 
@@ -460,7 +460,7 @@ If the key is the same, the CSS will be replaced instead of inserted
 
 > **addStylesheetRules**(`rules`, `key?`): `void`
 
-Defined in: src/contents.ts:798
+Defined in: src/contents.ts:799
 
 Append stylesheet rules to a generate stylesheet
 Array: https://developer.mozilla.org/en-US/docs/Web/API/CSSStyleSheet/insertRule
@@ -488,7 +488,7 @@ If the key is the same, the CSS will be replaced instead of inserted
 
 > **cfiFromNode**(`node`, `ignoreClass?`): `string`
 
-Defined in: src/contents.ts:1033
+Defined in: src/contents.ts:1034
 
 Get an EpubCFI from a Dom node
 
@@ -514,7 +514,7 @@ cfi
 
 > **cfiFromRange**(`range`, `ignoreClass?`): `string`
 
-Defined in: src/contents.ts:1023
+Defined in: src/contents.ts:1024
 
 Get an EpubCFI from a Dom Range
 
@@ -540,7 +540,7 @@ cfi
 
 > **columns**(`width`, `height`, `columnWidth`, `gap`, `dir?`): `void`
 
-Defined in: src/contents.ts:1076
+Defined in: src/contents.ts:1077
 
 Apply columns to the contents for pagination
 
@@ -650,7 +650,7 @@ set as "important"
 
 > **destroy**(): `void`
 
-Defined in: src/contents.ts:1287
+Defined in: src/contents.ts:1302
 
 #### Returns
 
@@ -662,7 +662,7 @@ Defined in: src/contents.ts:1287
 
 > **direction**(`dir?`): `void`
 
-Defined in: src/contents.ts:1206
+Defined in: src/contents.ts:1217
 
 Set the direction of the text
 
@@ -682,9 +682,9 @@ Set the direction of the text
 
 ### fit()
 
-> **fit**(`width`, `height`, `section?`): `void`
+> **fit**(`width`, `height`, `section?`): `boolean`
 
-Defined in: src/contents.ts:1161
+Defined in: src/contents.ts:1163
 
 Fit contents into a fixed width and height
 
@@ -704,7 +704,9 @@ Fit contents into a fixed width and height
 
 #### Returns
 
-`void`
+`boolean`
+
+whether the contents could be fitted
 
 ***
 
@@ -768,7 +770,7 @@ for the cfi
 
 > **mapPage**(`cfiBase`, `layout`, `start`, `end`, `dev?`): [`EpubCFIPair`](../interfaces/EpubCFIPair.md) \| `undefined`
 
-Defined in: src/contents.ts:1212
+Defined in: src/contents.ts:1223
 
 #### Parameters
 
@@ -862,7 +864,7 @@ Set overflowY css style of the documentElement
 
 > **range**(`_cfi`, `ignoreClass?`): `Range`
 
-Defined in: src/contents.ts:1012
+Defined in: src/contents.ts:1013
 
 Get a Dom Range from EpubCFI
 
@@ -888,7 +890,7 @@ range
 
 > **removeClass**(`className`): `void`
 
-Defined in: src/contents.ts:898
+Defined in: src/contents.ts:899
 
 Remove a class from the contents container
 
@@ -926,7 +928,7 @@ documentElement
 
 > **scaler**(`scale`, `offsetX?`, `offsetY?`): `void`
 
-Defined in: src/contents.ts:1143
+Defined in: src/contents.ts:1144
 
 Scale contents from center
 
@@ -986,7 +988,7 @@ width
 
 > **size**(`width?`, `height?`): `void`
 
-Defined in: src/contents.ts:1042
+Defined in: src/contents.ts:1043
 
 Size the contents to a given width and height
 
@@ -1084,7 +1086,7 @@ width
 
 > **writingMode**(`mode?`): `string`
 
-Defined in: src/contents.ts:1232
+Defined in: src/contents.ts:1243
 
 Set the writingMode of the text
 

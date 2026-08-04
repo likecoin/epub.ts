@@ -6,7 +6,7 @@
 
 # Interface: EpubCFIPair
 
-Defined in: src/types.ts:207
+Defined in: src/types.ts:218
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: src/types.ts:207
 
 > **end**: `string`
 
-Defined in: src/types.ts:209
+Defined in: src/types.ts:220
 
 ***
 
@@ -22,4 +22,4 @@ Defined in: src/types.ts:209
 
 > **start**: `string`
 
-Defined in: src/types.ts:208
+Defined in: src/types.ts:219
