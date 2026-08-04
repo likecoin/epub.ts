@@ -155,6 +155,16 @@ describe("Queue", () => {
 			q.clear();
 			expect(q.length()).toBe(0);
 		});
+
+		// Hangs whoever awaited it — including anyone mid-display at destroy.
+		it("should settle the promises of tasks it drops", async () => {
+			const q = createTestQueue();
+			const pending = q.enqueue(() => "never runs");
+
+			q.clear();
+
+			await expect(pending).resolves.toBeUndefined();
+		});
 	});
 
 	describe("length()", () => {
@@ -182,6 +192,32 @@ describe("Queue", () => {
 			expect(q.length()).toBe(0);
 			expect(q.running).toBe(false);
 			expect(q.paused).toBe(true);
+		});
+
+		it("should settle the promises of tasks it drops", async () => {
+			const q = createTestQueue();
+			const pending = q.enqueue(() => "never runs");
+
+			q.stop();
+
+			await expect(pending).resolves.toBeUndefined();
+		});
+
+		// Locations.generate() awaits run(), not a task, and run()'s promise is
+		// settled only by step() finding the queue empty — which never happens
+		// while a task is still in flight.
+		it("should settle run() when stopped with a task in flight", async () => {
+			const q = createTestQueue();
+			// Pause before enqueuing, as Locations.generate() does, so run() is
+			// what starts the queue and only one step is ever scheduled.
+			q.pause();
+			q.enqueue(() => new Promise(() => {}));
+			const running = q.run();
+			await new Promise((resolve) => setTimeout(resolve, 0));
+
+			q.stop();
+
+			await expect(running).resolves.toBeUndefined();
 		});
 	});
 
