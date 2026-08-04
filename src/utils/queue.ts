@@ -189,7 +189,20 @@ class Queue {
 	 * Clear all items in wait
 	 */
 	clear(): void {
+		const cleared = this._q;
 		this._q = [];
+
+		// Settle what never ran, or its promise hangs its awaiters forever.
+		// Cancelling resolves undefined, as a superseded display does.
+		for (const item of cleared) {
+			item.deferred?.resolve(undefined);
+		}
+
+		// run()'s own promise is settled only by step() finding the queue empty,
+		// which never happens when a task is still in flight. Left alone it hangs
+		// whoever awaited run() — Locations.generate() does. Not cleared: step()
+		// may still resolve it, and settling twice is a no-op.
+		this.defered?.resolve();
 	}
 
 	/**
@@ -211,7 +224,7 @@ class Queue {
 	 * End the queue
 	 */
 	stop(): void {
-		this._q = [];
+		this.clear();
 		this.running = false;
 		this.paused = true;
 	}
