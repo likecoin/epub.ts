@@ -749,14 +749,27 @@ class Book implements IEventEmitter<BookEvents> {
 			: undefined;
 		// Save original url
 		const originalUrl = this.url;
-		// Save original request method
-		const requester = this.settings.requestMethod || ((url: string, type?: string): Promise<unknown> => request(url, type));
+		// Save original request method. Apply the book's credentials here rather
+		// than per call site, so everything the store fetches carries them —
+		// including add(), which pre-caches a whole book for offline use.
+		const httpRequester = this.settings.requestMethod || request;
+		const requester: RequestFunction = (url, type, withCredentials, headers, signal) =>
+			httpRequester(
+				url,
+				type,
+				withCredentials ?? this.settings.requestCredentials,
+				headers ?? this.settings.requestHeaders,
+				signal
+			);
 		// Create new Store
 		this.storage = new Store(name as string, requester, (path: string, absolute?: boolean): string => this.resolve(path, absolute));
 		// Replace request method to go through store
-		this.request = (path: string, type?: string): Promise<unknown> => this.storage!.request(path, type);
+		this.request = this.storage.request.bind(this.storage);
 
 		this.opened.then(() => {
+			if (!this.resources) {
+				return;
+			}
 			if (this.archived) {
 				this.storage!.requester = (path: string, type?: string): Promise<unknown> => this.archive!.request(path, type);
 			}
@@ -770,7 +783,7 @@ class Book implements IEventEmitter<BookEvents> {
 			// Create replacement urls
 			this.resources.replacements().
 				then(() => {
-					return this.resources.replaceCss();
+					return this.resources && this.resources.replaceCss();
 				});
 
 			this.storage!.on("offline", () => {

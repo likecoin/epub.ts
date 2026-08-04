@@ -139,7 +139,7 @@ describe("Store", () => {
 			const store = new Store("test-request", requester);
 			store.online = true;
 			const result = await store.request("http://example.com/data.json", "json");
-			expect(requester).toHaveBeenCalledWith("http://example.com/data.json", "json", undefined, undefined);
+			expect(requester).toHaveBeenCalledWith("http://example.com/data.json", "json", undefined, undefined, undefined);
 			expect(result).toBe("response data");
 		});
 

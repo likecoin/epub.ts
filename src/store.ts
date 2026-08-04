@@ -166,14 +166,15 @@ class Store implements IEventEmitter<StoreEvents> {
 	 * @param  {string} url  a url to request from storage
 	 * @param  {boolean} [withCredentials]
 	 * @param  {object} [headers]
-	 * @return {Promise<Blob>}
+	 * @param  {AbortSignal} [signal]
+	 * @return {Promise<Uint8Array | null>}
 	 */
-	put(url: string, withCredentials?: boolean, headers?: Record<string, string>): Promise<Uint8Array | null> {
+	put(url: string, withCredentials?: boolean, headers?: Record<string, string>, signal?: AbortSignal): Promise<Uint8Array | null> {
 		const encodedUrl = encodeURIComponent(url);
 
 		return this.storage.getItem(encodedUrl).then((result) => {
 			if (!result) {
-				return this.requester(url, "binary", withCredentials, headers).then((data) => {
+				return this.requester(url, "binary", withCredentials, headers, signal).then((data) => {
 					return this.storage.setItem(encodedUrl, data as Uint8Array);
 				});
 			}
@@ -187,14 +188,16 @@ class Store implements IEventEmitter<StoreEvents> {
 	 * @param  {string} [type] specify the type of the returned result
 	 * @param  {boolean} [withCredentials]
 	 * @param  {object} [headers]
+	 * @param  {AbortSignal} [signal]
 	 * @return {Promise<Blob | string | JSON | Document | XMLDocument>}
 	 */
-	request(url: string, type?: string, withCredentials?: boolean, headers?: Record<string, string>): Promise<unknown> {
+	request(url: string, type?: string, withCredentials?: boolean, headers?: Record<string, string>, signal?: AbortSignal): Promise<unknown> {
 		if (this.online) {
 			// From network
-			return this.requester(url, type, withCredentials, headers).then((data: unknown) => {
-				// save to store if not present
-				this.put(url);
+			return this.requester(url, type, withCredentials, headers, signal).then((data: unknown) => {
+				// save to store if not present; nothing awaits this, so a failed
+				// cache write must not surface as an unhandled rejection
+				this.put(url, withCredentials, headers, signal).catch(() => {});
 				return data;
 			})
 		} else {
