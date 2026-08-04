@@ -373,6 +373,15 @@ describe("InlineView", () => {
 			expect(result).toBe(view);
 			expect(section.render).not.toHaveBeenCalled();
 		});
+
+		// The chain had no rejection handler, so a failed render left this
+		// promise pending forever.
+		it("should reject when render fails", async () => {
+			const view = createView();
+			vi.spyOn(view, "render").mockRejectedValue(new Error("render failed"));
+
+			await expect(view.display(vi.fn())).rejects.toThrow("render failed");
+		});
 	});
 
 	describe("show()", () => {

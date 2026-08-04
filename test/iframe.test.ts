@@ -285,6 +285,19 @@ describe("IframeView", () => {
 			expect(view.displaying).toBe(false);
 		});
 
+		// The settle runs before the emit, so an application listener that throws
+		// can neither jam the shared in-flight promise nor leave the view unshown.
+		it("should complete the display when a displayed listener throws", async () => {
+			const view = createView();
+			vi.spyOn(view, "render").mockResolvedValue(undefined);
+			view.on("displayed", () => { throw new Error("listener blew up"); });
+
+			await expect(view.display(vi.fn())).resolves.toBe(view);
+
+			expect(view.displayed).toBe(true);
+			expect(view.displaying).toBe(false);
+		});
+
 		it("should not render again once displayed", async () => {
 			const request = vi.fn();
 			const view = createView();
