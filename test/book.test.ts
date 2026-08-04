@@ -1,7 +1,9 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach, vi } from "vitest";
 import Book from "../src/book";
+import Section from "../src/section";
 import { EpubError } from "../src/utils/core";
 import { getFixtureUrl } from "./helpers";
+import type { RequestFunction, SpineItem } from "../src/types";
 
 describe("Book", () => {
 	describe("Unarchived", () => {
@@ -254,6 +256,57 @@ describe("Book", () => {
 				expect(() => { opening = book.open(new ArrayBuffer(8), "binary"); }).not.toThrow();
 				await expect(opening).rejects.toBeInstanceOf(EpubError);
 			});
+		});
+	});
+
+	// load() is installed as a RequestFunction elsewhere — Rendition binds it as
+	// the manager's request method — so it has to forward that whole contract.
+	describe("request pass-through", () => {
+		const stubRequest = () => vi.fn<RequestFunction>(() => Promise.resolve({ documentElement: {} }));
+
+		it("should forward an abort signal to the request method", async () => {
+			const request = stubRequest();
+			const book = new Book({ requestMethod: request });
+			const controller = new AbortController();
+
+			await book.load("chapter.xhtml", "xhtml", undefined, undefined, controller.signal);
+
+			expect(request).toHaveBeenCalledWith("chapter.xhtml", "xhtml", undefined, undefined, controller.signal);
+		});
+
+		it("should fall back to the book's credentials and headers", async () => {
+			const request = stubRequest();
+			const headers = { "X-Test": "1" };
+			const book = new Book({ requestMethod: request, requestCredentials: true, requestHeaders: headers });
+
+			await book.load("chapter.xhtml");
+
+			expect(request).toHaveBeenCalledWith("chapter.xhtml", undefined, true, headers, undefined);
+		});
+
+		it("should let per-call credentials and headers override the settings", async () => {
+			const request = stubRequest();
+			const book = new Book({ requestMethod: request, requestCredentials: true, requestHeaders: { "X-Test": "1" } });
+			const override = { "X-Test": "2" };
+
+			await book.load("chapter.xhtml", undefined, false, override);
+
+			expect(request).toHaveBeenCalledWith("chapter.xhtml", undefined, false, override, undefined);
+		});
+
+		it("should carry a signal through Section.load into the request method", async () => {
+			const request = stubRequest();
+			const book = new Book({ requestMethod: request });
+			const controller = new AbortController();
+			const item: SpineItem = {
+				idref: "id", linear: "yes", properties: [], index: 0,
+				href: "chapter.xhtml", url: "chapter.xhtml", canonical: "", cfiBase: "",
+				next: (): undefined => undefined, prev: (): undefined => undefined
+			};
+
+			await new Section(item).load(book.load.bind(book), controller.signal);
+
+			expect(request).toHaveBeenCalledWith("chapter.xhtml", "xhtml", undefined, undefined, controller.signal);
 		});
 	});
 });

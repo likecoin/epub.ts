@@ -446,14 +446,26 @@ class Book implements IEventEmitter<BookEvents> {
 	 * Load a resource from the Book
 	 * @param  {string} path path to the resource to load
 	 * @param  {string} [type] parse type to use, overriding the path extension
+	 * @param  {boolean} [withCredentials] overrides the book's requestCredentials setting
+	 * @param  {object} [headers] overrides the book's requestHeaders setting
+	 * @param  {AbortSignal} [signal] cancels the in-flight request
 	 * @return {Promise}     returns a promise with the requested resource
+	 *
+	 * These apply to the network path only: an archived book reads from the zip,
+	 * and a configured store issues its own requests.
 	 */
-	load(path: string, type?: string): Promise<unknown> {
+	load(path: string, type?: string, withCredentials?: boolean, headers?: Record<string, string>, signal?: AbortSignal): Promise<unknown> {
 		const resolved = this.resolve(path);
 		if(this.archived) {
 			return this.archive!.request(resolved, type);
 		} else {
-			return this.request(resolved, type, this.settings.requestCredentials, this.settings.requestHeaders);
+			return this.request(
+				resolved,
+				type,
+				withCredentials ?? this.settings.requestCredentials,
+				headers ?? this.settings.requestHeaders,
+				signal
+			);
 		}
 	}
 
