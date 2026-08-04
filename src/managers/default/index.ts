@@ -362,8 +362,6 @@ class DefaultViewManager implements IEventEmitter<DefaultManagerEvents> {
 					this.moveTo(offset, width);
 				}
 
-			}, (err) => {
-				displaying.reject(err);
 			})
 			.then(() => {
 				return this.handleNextPrePaginated(forceRight, section, this.add);
@@ -374,6 +372,12 @@ class DefaultViewManager implements IEventEmitter<DefaultManagerEvents> {
 
 				displaying.resolve();
 
+			})
+			// Terminal, not mid-chain: a rejection handler on an earlier link lets
+			// the rest of the chain run on, and leaves later failures with nothing
+			// to settle the deferred.
+			.catch((err: Error) => {
+				displaying.reject(err);
 			});
 		// .then(function(){
 		// 	return this.hooks.display.trigger(view);
@@ -1074,7 +1078,9 @@ class DefaultViewManager implements IEventEmitter<DefaultManagerEvents> {
 		this.layout = layout;
 		this.updateLayout();
 		if (this.views && this.views.length > 0 && this.layout.name === "pre-paginated") {
-			this.display(this.views.first()!.section);
+			// Nothing awaits this re-display, and pre-paginated is exactly where
+			// the companion-page failure can reject.
+			this.display(this.views.first()!.section).catch(() => {});
 		}
 		 // this.manager.layout(this.layout.format);
 	}
