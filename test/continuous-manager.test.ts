@@ -157,7 +157,7 @@ describe("ContinuousViewManager", () => {
 			manager.isPaginated = true;
 			manager.settings.axis = "horizontal";
 			// Add a mock view so views.length > 0
-			const mockView = { element: document.createElement("div"), section: { next: vi.fn() } };
+			const mockView = { element: document.createElement("div"), section: { next: vi.fn() }, destroy: vi.fn() };
 			manager.views.append(mockView as any);
 			const spy = vi.spyOn(manager, "scrollBy");
 			manager.next();
@@ -179,7 +179,7 @@ describe("ContinuousViewManager", () => {
 			} as unknown as Layout;
 			manager.isPaginated = false;
 			manager.settings.axis = "vertical";
-			const mockView = { element: document.createElement("div"), section: { next: vi.fn() } };
+			const mockView = { element: document.createElement("div"), section: { next: vi.fn() }, destroy: vi.fn() };
 			manager.views.append(mockView as any);
 			const spy = vi.spyOn(manager, "scrollBy");
 			manager.next();
@@ -214,7 +214,7 @@ describe("ContinuousViewManager", () => {
 			} as unknown as Layout;
 			manager.isPaginated = true;
 			manager.settings.axis = "horizontal";
-			const mockView = { element: document.createElement("div"), section: { prev: vi.fn() } };
+			const mockView = { element: document.createElement("div"), section: { prev: vi.fn() }, destroy: vi.fn() };
 			manager.views.append(mockView as any);
 			const spy = vi.spyOn(manager, "scrollBy");
 			manager.prev();
@@ -236,7 +236,7 @@ describe("ContinuousViewManager", () => {
 			} as unknown as Layout;
 			manager.isPaginated = false;
 			manager.settings.axis = "vertical";
-			const mockView = { element: document.createElement("div"), section: { prev: vi.fn() } };
+			const mockView = { element: document.createElement("div"), section: { prev: vi.fn() }, destroy: vi.fn() };
 			manager.views.append(mockView as any);
 			const spy = vi.spyOn(manager, "scrollBy");
 			manager.prev();
@@ -321,6 +321,37 @@ describe("ContinuousViewManager", () => {
 			expect((views[1]!.destroy as ReturnType<typeof vi.fn>)).not.toHaveBeenCalled();
 			expect((views[2]!.destroy as ReturnType<typeof vi.fn>)).not.toHaveBeenCalled();
 			expect((views[3]!.destroy as ReturnType<typeof vi.fn>)).not.toHaveBeenCalled();
+		});
+
+		// An off-screen view whose display is still in flight holds the request
+		// we want to abort, so it has to be destroyed even though it never
+		// displayed. Views that are neither displayed nor loading are already
+		// torn down — re-destroying them every pass would also re-arm trim().
+		it("should destroy an off-screen view whose display is still in flight", () => {
+			const manager = new ContinuousViewManager(createMockManagerOptions());
+			manager.render(document.createElement("div"), { width: 800, height: 600 });
+			manager.layout = {
+				props: { delta: 800, spread: false, name: "reflowable" },
+				width: 800,
+				height: 600,
+			} as unknown as Layout;
+
+			const views = [0, 1, 2, 3, 4].map(makeMockView);
+			views[0]!.displayed = false;
+			views[0]!._displaying = new Promise(() => {});
+			views[4]!.displayed = false;
+
+			views.forEach(v => manager.views.append(v as any));
+			vi.spyOn(manager, "isVisible").mockImplementation(
+				(v: unknown) => (v as { index: number }).index === 2
+			);
+
+			manager.q.tick = (cb: FrameRequestCallback): number => { cb(0); return 0; };
+			manager.update();
+			manager.q.dump();
+
+			expect((views[0]!.destroy as ReturnType<typeof vi.fn>)).toHaveBeenCalledTimes(1);
+			expect((views[4]!.destroy as ReturnType<typeof vi.fn>)).not.toHaveBeenCalled();
 		});
 
 		it("should hide (not destroy) views in the ±1 keep buffer", () => {
