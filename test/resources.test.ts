@@ -335,6 +335,83 @@ describe("Resources", () => {
 			expect(res.replacementUrls[cssIndex]).toMatch(/^blob:/);
 		});
 
+		// The stylesheet gets a blob in replacements() before it is rewritten here;
+		// once the rewritten one takes the slot, only destroy() can reclaim it.
+		it("should hand the blob it supersedes to destroy()", async () => {
+			const revoked: string[] = [];
+			const revokeSpy = vi.spyOn(URL, "revokeObjectURL").mockImplementation((url: string) => {
+				revoked.push(url);
+			});
+			const request = vi.fn((url: string) => Promise.resolve(
+				url.endsWith(".css") ? "body { color: red; }" : new Blob([url])
+			)) as unknown as RequestFunction;
+			const resolver = (href: string) => "/OPS/" + href;
+			const res = new Resources(manifest, { replacements: "blobUrl", request, resolver });
+
+			await res.replacements();
+			const cssIndex = res.urls.indexOf("style.css");
+			const superseded = res.replacementUrls[cssIndex]!;
+
+			await res.replaceCss();
+
+			expect(res.replacementUrls[cssIndex]).not.toBe(superseded);
+			expect(res.ownedUrls).toContain(superseded);
+			// still live: the other stylesheets were rewritten against it
+			expect(revoked).not.toContain(superseded);
+
+			res.destroy();
+			expect(revoked).toContain(superseded);
+			revokeSpy.mockRestore();
+		});
+
+		// a base64 url has nothing to revoke, so holding it would only pin the
+		// stylesheet payload for the book's lifetime
+		it("should not track a superseded base64 url", async () => {
+			// keyed on type, not extension: replacements() asks for a blob even for css
+			const request = vi.fn((url: string, type?: string) => Promise.resolve(
+				type === "text" ? "body { color: red; }" : new Blob([url])
+			)) as unknown as RequestFunction;
+			const resolver = (href: string) => "/OPS/" + href;
+			const res = new Resources(manifest, { replacements: "base64", request, resolver });
+
+			await res.replacements();
+			const cssIndex = res.urls.indexOf("style.css");
+			const superseded = res.replacementUrls[cssIndex]!;
+
+			await res.replaceCss();
+
+			expect(superseded).toMatch(/^data:/);
+			expect(res.replacementUrls[cssIndex]).not.toBe(superseded);
+			expect(res.ownedUrls).not.toContain(superseded);
+		});
+
+		// main.css is rewritten against base.css's raw blob before either write-back
+		// lands, so revoking the superseded url here would break that @import
+		it("should not revoke a blob another stylesheet was rewritten against", async () => {
+			const revoked: string[] = [];
+			const revokeSpy = vi.spyOn(URL, "revokeObjectURL").mockImplementation((url: string) => {
+				revoked.push(url);
+			});
+			const twoSheets: PackagingManifestObject = {
+				"main": { href: "main.css", type: "text/css", overlay: "", properties: [], fallback: "" },
+				"base": { href: "base.css", type: "text/css", overlay: "", properties: [], fallback: "" },
+			};
+			const request = vi.fn((url: string, type?: string) => Promise.resolve(
+				type === "text"
+					? (url.endsWith("main.css") ? '@import url("base.css");' : "body {}")
+					: new Blob([url])
+			)) as unknown as RequestFunction;
+			const res = new Resources(twoSheets, { replacements: "blobUrl", request, resolver: (h: string) => h });
+
+			await res.replacements();
+			const rawBase = res.replacementUrls[res.urls.indexOf("base.css")]!;
+
+			await res.replaceCss();
+
+			expect(revoked).not.toContain(rawBase);
+			revokeSpy.mockRestore();
+		});
+
 		// An archive read can't be cancelled, so it always lands after destroy()
 		it("should not write to a destroyed Resources when the css lands late", async () => {
 			let resolveText!: (text: string) => void;
