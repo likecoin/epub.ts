@@ -227,6 +227,27 @@ describe("IframeView", () => {
 		});
 	});
 
+	describe("render()", () => {
+		// sectionRender is cached to dedupe overlapping displays; caching a
+		// rejected promise would make every later render() fail on it.
+		it("should drop the cached section render after a failure so a retry re-requests", async () => {
+			const section = createMockSection();
+			const sectionRender = vi.fn()
+				.mockRejectedValueOnce(new Error("nope"))
+				.mockReturnValueOnce(new Promise<string>(() => {}));
+			(section as any).render = sectionRender;
+
+			const view = createView(section);
+
+			await expect(view.render(vi.fn())).rejects.toThrow("nope");
+			expect(view.sectionRender).toBeUndefined();
+
+			void view.render(vi.fn());
+
+			expect(sectionRender).toHaveBeenCalledTimes(2);
+		});
+	});
+
 	describe("display()", () => {
 		it("should share the in-flight promise across overlapping calls", async () => {
 			const request = vi.fn();
@@ -634,6 +655,19 @@ describe("IframeView", () => {
 			view.on("shown", vi.fn());
 			view.destroy();
 			expect(view.__listeners).toEqual({});
+		});
+
+		it("should clear the cached section render", async () => {
+			const section = createMockSection();
+			(section as any).render = vi.fn(() => new Promise<string>(() => {}));
+
+			const view = createView(section);
+			void view.render(vi.fn());
+			expect(view.sectionRender).toBeDefined();
+
+			view.destroy();
+
+			expect(view.sectionRender).toBeUndefined();
 		});
 
 		it("should abort in-flight section render and suppress loaderror", async () => {
