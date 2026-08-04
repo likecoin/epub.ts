@@ -26,6 +26,38 @@ describe("request", () => {
 			expect((rejected as Error).name).toBe("AbortError");
 			expect(rejected).not.toBeInstanceOf(EpubError);
 		});
+
+		// That same realm mismatch used to fail the whole request: fetch refuses
+		// the foreign signal, so the resource was lost rather than just becoming
+		// uncancellable.
+		it("should retry without the signal when fetch rejects it as foreign", async () => {
+			const foreign = new TypeError('RequestInit: Expected signal ("AbortSignal {}") to be an instance of AbortSignal.');
+			const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation((_url, init) => {
+				if (init && init.signal) {
+					return Promise.reject(foreign);
+				}
+				return Promise.resolve(new Response("body {}", { status: 200 }));
+			});
+
+			const controller = new AbortController();
+			const result = await request("http://localhost/style.css", "text", undefined, undefined, controller.signal);
+
+			expect(result).toBe("body {}");
+			expect(fetchMock).toHaveBeenCalledTimes(2);
+		});
+
+		it("should not retry an already aborted request when the signal is rejected as foreign", async () => {
+			const foreign = new TypeError('RequestInit: Expected signal ("AbortSignal {}") to be an instance of AbortSignal.');
+			vi.spyOn(globalThis, "fetch").mockRejectedValue(foreign);
+
+			const controller = new AbortController();
+			controller.abort();
+
+			const rejected = await request("http://localhost/style.css", "text", undefined, undefined, controller.signal)
+				.then(() => undefined, (e: unknown) => e);
+
+			expect((rejected as Error).name).toBe("AbortError");
+		});
 	});
 
 	describe("type inference from extension", () => {
