@@ -267,9 +267,11 @@ describe("ContinuousViewManager", () => {
 	});
 
 	describe("check()", () => {
-		// fill() loops while the result is truthy, so resolving with an Error
-		// drove it down the whole spine.
-		it("should resolve falsy and drop the view when it fails to display", async () => {
+		function managerWithFailingAppend(): {
+			manager: ContinuousViewManager;
+			failed: IframeView;
+			nextSection: Section;
+		} {
 			const manager = new ContinuousViewManager(createMockManagerOptions());
 			manager.render(document.createElement("div"), { width: 800, height: 600 });
 			manager.layout = {
@@ -288,18 +290,42 @@ describe("ContinuousViewManager", () => {
 				destroy: vi.fn(),
 				display: vi.fn().mockRejectedValue(new Error("view failed")),
 			} as unknown as IframeView;
-			const appendSpy = vi.spyOn(manager, "append").mockImplementation(() => {
+			vi.spyOn(manager, "append").mockImplementation(() => {
 				manager.views.append(failed);
 				return Promise.resolve(failed);
 			});
+			return { manager, failed, nextSection };
+		}
+
+		// fill() loops while the result is truthy, so resolving with an Error
+		// drove it down the whole spine.
+		it("should resolve falsy and drop the view when it fails to display", async () => {
+			const { manager, failed, nextSection } = managerWithFailingAppend();
+
+			const onError = vi.fn();
+			manager.on("displayerror", onError);
 
 			await expect(manager.check()).resolves.toBe(false);
 
+			// The default manager reports the same failure the same way; the
+			// contract must not depend on which manager the reader configured.
+			expect(onError).toHaveBeenCalledWith(expect.objectContaining({ message: "view failed" }));
+
 			// Without this the assertion above is ambiguous: check()'s other
 			// branch resolves false too, without ever appending.
-			expect(appendSpy).toHaveBeenCalledWith(nextSection);
+			expect(manager.append).toHaveBeenCalledWith(nextSection);
 			expect(manager.views.all()).not.toContain(failed);
 			expect(failed.destroy).toHaveBeenCalled();
+		});
+
+		// emit() runs listeners bare, so a throwing one would reject the very
+		// promise this reporting exists to keep resolved — reintroducing the
+		// rejection-into-nothing that check() swallows on purpose.
+		it("should still resolve false when a displayerror listener throws", async () => {
+			const { manager } = managerWithFailingAppend();
+			manager.on("displayerror", () => { throw new Error("listener blew up"); });
+
+			await expect(manager.check()).resolves.toBe(false);
 		});
 	});
 

@@ -673,6 +673,32 @@ describe("Rendition", () => {
 
 			expect(leaked).toEqual([]);
 		});
+
+		// A page turn never runs through _display, so this forwarding is the
+		// only route by which a failed next()/prev() reaches an application.
+		it("should forward the manager's displayerror to its own listeners", () => {
+			const rendition = new Rendition(createMockBook());
+			rendition.q.clear();
+			const manager = new DefaultViewManager({
+				view: IframeView,
+				queue: rendition.q,
+				settings: {},
+			} as never);
+			manager.direction = vi.fn();
+			manager.updateFlow = vi.fn();
+			manager.applyLayout = vi.fn();
+			manager.isRendered = vi.fn().mockReturnValue(false);
+			rendition.manager = manager;
+
+			rendition.start();
+
+			const onError = vi.fn();
+			rendition.on("displayerror", onError);
+			const err = new Error("append failed");
+			manager.emit("displayerror", err);
+
+			expect(onError).toHaveBeenCalledWith(err);
+		});
 	});
 
 	describe("content reflow re-anchoring", () => {

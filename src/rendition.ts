@@ -339,6 +339,10 @@ class Rendition implements IEventEmitter<RenditionEvents> {
 		// Listen for scroll changes
 		this.manager.on(EVENTS.MANAGERS.SCROLLED, () => this.reportLocation());
 
+		// A page turn never runs through _display, so displayerror had no emit
+		// site for it until the managers gained one.
+		this.manager.on(EVENTS.MANAGERS.DISPLAY_ERROR, (err: Error) => this.emit(EVENTS.RENDITION.DISPLAY_ERROR, err));
+
 		/**
 		 * Emit that rendering has started
 		 * @event started
@@ -1108,6 +1112,7 @@ class Rendition implements IEventEmitter<RenditionEvents> {
 			this.manager.off(EVENTS.MANAGERS.SCROLL);
 			this.manager.off(EVENTS.MANAGERS.ORIENTATION_CHANGE);
 			this.manager.off(EVENTS.MANAGERS.SCROLLED);
+			this.manager.off(EVENTS.MANAGERS.DISPLAY_ERROR);
 			this.manager.destroy();
 			this.manager = undefined!;
 		}

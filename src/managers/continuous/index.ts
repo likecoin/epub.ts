@@ -331,11 +331,13 @@ class ContinuousViewManager extends DefaultViewManager {
 				.then(() => {
 					// Check to see if anything new is on screen after rendering
 					return this.update(delta);
-				}, () => {
-					// Swallowed on purpose: check() is floated by scrolled(),
-					// next() and prev(), so propagating would reject into nothing.
+				}, (err: Error) => {
+					// Reported rather than propagated: check() is floated by
+					// scrolled(), next() and prev(), so a rejection would reject
+					// into nothing.
 					// fill() loops while the result is truthy, so false ends it —
 					// an Error would not, and drove it down the whole spine.
+					this.reportDisplayError(err);
 					return false;
 				});
 		} else {

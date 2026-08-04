@@ -25,6 +25,7 @@ export const EVENTS = {
     SCROLL : "scroll",
     SCROLLED : "scrolled",
     REMOVED : "removed",
+    DISPLAY_ERROR : "displayerror",
   },
   VIEWS : {
     AXIS: "axis",
