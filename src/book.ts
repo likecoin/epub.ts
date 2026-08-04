@@ -761,6 +761,7 @@ class Book implements IEventEmitter<BookEvents> {
 				headers ?? this.settings.requestHeaders,
 				signal
 			);
+		const storedBeforeOpen = !this.isOpen;
 		// Create new Store
 		this.storage = new Store(name as string, requester, (path: string, absolute?: boolean): string => this.resolve(path, absolute));
 		// Replace request method to go through store
@@ -779,12 +780,18 @@ class Book implements IEventEmitter<BookEvents> {
 			};
 
 			// Set to use replacements
-			this.resources.settings!.replacements = replacementsSetting || "blobUrl";
-			// Create replacement urls
-			this.resources.replacements().
-				then(() => {
-					return this.resources && this.resources.replaceCss();
-				});
+			const previousReplacements = this.resources.settings!.replacements;
+			const nextReplacements = replacementsSetting || "blobUrl";
+			this.resources.settings!.replacements = nextReplacements;
+			// Create replacement urls, unless open() already built this same set —
+			// running the pass again would just orphan the urls it made
+			const alreadyBuilt = storedBeforeOpen && this.replacementsReady && previousReplacements === nextReplacements;
+			if (!alreadyBuilt) {
+				this.resources.replacements().
+					then(() => {
+						return this.resources && this.resources.replaceCss();
+					});
+			}
 
 			this.storage!.on("offline", () => {
 				// Remove url to use relative resolving for hrefs
