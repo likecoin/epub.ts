@@ -21,6 +21,7 @@ export interface DefaultManagerEvents extends Record<string, any[]> {
 	"scroll": [{ top: number; left: number }];
 	"scrolled": [{ top: number; left: number }];
 	"removed": [IframeView];
+	"displayerror": [Error];
 }
 
 class DefaultViewManager implements IEventEmitter<DefaultManagerEvents> {
@@ -388,6 +389,19 @@ class DefaultViewManager implements IEventEmitter<DefaultManagerEvents> {
 		return displayed;
 	}
 
+	/**
+	 * Report a display failure without letting it escape.
+	 * emit() runs listeners bare, so a throwing one would reject the very
+	 * promise this reporting exists to keep resolved.
+	 */
+	reportDisplayError(err: Error): void {
+		try {
+			this.emit(EVENTS.MANAGERS.DISPLAY_ERROR, err);
+		} catch {
+			// A listener's own bug is not the reader's problem.
+		}
+	}
+
 	afterDisplayed(view: IframeView): void {
 		this.emit(EVENTS.MANAGERS.ADDED, view);
 	}
@@ -617,8 +631,6 @@ class DefaultViewManager implements IEventEmitter<DefaultManagerEvents> {
 			return this.append(next, forceRight)
 				.then(() => {
 					return this.handleNextPrePaginated(forceRight, next, this.append);
-				}, (err) => {
-					return err;
 				})
 				.then(() => {
 
@@ -631,7 +643,12 @@ class DefaultViewManager implements IEventEmitter<DefaultManagerEvents> {
 						this.scrollTo(this.container.scrollWidth, 0, true);
 					}
 					this.views.show();
-				});
+				})
+				// Reported, not rejected: the canonical caller is a bare
+				// rendition.next() in a key handler, so rejecting would only
+				// produce an unhandled rejection. Short-circuiting the chain is
+				// the point — a section that failed to load is never shown.
+				.catch((err: Error) => this.reportDisplayError(err));
 		}
 		return undefined;
 
@@ -752,8 +769,6 @@ class DefaultViewManager implements IEventEmitter<DefaultManagerEvents> {
 						}
 					}
 					return undefined;
-				}, (err) => {
-					return err;
 				})
 				.then(() => {
 					if(this.isPaginated && this.settings.axis === "horizontal") {
@@ -769,7 +784,8 @@ class DefaultViewManager implements IEventEmitter<DefaultManagerEvents> {
 						}
 					}
 					this.views.show();
-				});
+				})
+				.catch((err: Error) => this.reportDisplayError(err));
 		}
 		return undefined;
 	}

@@ -337,24 +337,24 @@ describe("DefaultViewManager", () => {
 		});
 	});
 
+	function createManager(): DefaultViewManager {
+		const manager = new DefaultViewManager(createMockManagerOptions());
+		manager.render(document.createElement("div"), { width: 800, height: 600 });
+		manager.layout = {
+			calculate: vi.fn(),
+			spread: vi.fn(),
+			settings: { spread: "auto" },
+			props: {},
+			name: "reflowable",
+			divisor: 1,
+		} as unknown as Layout;
+		return manager;
+	}
+
 	// display() settles a deferred from a promise chain: any unsettled link hangs
 	// the caller and the queue waiting behind it.
 	describe("display()", () => {
 		const section = { index: 0, href: "chapter_001.xhtml", properties: [] } as unknown as Section;
-
-		function createManager(): DefaultViewManager {
-			const manager = new DefaultViewManager(createMockManagerOptions());
-			manager.render(document.createElement("div"), { width: 800, height: 600 });
-			manager.layout = {
-				calculate: vi.fn(),
-				spread: vi.fn(),
-				settings: { spread: "auto" },
-				props: {},
-				name: "reflowable",
-				divisor: 1,
-			} as unknown as Layout;
-			return manager;
-		}
 
 		it("should resolve once the view is added and shown", async () => {
 			const manager = createManager();
@@ -408,6 +408,61 @@ describe("DefaultViewManager", () => {
 			vi.spyOn(manager.views, "show").mockImplementation(() => { throw new Error("show failed"); });
 
 			await expect(manager.display(section)).rejects.toThrow("show failed");
+		});
+	});
+
+	// A mid-chain `(err) => err` converted an append failure into a fulfilment,
+	// so the chain ran on and scrolled to a section that never loaded. The
+	// short-circuit is the fix; the failure is reported on displayerror rather
+	// than rejected, since the canonical caller is a bare rendition.next().
+	describe("next() / prev()", () => {
+		function managerWithOneView(neighbour: "next" | "prev"): DefaultViewManager {
+			const manager = createManager();
+			manager.isPaginated = false;
+			const section = { index: 1 } as Section;
+			manager.views.append({
+				element: document.createElement("div"),
+				section: { [neighbour]: (): Section => section },
+				destroy: vi.fn(),
+			} as unknown as IframeView);
+			return manager;
+		}
+
+		it("should report on displayerror and not show views when appending the next section fails", async () => {
+			const manager = managerWithOneView("next");
+			vi.spyOn(manager, "append").mockRejectedValue(new Error("append failed"));
+			const showSpy = vi.spyOn(manager.views, "show");
+			const onError = vi.fn();
+			manager.on("displayerror", onError);
+
+			await expect(manager.next()).resolves.toBeUndefined();
+
+			expect(onError).toHaveBeenCalledWith(expect.objectContaining({ message: "append failed" }));
+			expect(showSpy).not.toHaveBeenCalled();
+		});
+
+		it("should report on displayerror and not show views when prepending the previous section fails", async () => {
+			const manager = managerWithOneView("prev");
+			vi.spyOn(manager, "prepend").mockRejectedValue(new Error("prepend failed"));
+			const showSpy = vi.spyOn(manager.views, "show");
+			const onError = vi.fn();
+			manager.on("displayerror", onError);
+
+			await expect(manager.prev()).resolves.toBeUndefined();
+
+			expect(onError).toHaveBeenCalledWith(expect.objectContaining({ message: "prepend failed" }));
+			expect(showSpy).not.toHaveBeenCalled();
+		});
+
+		// emit() runs listeners bare, so a throwing one would reject the promise
+		// this whole design exists to keep resolved — handing the bare
+		// rendition.next() caller exactly the unhandled rejection it avoids.
+		it("should still resolve when a displayerror listener throws", async () => {
+			const manager = managerWithOneView("next");
+			vi.spyOn(manager, "append").mockRejectedValue(new Error("append failed"));
+			manager.on("displayerror", () => { throw new Error("listener blew up"); });
+
+			await expect(manager.next()).resolves.toBeUndefined();
 		});
 	});
 
