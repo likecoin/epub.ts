@@ -1,6 +1,7 @@
 import "fake-indexeddb/auto";
 import { describe, it, expect, vi } from "vitest";
 import Book from "../src/book";
+import Resources from "../src/resources";
 import request from "../src/utils/request";
 import { getFixtureUrl } from "./helpers";
 import type { RequestFunction } from "../src/types";
@@ -75,6 +76,48 @@ describe("Book.store()", () => {
 			expect(sentHeaders).toEqual(headers);
 		});
 
+		book.destroy();
+	});
+
+	// open() already built the replacement urls through this same store; running
+	// the pass again just orphans that first set of blob urls.
+	it("should not re-run the replacement pass that already ran during open", async () => {
+		const replacementsSpy = vi.spyOn(Resources.prototype, "replacements");
+		const book = new Book(opfUrl(), {
+			store: uniqueName(),
+			requestMethod: passThrough(),
+			replacements: "blobUrl"
+		});
+
+		await book.opened;
+		await book.replacementsReady;
+		// let the store's opened callback run
+		await new Promise((resolve) => setTimeout(resolve, 0));
+
+		expect(replacementsSpy).toHaveBeenCalledTimes(1);
+
+		replacementsSpy.mockRestore();
+		book.destroy();
+	});
+
+	// store() after open() always rebuilds: storedBeforeOpen is false, so the
+	// alreadyBuilt check never applies here. This book does already hold a full set
+	// of urls from open(), and replacements() overwrites replacementUrls wholesale
+	// without revoking them, so that first batch stays stranded until destroy().
+	// That leak predates this guard and is not what it covers.
+	it("should still build replacements when store() is called after opening", async () => {
+		const book = new Book(opfUrl(), { requestMethod: passThrough(), replacements: "blobUrl" });
+
+		await book.opened;
+		await book.replacementsReady;
+		const replacementsSpy = vi.spyOn(Resources.prototype, "replacements");
+
+		book.store(uniqueName());
+		await new Promise((resolve) => setTimeout(resolve, 0));
+
+		expect(replacementsSpy).toHaveBeenCalledTimes(1);
+
+		replacementsSpy.mockRestore();
 		book.destroy();
 	});
 
