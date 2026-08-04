@@ -385,13 +385,14 @@ class Rendition implements IEventEmitter<RenditionEvents> {
 	 * so it will wait until book is opened, rendering started
 	 * and all other rendering tasks have finished to be called.
 	 * @param  {string} target Url or EpubCFI
-	 * @return {Promise}
+	 * @return {Promise} resolves the displayed section, or undefined if this
+	 * display was superseded by a later one or aborted
 	 */
-	display(target?: string | number): Promise<Section> {
+	display(target?: string | number): Promise<Section | undefined> {
 		if (this.displaying) {
 			this.displaying.resolve(undefined);
 		}
-		return this.q.enqueue(this._display, target) as Promise<Section>;
+		return this.q.enqueue(this._display, target);
 	}
 
 	/**
