@@ -2,6 +2,7 @@ import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach, vi } 
 import Book from "../src/book";
 import Section from "../src/section";
 import { EpubError } from "../src/utils/core";
+import request from "../src/utils/request";
 import { getFixtureUrl } from "./helpers";
 import type { RequestFunction, SpineItem } from "../src/types";
 
@@ -307,6 +308,86 @@ describe("Book", () => {
 			await new Section(item).load(book.load.bind(book), controller.signal);
 
 			expect(request).toHaveBeenCalledWith("chapter.xhtml", "xhtml", undefined, undefined, controller.signal);
+		});
+	});
+
+	// Resources fetches every image, font and stylesheet itself; those requests
+	// have to carry the same credentials and cancellation as the rest of the book.
+	describe("resource requests", () => {
+		const opfUrl = (): string => getFixtureUrl("/alice/OPS/package.opf");
+
+		// Assets are the blob/text requests; everything else (the opf, the nav
+		// document) has to load for real or the book never opens.
+		const interceptAssets = (onAsset: (signal?: AbortSignal) => Promise<unknown>): RequestFunction =>
+			(url, type, withCredentials, headers, signal) =>
+				type === "blob" || type === "text"
+					? onAsset(signal)
+					: request(url, type, withCredentials, headers, signal);
+
+		it("should send the book's credentials and headers with asset requests", async () => {
+			const calls: Parameters<RequestFunction>[] = [];
+			const requestMethod: RequestFunction = (...args) => {
+				calls.push(args);
+				return request(...args);
+			};
+			const headers = { "X-Test": "1" };
+			const book = new Book(opfUrl(), {
+				requestMethod,
+				requestCredentials: true,
+				requestHeaders: headers,
+				replacements: "blobUrl"
+			});
+
+			await book.opened;
+			await book.replacementsReady;
+
+			const asset = calls.find(([url]) => url.endsWith(".jpg"));
+			expect(asset).toBeDefined();
+			const [, , withCredentials, sentHeaders, signal] = asset!;
+			expect(withCredentials).toBe(true);
+			expect(sentHeaders).toEqual(headers);
+			expect(signal).toBeDefined();
+			// the fetch went through despite the signal, so urls were substituted
+			expect(book.resources.replacementUrls.length).toBeGreaterThan(0);
+
+			book.destroy();
+		});
+
+		it("should abort in-flight asset requests when the book is destroyed", async () => {
+			const signals: (AbortSignal | undefined)[] = [];
+			// never settles: keeps the asset in flight until destroy()
+			const requestMethod = interceptAssets((signal) => {
+				signals.push(signal);
+				return new Promise(() => {});
+			});
+			const book = new Book(opfUrl(), { requestMethod, replacements: "blobUrl" });
+
+			await book.opened;
+			expect(signals.length).toBeGreaterThan(0);
+			expect(signals.some((signal) => signal?.aborted)).toBe(false);
+
+			book.destroy();
+
+			expect(signals.every((signal) => signal?.aborted === true)).toBe(true);
+		});
+
+		it("should not throw or log when destroyed while replacements are in flight", async () => {
+			const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+			const requestMethod = interceptAssets((signal) => new Promise((_resolve, reject) => {
+				signal?.addEventListener("abort", () => {
+					reject(new DOMException("Aborted", "AbortError"));
+				});
+			}));
+			const book = new Book(opfUrl(), { requestMethod, replacements: "blobUrl" });
+
+			await book.opened;
+			// destroy() clears the handle, so keep it before tearing down
+			const replacementsReady = book.replacementsReady;
+			book.destroy();
+
+			await expect(replacementsReady).resolves.toBeUndefined();
+			expect(errorSpy).not.toHaveBeenCalled();
+			errorSpy.mockRestore();
 		});
 	});
 });
