@@ -54,7 +54,7 @@ const REANCHOR_DEBOUNCE = 50;
 export interface RenditionEvents extends Record<string, any[]> {
 	"started": [];
 	"attached": [];
-	"displayed": [Section | undefined];
+	"displayed": [Section];
 	"displayerror": [Error];
 	"rendered": [Section, IframeView];
 	"removed": [Section, IframeView];
