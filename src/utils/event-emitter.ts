@@ -27,7 +27,14 @@ export default function EventEmitter(target: object): object {
 		if (!this.__listeners || !this.__listeners[type]) return;
 		const listeners = this.__listeners[type].slice();
 		for (let i = 0; i < listeners.length; i++) {
-			listeners[i](...args);
+			try {
+				listeners[i](...args);
+			} catch (err) {
+				// Scoped per listener, not around the loop: one that throws must
+				// not abort the rest.
+				// eslint-disable-next-line no-console
+				console.error(err);
+			}
 		}
 	};
 

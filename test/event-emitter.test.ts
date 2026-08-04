@@ -72,6 +72,24 @@ describe("EventEmitter", () => {
 			expect(() => emitter.emit("nonexistent")).not.toThrow();
 		});
 
+		it("should run the remaining listeners when one throws", () => {
+			const emitter = createEmitter();
+			const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+			try {
+				const err = new Error("listener blew up");
+				const after = vi.fn();
+
+				emitter.on("test", () => { throw err; });
+				emitter.on("test", after);
+
+				expect(() => emitter.emit("test")).not.toThrow();
+				expect(after).toHaveBeenCalledOnce();
+				expect(spy).toHaveBeenCalledWith(err);
+			} finally {
+				spy.mockRestore();
+			}
+		});
+
 		it("should not affect other event types", () => {
 			const emitter = createEmitter();
 			const fn = vi.fn();
