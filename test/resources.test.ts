@@ -99,6 +99,36 @@ describe("Resources", () => {
 			// createUrl was invoked via the request mock
 			expect(request).toHaveBeenCalled();
 		});
+
+		// a url that never lands in replacementUrls has nowhere else to be tracked
+		it("should keep a url it mints for a failed asset revocable", async () => {
+			const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+			const request = vi.fn((url: string) => url.includes("cover.jpg")
+				? Promise.reject(new Error("404"))
+				: Promise.resolve(new Blob([url]))) as unknown as RequestFunction;
+			const res = new Resources(manifest, { replacements: "blobUrl", request, resolver: (h: string) => h });
+
+			await res.replacements();
+			errorSpy.mockRestore();
+
+			(request as unknown as ReturnType<typeof vi.fn>).mockImplementation((url: string) => Promise.resolve(new Blob([url])));
+			const minted = await res.get("cover.jpg");
+
+			expect(res.ownedUrls).toContain(minted);
+		});
+
+		// a base64 url has nothing to revoke and carries the whole asset, so tracking
+		// it would pin the payload for the book's lifetime
+		it("should not track a base64 url it mints", async () => {
+			const request = vi.fn(() => Promise.resolve(new Blob(["test"]))) as unknown as RequestFunction;
+			const res = new Resources(manifest, { replacements: "base64", request, resolver: (h: string) => h });
+			res.replacementUrls = [];
+
+			const minted = await res.get("cover.jpg");
+
+			expect(minted).toMatch(/^data:/);
+			expect(res.ownedUrls).toEqual([]);
+		});
 	});
 
 	describe("substitute()", () => {
@@ -166,11 +196,34 @@ describe("Resources", () => {
 			const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 			const res = new Resources(manifest, { replacements: "blobUrl", request, resolver });
 
-			const result = await res.replacements();
+			await res.replacements();
 			expect(errorSpy).toHaveBeenCalled();
-			// null entries are filtered from replacementUrls
-			expect(res.replacementUrls.length).toBe(0);
+			// failures stay as null rather than being dropped
+			expect(res.replacementUrls).toEqual([null, null, null]);
 			errorSpy.mockRestore();
+		});
+
+		// Dropping failures used to shift every later asset onto the wrong url:
+		// a 404 on one image left the next asset's blob standing in for it.
+		it("should keep replacementUrls index-matched with urls when one asset fails", async () => {
+			const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+			const request = vi.fn((url: string) => url.includes("cover.jpg")
+				? Promise.reject(new Error("404"))
+				: Promise.resolve(new Blob([url]))) as unknown as RequestFunction;
+			const resolver = (href: string) => "/resolved/" + href;
+			const res = new Resources(manifest, { replacements: "blobUrl", request, resolver });
+
+			await res.replacements();
+			errorSpy.mockRestore();
+
+			const coverIndex = res.urls.indexOf("cover.jpg");
+			expect(res.replacementUrls.length).toBe(res.urls.length);
+			expect(res.replacementUrls[coverIndex]).toBeNull();
+
+			// the failed asset is left alone, and the others still map to their own blob
+			const out = res.substitute('<img src="cover.jpg"><link href="style.css">');
+			expect(out).toContain('src="cover.jpg"');
+			expect(out).toContain(`href="${res.replacementUrls[res.urls.indexOf("style.css")]}"`);
 		});
 
 		it("should not log when the requests were aborted", async () => {
@@ -182,7 +235,7 @@ describe("Resources", () => {
 			await res.replacements();
 
 			expect(errorSpy).not.toHaveBeenCalled();
-			expect(res.replacementUrls.length).toBe(0);
+			expect(res.replacementUrls).toEqual([null, null, null]);
 			errorSpy.mockRestore();
 		});
 

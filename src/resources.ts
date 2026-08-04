@@ -25,7 +25,9 @@ class Resources {
 	};
 	manifest!: PackagingManifestObject;
 	resources!: PackagingManifestItem[];
-	replacementUrls!: string[];
+	replacementUrls!: (string | null)[];
+	/** Blob urls this created that no longer sit in replacementUrls, kept so destroy() can still revoke them */
+	ownedUrls!: string[];
 	html!: PackagingManifestItem[];
 	assets!: PackagingManifestItem[];
 	css!: PackagingManifestItem[];
@@ -55,6 +57,7 @@ class Resources {
 			});
 
 		this.replacementUrls = [];
+		this.ownedUrls = [];
 
 		this.html = [];
 		this.assets = [];
@@ -154,7 +157,7 @@ class Resources {
 	 * Create blob urls for all the assets
 	 * @return {Promise}         returns replacement urls
 	 */
-	replacements(): Promise<string[]> {
+	replacements(): Promise<(string | null)[]> {
 		if (this.settings.replacements === "none") {
 			return new Promise((resolve: (value: string[]) => void) => {
 				resolve(this.urls);
@@ -177,18 +180,17 @@ class Resources {
 
 		return Promise.all(replacements)
 			.then( (replacementUrls) => {
-				const created = replacementUrls.filter((url): url is string => {
-					return (typeof(url) === "string");
-				});
-
 				if (!this.settings) {
 					// destroyed mid-flight: nothing is left to revoke these later
-					created.forEach((url) => revokeBlobUrl(url));
-					return replacementUrls as string[];
+					replacementUrls.forEach((url) => url && revokeBlobUrl(url));
+					return replacementUrls;
 				}
 
-				this.replacementUrls = created;
-				return replacementUrls as string[];
+				// Index-matched with this.urls: substitute() and get() pair the two by
+				// position, so dropping a failure would shift every later asset onto
+				// the wrong url. A null slot is left unsubstituted instead.
+				this.replacementUrls = replacementUrls;
+				return replacementUrls;
 			});
 	}
 
@@ -320,12 +322,19 @@ class Resources {
 		if (indexInUrls === -1) {
 			return;
 		}
-		if (this.replacementUrls.length) {
+		const replacementUrl = this.replacementUrls[indexInUrls];
+		if (replacementUrl) {
 			return new Promise((resolve: (value: string) => void, _reject: (reason?: unknown) => void) => {
-				resolve(this.replacementUrls[indexInUrls]!);
+				resolve(replacementUrl);
 			});
 		} else {
-			return this.createUrl(path);
+			return this.createUrl(path).then((url) => {
+				// not in replacementUrls, so only destroy() can reclaim it. A base64
+				// url has nothing to revoke and holds the whole asset, so tracking it
+				// would just pin it for the book's lifetime.
+				if (url.startsWith("blob:")) this.ownedUrls.push(url);
+				return url;
+			});
 		}
 	}
 
@@ -353,10 +362,15 @@ class Resources {
 			});
 		}
 
+		if (this.ownedUrls) {
+			this.ownedUrls.forEach((url) => revokeBlobUrl(url));
+		}
+
 		this.settings = undefined!;
 		this.manifest = undefined!;
 		this.resources = undefined!;
 		this.replacementUrls = undefined!;
+		this.ownedUrls = undefined!;
 		this.html = undefined!;
 		this.assets = undefined!;
 		this.css = undefined!;
