@@ -228,8 +228,6 @@ describe("IframeView", () => {
 	});
 
 	describe("render()", () => {
-		// sectionRender is cached to dedupe overlapping displays; caching a
-		// rejected promise would make every later render() fail on it.
 		it("should drop the cached section render after a failure so a retry re-requests", async () => {
 			const section = createMockSection();
 			const sectionRender = vi.fn()
@@ -268,6 +266,23 @@ describe("IframeView", () => {
 			await expect(first).resolves.toBe(view);
 			await expect(second).resolves.toBe(view);
 			expect(view.displayed).toBe(true);
+		});
+
+		it("should report displaying only while a display is in flight", async () => {
+			const request = vi.fn();
+			const view = createView();
+			let finishRender!: () => void;
+			vi.spyOn(view, "render").mockReturnValue(new Promise<void>((resolve) => { finishRender = resolve; }));
+
+			expect(view.displaying).toBe(false);
+
+			const displayed = view.display(request);
+			expect(view.displaying).toBe(true);
+
+			finishRender();
+			await displayed;
+
+			expect(view.displaying).toBe(false);
 		});
 
 		it("should not render again once displayed", async () => {
@@ -657,7 +672,7 @@ describe("IframeView", () => {
 			expect(view.__listeners).toEqual({});
 		});
 
-		it("should clear the cached section render", async () => {
+		it("should clear the cached section render", () => {
 			const section = createMockSection();
 			(section as any).render = vi.fn(() => new Promise<string>(() => {}));
 
@@ -668,6 +683,23 @@ describe("IframeView", () => {
 			view.destroy();
 
 			expect(view.sectionRender).toBeUndefined();
+		});
+
+		// A view torn down between iframe.src and the load event never gets that
+		// event, so destroy() has to settle load() itself — otherwise the render
+		// chain hangs and stalls the manager queue.
+		it("should reject an in-flight load and detach the iframe load handler", async () => {
+			const view = createView();
+			view.create();
+
+			const loading = view.load("<html><body>hi</body></html>");
+			expect(view._loading).toBeDefined();
+
+			view.destroy();
+
+			await expect(loading).rejects.toMatchObject({ name: "AbortError" });
+			expect(view._loading).toBeUndefined();
+			expect(view.iframe!.onload).toBeNull();
 		});
 
 		it("should abort in-flight section render and suppress loaderror", async () => {

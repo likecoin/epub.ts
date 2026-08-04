@@ -85,9 +85,7 @@ class Views {
 	}
 
 	destroy(view: IframeView): void {
-		// Destroy unconditionally: a view removed before it displays still has
-		// an in-flight request to abort and a blob url to revoke. IframeView
-		// guards its own teardown on `displayed`.
+		// A view removed before it displayed still has a request to abort and a blob url to revoke.
 		view.destroy();
 
 		if(this.container){

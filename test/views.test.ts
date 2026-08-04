@@ -127,8 +127,6 @@ describe("Views", () => {
 			expect(views.container.children.length).toBe(0);
 		});
 
-		// A view removed before it displays still holds an in-flight request and
-		// a blob url; skipping destroy() left both dangling.
 		it("should call destroy on a view that never displayed", () => {
 			const views = createViews();
 			const v = createMockView(0, false);
