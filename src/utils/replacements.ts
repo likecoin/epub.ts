@@ -126,7 +126,7 @@ export function replaceLinks(contents: Element, fn: (path: string) => void): voi
 
 }
 
-export function substitute(content: string, urls: string[], replacements: string[]): string {
+export function substitute(content: string, urls: string[], replacements: (string | null)[]): string {
 	const map = new Map<string, string>();
 	const alternatives: string[] = [];
 	const escapeRe = /[-[\]{}()*+?.,\\^$|#\s]/g;
