@@ -495,6 +495,186 @@ describe("Rendition", () => {
 		});
 	});
 
+	function createRenditionWithManager(): { rendition: Rendition; section: Section } {
+		const rendition = new Rendition(createMockBook());
+		// The constructor queues book.opened + start(); drop them so the queue
+		// only runs what a test enqueues, not a stray start() against the
+		// partial manager mock below.
+		rendition.q.clear();
+		const section = { index: 5 } as unknown as Section;
+		(rendition.book.spine.get as ReturnType<typeof vi.fn>).mockReturnValue(section);
+		rendition.manager = {
+			display: vi.fn().mockResolvedValue(undefined),
+			next: vi.fn().mockResolvedValue(undefined),
+			prev: vi.fn().mockResolvedValue(undefined),
+		} as unknown as DefaultViewManager;
+		rendition.reportLocation = vi.fn().mockResolvedValue(undefined);
+		return { rendition, section };
+	}
+
+	describe("display() error handling", () => {
+		function renditionWithFailingDisplay(err: Error): { rendition: Rendition; section: Section } {
+			const { rendition, section } = createRenditionWithManager();
+			// Drive follow-on queue steps inline rather than waiting on rAF.
+			rendition.q.tick = (cb: FrameRequestCallback): number => { cb(0); return 0; };
+			(rendition.manager.display as ReturnType<typeof vi.fn>).mockRejectedValue(err);
+			return { rendition, section };
+		}
+
+		it("should reject when the manager fails to display", async () => {
+			const { rendition } = renditionWithFailingDisplay(new Error("boom"));
+
+			await expect(rendition.display("chapter_001.xhtml")).rejects.toThrow("boom");
+		});
+
+		it("should resolve undefined when the display was aborted", async () => {
+			const { rendition } = renditionWithFailingDisplay(new DOMException("Aborted", "AbortError"));
+
+			await expect(rendition.display("chapter_001.xhtml")).resolves.toBeUndefined();
+
+			expect(rendition.displaying).toBeUndefined();
+		});
+
+		// A stuck `displaying` also disables re-anchoring — see the guard in
+		// onContentReflow's debounce.
+		it("should clear displaying after a failure", async () => {
+			const { rendition } = renditionWithFailingDisplay(new Error("boom"));
+
+			await expect(rendition.display("chapter_001.xhtml")).rejects.toThrow("boom");
+
+			expect(rendition.displaying).toBeUndefined();
+		});
+
+		it("should clear displaying when no section matches the target", async () => {
+			const { rendition } = renditionWithFailingDisplay(new Error("boom"));
+			(rendition.book.spine.get as ReturnType<typeof vi.fn>).mockReturnValue(null);
+
+			await expect(rendition.display("missing.xhtml")).rejects.toThrow("No Section Found");
+
+			expect(rendition.displaying).toBeUndefined();
+		});
+
+		it("should still emit displayerror", async () => {
+			const { rendition } = renditionWithFailingDisplay(new Error("boom"));
+			const emitSpy = vi.spyOn(rendition, "emit");
+
+			await expect(rendition.display("chapter_001.xhtml")).rejects.toThrow("boom");
+
+			expect(emitSpy).toHaveBeenCalledWith("displayerror", expect.any(Error));
+		});
+
+		// Superseding a display resolves its deferred early, so a newer display
+		// can be in flight by the time the older manager call settles. Both of
+		// _display's handlers guard against blanking the newer one's marker.
+		async function supersedeThenSettleOlder(
+			older: Promise<void>,
+			settleOlder: () => void,
+			settledEvent: string
+		): Promise<void> {
+			const { rendition } = createRenditionWithManager();
+			(rendition.manager.display as ReturnType<typeof vi.fn>)
+				.mockReturnValueOnce(older)
+				.mockReturnValue(new Promise<void>(() => {}));
+
+			const first = rendition.display("chapter_001.xhtml");
+			await vi.waitFor(() => expect(rendition.displaying).toBeDefined());
+			const olderMarker = rendition.displaying;
+
+			void rendition.display("chapter_002.xhtml");
+			await expect(first).resolves.toBeUndefined();
+			// Assert defined as well as changed — without it the wait would also
+			// be satisfied by the very clobber this test exists to catch.
+			await vi.waitFor(() => {
+				expect(rendition.displaying).toBeDefined();
+				expect(rendition.displaying).not.toBe(olderMarker);
+			});
+			const newerMarker = rendition.displaying;
+
+			// Wait on the older handler's own emit rather than a bare tick, so a
+			// handler that never ran fails instead of passing vacuously.
+			const emitSpy = vi.spyOn(rendition, "emit");
+			settleOlder();
+			await vi.waitFor(() => expect(emitSpy).toHaveBeenCalledWith(settledEvent, expect.anything()));
+
+			expect(rendition.displaying).toBe(newerMarker);
+		}
+
+		it("should not clear a newer display's marker when an older one resolves", async () => {
+			let finish!: () => void;
+			const older = new Promise<void>((resolve) => { finish = resolve; });
+
+			await supersedeThenSettleOlder(older, () => finish(), "displayed");
+		});
+
+		it("should not clear a newer display's marker when an older one rejects", async () => {
+			let fail!: () => void;
+			const older = new Promise<void>((_resolve, reject) => {
+				fail = (): void => reject(new Error("boom"));
+			});
+
+			await supersedeThenSettleOlder(older, () => fail(), "displayerror");
+		});
+
+		it("should keep draining the queue after a failure", async () => {
+			const { rendition, section } = renditionWithFailingDisplay(new Error("boom"));
+
+			await expect(rendition.display("chapter_001.xhtml")).rejects.toThrow("boom");
+
+			(rendition.manager.display as ReturnType<typeof vi.fn>).mockResolvedValue(undefined);
+
+			await expect(rendition.display("chapter_002.xhtml")).resolves.toBe(section);
+		});
+
+		// q.clear() only reaches tasks that never ran. A _display already dequeued
+		// and waiting on the manager holds its own deferred, and destroy() tears
+		// the manager down under it, so nothing else will ever settle it.
+		it("should settle an in-flight display when the rendition is destroyed", async () => {
+			const { rendition } = createRenditionWithManager();
+			rendition.q.tick = (cb: FrameRequestCallback): number => { cb(0); return 0; };
+			(rendition.manager.display as ReturnType<typeof vi.fn>).mockReturnValue(new Promise<void>(() => {}));
+			Object.assign(rendition.manager, { off: vi.fn(), destroy: vi.fn() });
+
+			const displayed = rendition.display("chapter_001.xhtml");
+			// Without this the test could pass on a task that never ran, which
+			// q.clear() would settle for a different reason.
+			await vi.waitFor(() => expect(rendition.manager.display).toHaveBeenCalled());
+
+			rendition.destroy();
+
+			await expect(displayed).resolves.toBeUndefined();
+		});
+
+		// _display() discards the chain it builds — it returns the deferred's
+		// promise, not the chain — so a throw in either handler rejects a promise
+		// nobody holds. The deferred is already settled by then, so the caller is
+		// fine; what leaks is an unhandled rejection from the listener's own bug.
+		it.each([
+			["displayed", undefined],
+			["displayerror", new Error("boom")],
+		])("should not leak an unhandled rejection when a %s listener throws", async (event, failWith) => {
+			const { rendition } = createRenditionWithManager();
+			rendition.q.tick = (cb: FrameRequestCallback): number => { cb(0); return 0; };
+			if (failWith) {
+				(rendition.manager.display as ReturnType<typeof vi.fn>).mockRejectedValue(failWith);
+			}
+			rendition.on(event as "displayed", () => { throw new Error("listener blew up"); });
+
+			const leaked: unknown[] = [];
+			const onUnhandled = (reason: unknown): void => { leaked.push(reason); };
+			process.on("unhandledRejection", onUnhandled);
+			try {
+				await rendition.display("chapter_001.xhtml").catch(() => undefined);
+				// Node reports unhandled rejections a macrotask after the
+				// microtask queue drains, so awaiting the display is not enough.
+				await new Promise((resolve) => setTimeout(resolve, 20));
+			} finally {
+				process.off("unhandledRejection", onUnhandled);
+			}
+
+			expect(leaked).toEqual([]);
+		});
+	});
+
 	describe("content reflow re-anchoring", () => {
 		const CFI = "epubcfi(/6/12!/4[A-5]/2/114/1:0)";
 
@@ -505,23 +685,6 @@ describe("Rendition", () => {
 		afterEach(() => {
 			vi.useRealTimers();
 		});
-
-		function createRenditionWithManager(): { rendition: Rendition; section: Section } {
-			const rendition = new Rendition(createMockBook());
-			// The constructor queues book.opened + start(); drop them so advancing
-			// fake timers only flushes the re-anchor debounce, not a stray start()
-			// against the partial manager mock below.
-			rendition.q.clear();
-			const section = { index: 5 } as unknown as Section;
-			(rendition.book.spine.get as ReturnType<typeof vi.fn>).mockReturnValue(section);
-			rendition.manager = {
-				display: vi.fn().mockResolvedValue(undefined),
-				next: vi.fn().mockResolvedValue(undefined),
-				prev: vi.fn().mockResolvedValue(undefined),
-			} as unknown as DefaultViewManager;
-			rendition.reportLocation = vi.fn().mockResolvedValue(undefined);
-			return { rendition, section };
-		}
 
 		it("re-applies the armed target on a content reflow", async () => {
 			const { rendition, section } = createRenditionWithManager();
