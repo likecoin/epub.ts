@@ -651,14 +651,21 @@ class IframeView implements IEventEmitter<IframeViewEvents> {
 
 		this.render(request)
 			.then(() => {
-				this.emit(EVENTS.VIEWS.DISPLAYED, this);
-				this.onDisplayed(this);
-
+				// Settle before emitting, and catch terminally: the emit and
+				// onDisplayed below run application code. A listener that throws
+				// would otherwise leave _displaying set, which the in-flight
+				// sharing above hands to every later display(), and would leave
+				// `displayed` false — which is what views.show() gates on, so a
+				// fully rendered iframe would stay hidden for good.
 				this.displayed = true;
 				this._displaying = undefined;
 				displayed.resolve(this);
 
-			}, (err) => {
+				this.emit(EVENTS.VIEWS.DISPLAYED, this);
+				this.onDisplayed(this);
+
+			})
+			.catch((err: Error) => {
 				this._displaying = undefined;
 				displayed.reject(err);
 			});

@@ -385,13 +385,17 @@ class InlineView implements IEventEmitter<InlineViewEvents> {
 
 			this.render(request).then(() => {
 
-				this.emit(EVENTS.VIEWS.DISPLAYED, this);
-				this.onDisplayed(this);
-
+				// Settle before emitting, as IframeView does — a listener that
+				// throws must not leave the view unsettled and unshowable.
 				this.displayed = true;
 
 				displayed.resolve(this);
 
+				this.emit(EVENTS.VIEWS.DISPLAYED, this);
+				this.onDisplayed(this);
+
+			}).catch((err: Error) => {
+				displayed.reject(err);
 			});
 
 		} else {
