@@ -1,8 +1,9 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach, vi } from "vitest";
 import Book from "../src/book";
 import Section from "../src/section";
-import { EpubError } from "../src/utils/core";
+import { EpubError, handleResponse } from "../src/utils/core";
 import request from "../src/utils/request";
+import Path from "../src/utils/path";
 import { getFixtureUrl } from "./helpers";
 import type { RequestFunction, SpineItem } from "../src/types";
 
@@ -127,6 +128,48 @@ describe("Book", () => {
 
 			expect(spy.mock.calls[0]![1]).toBe("xhtml");
 			await book.replacementsReady;
+		});
+	});
+
+	describe("loadNavigation()", () => {
+		const malformedNav = [
+			"<?xml version=\"1.0\" encoding=\"utf-8\"?>",
+			"<html xmlns=\"http://www.w3.org/1999/xhtml\" xmlns:epub=\"http://www.idpf.org/2007/ops\">",
+			"<body><nav epub:type=\"toc\"><ol>",
+			"<li><a href=\"chapter_001.xhtml\">Down the Rabbit-Hole &amp; Beyond</a></li>",
+			"<li><a href=\"chapter_002.xhtml\">A Pool of Tears & More</a></li>",
+			"</ol></nav></body></html>"
+		].join("");
+
+		it("should recover a nav.xhtml that isn't well-formed", async () => {
+			const book = new Book(getFixtureUrl("/alice/OPS/package.opf"));
+			await book.opened;
+
+			// A bare "&" breaks the strict xhtml parse, and handleResponse only
+			// falls back for type "xhtml" — so recovering proves the nav wasn't
+			// requested as "xml". The mock mirrors request(): an absent type is
+			// inferred from the extension.
+			vi.spyOn(book, "request").mockImplementation(((url: string, type?: string) =>
+				Promise.resolve(handleResponse(malformedNav, type || new Path(url).extension))
+			) as RequestFunction);
+
+			const navigation = await book.loadNavigation(book.packaging);
+
+			expect(navigation.toc.length).toBe(2);
+			expect(navigation.toc[1]!.label.trim()).toBe("A Pool of Tears & More");
+		});
+
+		it("should not force a request type for the nav document", async () => {
+			const book = new Book(getFixtureUrl("/alice/OPS/package.opf"));
+			await book.opened;
+			const spy = vi.spyOn(book, "request").mockResolvedValue(
+				new DOMParser().parseFromString(malformedNav, "text/html")
+			);
+
+			await book.loadNavigation(book.packaging);
+
+			// undefined lets request()/archive infer from the extension
+			expect(spy.mock.calls[0]![1]).toBeUndefined();
 		});
 	});
 

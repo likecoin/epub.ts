@@ -676,7 +676,12 @@ class Book implements IEventEmitter<BookEvents> {
 			});
 		}
 
-		return this.load(navPath, "xml")
+		// No explicit type: the extension decides, so an EPUB3 nav.xhtml is parsed
+		// as xhtml and gets handleResponse's lenient fallback. Forcing "xml" here
+		// bypassed it, and a nav that isn't well-formed yields a parsererror
+		// document — which produces a silently empty toc and pageList, not an error.
+		// A toc.ncx still infers "ncx", so EPUB2 is unchanged.
+		return this.load(navPath)
 			.then((xml) => {
 				this.navigation = new Navigation(xml as Document);
 				this.pageList = new PageList(xml as Document);
