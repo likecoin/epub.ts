@@ -9,3 +9,6 @@ documentation/html
 types/*.js
 bench/fixtures/*.epub
 bench/results/
+
+# agent run-skill screenshots
+.claude/skills/*/shots/
