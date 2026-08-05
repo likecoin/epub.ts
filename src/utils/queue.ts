@@ -133,7 +133,11 @@ class Queue {
 	 */
 	run(): Promise<void> {
 
-		if(!this.running){
+		// `!this.defered` matters as much as `!this.running`: clear() settles and
+		// drops the deferred while a task is still in flight, leaving running set.
+		// Without this, the next run() would hand back the settled promise and
+		// report a drained queue that still has work in it.
+		if(!this.running || !this.defered){
 			this.running = true;
 			this.defered = new defer<void>();
 		}
@@ -147,7 +151,7 @@ class Queue {
 					});
 
 			} else {
-				this.defered!.resolve();
+				this.defered?.resolve();
 				this.running = undefined;
 			}
 		};
@@ -200,9 +204,11 @@ class Queue {
 
 		// run()'s own promise is settled only by step() finding the queue empty,
 		// which never happens when a task is still in flight. Left alone it hangs
-		// whoever awaited run() — Locations.generate() does. Not cleared: step()
-		// may still resolve it, and settling twice is a no-op.
+		// whoever awaited run() — Locations.generate() does. Dropped as well as
+		// settled, so a later run() mints a fresh one instead of returning this
+		// already-resolved promise for work that hasn't started.
 		this.defered?.resolve();
+		this.defered = undefined;
 	}
 
 	/**

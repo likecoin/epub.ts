@@ -219,6 +219,30 @@ describe("Queue", () => {
 
 			await expect(running).resolves.toBeUndefined();
 		});
+
+		// clear() settles run()'s deferred while a task is still in flight, so
+		// `running` stays set. A later run() must not hand back that settled
+		// promise and report a queue that still has work in it as drained.
+		it("should give a later run() a fresh promise after clearing mid-flight", async () => {
+			const q = createTestQueue();
+			q.pause();
+			let release: (() => void) | undefined;
+			q.enqueue(() => new Promise<void>((resolve) => { release = resolve; }));
+			const firstRun = q.run();
+			await new Promise((resolve) => setTimeout(resolve, 0));
+
+			q.clear();
+			await expect(firstRun).resolves.toBeUndefined();
+
+			let done = false;
+			q.enqueue(() => { done = true; });
+			const secondRun = q.run();
+			expect(secondRun).not.toBe(firstRun);
+
+			release!();
+			await secondRun;
+			expect(done).toBe(true);
+		});
 	});
 
 	describe("run()", () => {
