@@ -2,7 +2,7 @@
 
 ## At a glance
 
-- **1080 tests passing** across 45 test files
+- **1185 tests passing** across 46 test files
 - **1 runtime dependency** (`jszip`)
 - **~6 intentional `any` types** remaining (3 in event emitter infrastructure, 2 in `EventMap` type definition, 1 in `HookCallback`)
 - **0 `Function` types** in code — all 33 replaced with `HookCallback`, `ViewManagerConstructor`, `ViewConstructor`, `EventListener`, or typed function signatures
@@ -12,11 +12,11 @@
 
 | Format | File | Size | Use case |
 |--------|------|------|----------|
-| ESM | `dist/epub.js` | ~235 KB | Modern bundlers (Vite, webpack, Rollup) |
-| CJS | `dist/epub.cjs` | ~151 KB | `require()` in legacy Node.js setups |
-| UMD | `dist/epub.umd.js` | ~151 KB | `<script>` tags / CDN |
-| Node ESM | `dist/epub.node.js` | ~232 KB | `@likecoin/epub-ts/node` |
-| Node CJS | `dist/epub.node.cjs` | ~149 KB | `require("@likecoin/epub-ts/node")` |
+| ESM | `dist/epub.js` | ~265 KB | Modern bundlers (Vite, webpack, Rollup) |
+| CJS | `dist/epub.cjs` | ~170 KB | `require()` in legacy Node.js setups |
+| UMD | `dist/epub.umd.js` | ~170 KB | `<script>` tags / CDN |
+| Node ESM | `dist/epub.node.js` | ~256 KB | `@likecoin/epub-ts/node` |
+| Node CJS | `dist/epub.node.cjs` | ~163 KB | `require("@likecoin/epub-ts/node")` |
 | Types | `dist/*.d.ts` | — | Generated from source via `vite-plugin-dts` |
 
 All formats are single-file bundles. `preserveModules` was considered for ESM but provides minimal benefit since `Book` imports nearly the entire dependency graph.

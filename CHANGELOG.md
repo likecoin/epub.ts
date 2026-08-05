@@ -1,5 +1,49 @@
 # Changelog
 
+## 0.7.0 (2026-08-05)
+
+### Breaking changes
+
+- `Rendition.display()` is now typed `Promise<Section | undefined>` — it has always resolved `undefined` for a superseded or aborted display, and a cast was hiding it
+- The `./dist/*` subpath export is narrowed to `./dist/*.js` and `./dist/*.cjs`, so per-module `.d.ts` paths with no JS beside them now fail at resolve time instead of at runtime
+
+### Features
+
+- Export `InlineView` for parity with epubjs deep imports (restores the import path, not a working renderer — the class has never rendered in any epubjs release)
+- Add `method` to `RenditionOptions`, so TypeScript consumers can pass it to `renderTo()` without a cast
+
+### Bug fixes
+
+- `Rendition.display()` no longer hangs — and no longer stalls every later queued task — when rendering fails; `destroy()` settles the in-flight deferred too
+- `DefaultViewManager.display()` settles on every failure path, not just the one mid-chain rejection it handled
+- `Queue.clear()`/`stop()` settle the tasks they drop, so teardown no longer hangs a pending `display()` or `Locations.generate()`
+- `Queue.run()` mints a fresh promise after the queue is cleared mid-flight instead of reporting a non-empty queue as drained
+- View display promises settle before listeners run, so a throwing listener can't deadlock a view into permanent invisibility
+- Overlapping `IframeView` displays share one in-flight promise instead of racing two loads
+- The memoized `sectionRender` is cleared on failure and on destroy, so a failed view can retry instead of re-attaching to a rejected promise forever
+- A view destroyed mid-load settles its pending load with `AbortError` instead of stranding the manager queue
+- Views removed before they displayed are now destroyed — previously the one view worth aborting was always skipped, leaking its request and blob url
+- The continuous fill loop ends when a view fails, and the failed view is dropped instead of walking the spine to its end attaching iframes
+- A view that fails to display as it scrolls into range is dropped and reported, rather than silently re-requesting once per scroll tick
+- Page-turn failures are reported on `displayerror` instead of being swallowed and scrolled to anyway
+- Event listeners are isolated, so one throwing listener no longer skips the rest or propagates into library code
+- The abort signal and per-call credentials/headers are forwarded through `Book.load`, so superseded section fetches are actually cancelled
+- `request()` retries without the abort signal when `fetch` rejects it as cross-realm, unless the signal is already aborted
+- Sections declared `application/xhtml+xml` but named `.htm`/`.html` are parsed strictly, with a lenient fallback when the strict parse fails — a self-closed `<title/>` no longer renders the section blank
+- The nav document's parse type is inferred from its extension, so a not-well-formed `nav.xhtml` no longer yields an empty TOC with nothing thrown
+- `method` is passed through to views in `ContinuousViewManager`, making `blobUrl` reachable in scrolled flow, and a re-displayed view no longer orphans its first blob url ([#35](https://github.com/likecoin/epub.ts/issues/35))
+- The initial `about:blank` load is ignored when `method` is `"write"`, so the written document is measured and styled instead of an empty one
+- Book resources load through `load()` so images, fonts and stylesheets carry the book's credentials, headers and abort signal
+- The store carries the book's credentials and headers, so a stored book no longer caches a 401 body for later offline reads
+- Replacement urls stay index-matched when an asset fails, so one 404 no longer rewrites every later asset onto the wrong blob
+- The stylesheet blob that `replaceCss()` supersedes is reclaimed — previously one leaked blob per stylesheet, every book
+- The replacement pass is skipped when the store would repeat it, orphaning the first set of blob urls
+- `Resources` stays intact when destroyed mid-flight, and cancelled requests are no longer logged one line per asset
+
+### Refactor
+
+- Narrow the `displayed` event payload to a definite `Section`, dropping a null check listeners never needed
+
 ## 0.6.10 (2026-08-01)
 
 ### Features
