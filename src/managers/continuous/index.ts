@@ -219,7 +219,17 @@ class ContinuousViewManager extends DefaultViewManager {
 				if (!view.displayed) {
 					promises.push(
 						view.display(this.request)
-							.then((v: IframeView) => v.show(), () => view.hide())
+							.then((v: IframeView) => v.show(), (err: Error) => {
+								// Dropped as check() drops its own failures: display()
+								// leaves `displayed` false, so a view left in place is
+								// re-displayed — and re-reported — on every later pass.
+								this.views.remove(view);
+								// AbortError means the view was destroyed mid-display,
+								// which update() itself schedules; not a failure.
+								if (err && err.name !== "AbortError") {
+									this.reportDisplayError(err);
+								}
+							})
 					);
 				} else {
 					view.show();

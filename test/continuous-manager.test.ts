@@ -418,6 +418,96 @@ describe("ContinuousViewManager", () => {
 			expect((views[4]!.destroy as ReturnType<typeof vi.fn>)).not.toHaveBeenCalled();
 		});
 
+		it("should report on displayerror when a scrolled-in view fails to display", async () => {
+			const manager = new ContinuousViewManager(createMockManagerOptions());
+			manager.render(document.createElement("div"), { width: 800, height: 600 });
+			manager.layout = {
+				props: { delta: 800, spread: false, name: "reflowable" },
+				width: 800,
+				height: 600,
+			} as unknown as Layout;
+
+			const views = [0, 1, 2].map(makeMockView);
+			const failure = new Error("boom");
+			views[1]!.displayed = false;
+			views[1]!.display = vi.fn().mockRejectedValue(failure);
+			views.forEach(v => manager.views.append(v as any));
+
+			vi.spyOn(manager, "isVisible").mockImplementation(
+				(v: unknown) => (v as { index: number }).index === 1
+			);
+
+			const reported: Error[] = [];
+			manager.on("displayerror", (err: Error) => reported.push(err));
+
+			manager.q.tick = (cb: FrameRequestCallback): number => { cb(0); return 0; };
+			await manager.update();
+
+			expect(reported).toEqual([failure]);
+			expect((views[1]!.show as ReturnType<typeof vi.fn>)).not.toHaveBeenCalled();
+		});
+
+		// display() leaves `displayed` false on failure, so a view left in place
+		// is picked up again by every later pass — re-requesting the section and
+		// re-emitting displayerror for as long as it stays on screen.
+		it("should drop a failed view rather than retrying it on every pass", async () => {
+			const manager = new ContinuousViewManager(createMockManagerOptions());
+			manager.render(document.createElement("div"), { width: 800, height: 600 });
+			manager.layout = {
+				props: { delta: 800, spread: false, name: "reflowable" },
+				width: 800,
+				height: 600,
+			} as unknown as Layout;
+
+			const views = [0, 1, 2].map(makeMockView);
+			views[1]!.displayed = false;
+			views[1]!.display = vi.fn().mockRejectedValue(new Error("boom"));
+			views.forEach(v => manager.views.append(v as any));
+
+			vi.spyOn(manager, "isVisible").mockImplementation(
+				(v: unknown) => (v as { index: number }).index === 1
+			);
+
+			const reported: Error[] = [];
+			manager.on("displayerror", (err: Error) => reported.push(err));
+
+			manager.q.tick = (cb: FrameRequestCallback): number => { cb(0); return 0; };
+			await manager.update();
+			await manager.update();
+			await manager.update();
+
+			expect(reported).toHaveLength(1);
+			expect((views[1]!.display as ReturnType<typeof vi.fn>)).toHaveBeenCalledTimes(1);
+			expect(manager.views.all()).not.toContain(views[1] as any);
+		});
+
+		it("should not report an aborted display, which update() itself causes", async () => {
+			const manager = new ContinuousViewManager(createMockManagerOptions());
+			manager.render(document.createElement("div"), { width: 800, height: 600 });
+			manager.layout = {
+				props: { delta: 800, spread: false, name: "reflowable" },
+				width: 800,
+				height: 600,
+			} as unknown as Layout;
+
+			const views = [0, 1, 2].map(makeMockView);
+			views[1]!.displayed = false;
+			views[1]!.display = vi.fn().mockRejectedValue(new DOMException("Aborted", "AbortError"));
+			views.forEach(v => manager.views.append(v as any));
+
+			vi.spyOn(manager, "isVisible").mockImplementation(
+				(v: unknown) => (v as { index: number }).index === 1
+			);
+
+			const reported: Error[] = [];
+			manager.on("displayerror", (err: Error) => reported.push(err));
+
+			manager.q.tick = (cb: FrameRequestCallback): number => { cb(0); return 0; };
+			await manager.update();
+
+			expect(reported).toEqual([]);
+		});
+
 		it("should hide (not destroy) views in the ±1 keep buffer", () => {
 			const manager = new ContinuousViewManager(createMockManagerOptions());
 			manager.render(document.createElement("div"), { width: 800, height: 600 });
