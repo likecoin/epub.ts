@@ -6,7 +6,7 @@
 
 ## Conventions
 
-All code conventions, commands, commit format, key files, and coding style rules are documented in [`CLAUDE.md`](../CLAUDE.md) at the repo root. **Read it first.**
+All code conventions, commit format, and coding style rules are documented in [`CLAUDE.md`](../CLAUDE.md) at the repo root. **Read it first.**
 
 For test counts, dependency status, and remaining work, see [`PROJECT_STATUS.md`](../PROJECT_STATUS.md).
 

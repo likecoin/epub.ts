@@ -2,25 +2,9 @@
 
 All project rules and conventions are below. See also `README.md` for project overview and `PROJECT_STATUS.md` for volatile status.
 
-## Commands
-
-- `npm run build` — Vite library build
-- `npm test` — Vitest
-- `npm run typecheck` — tsc --noEmit
-- `npm run lint` — ESLint
-- `npm run docs` — Generate API docs (HTML + Markdown via typedoc)
-
-## Codebase
-
-- `src/` — Library source (TypeScript)
-- `test/` — Vitest tests
-- `dist/` — Build output (gitignored)
-- `documentation/md/API.md` — Generated API docs
-
 ## Conventions
 
 ### TypeScript
-- Full `strict: true` (noImplicitAny, strictNullChecks, strictPropertyInitialization, etc.)
 - API-compatible with epubjs v0.3.93 — do not break the public API
 - When adding or tightening types, do not introduce unintended behavioral changes — adding null guards is fine, but do not change return values, filter arrays, or alter control flow just to satisfy the type checker
 - ES6 classes with inline typed emitter
@@ -32,28 +16,17 @@ All project rules and conventions are below. See also `README.md` for project ov
 - Keep changes minimal — don't refactor surrounding code when fixing a bug
 
 ### Commit Messages
-- `feat: add CFI range support`
-- `fix: handle missing spine item`
-- `refactor: simplify event emitter`
-- `test: add section search tests`
-- `chore: update dependencies`
+Gitmoji prefix, then a capitalized imperative summary:
+- `🐛 Infer the nav document's parse type from its extension`
+- `✨ Resolve TOC hrefs to location indexes for page numbers`
+- `🏷️ Add typed event emitter generics across all emitter classes`
+- `♻️ Export InlineView for parity with epubjs deep imports`
+- `✅ Test AbortSignal propagation through request and IframeView`
+- `📝 Regenerate docs`
 
 ## Testing
 
-- Tests live in `test/` directory
-- Use Vitest with globals
 - Run `npm test` to verify all tests pass before committing
-
-## Key Files
-
-| File | Purpose |
-|------|---------|
-| `src/epub.ts` | Default export factory function |
-| `src/book.ts` | Main Book class |
-| `src/rendition.ts` | Rendering engine |
-| `src/epubcfi.ts` | EPUB CFI parser |
-| `src/index.ts` | Public API exports |
-| `src/node.ts` | Node.js entry point (linkedom shims + parsing exports) |
 
 ## Status
 
