@@ -80,9 +80,8 @@ class Section {
 		// needs lenient parsing still gets it.
 		const ext = new Path(this.url!).extension;
 		const declaredType = mediaTypeToRequestType(this.mediaType);
-		const type = declaredType === "xhtml" && (ext === "html" || ext === "htm")
-			? declaredType
-			: isKnownRequestType(ext) ? ext : declaredType;
+		const isXhtmlNamedHtml = declaredType === "xhtml" && (ext === "html" || ext === "htm");
+		const type = isXhtmlNamedHtml || !isKnownRequestType(ext) ? declaredType : ext;
 		const xml = await request(this.url!, type, undefined, undefined, signal);
 
 		this.document = xml as Document;
