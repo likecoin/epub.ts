@@ -492,6 +492,18 @@ describe("DefaultViewManager", () => {
 			manager.destroy();
 			expect(spy).toHaveBeenCalled();
 		});
+
+		it("should not throw when the manager was never rendered", () => {
+			const manager = new DefaultViewManager(createMockManagerOptions());
+			expect(() => manager.destroy()).not.toThrow();
+		});
+
+		it("should stop the queue when the manager was never rendered", () => {
+			const manager = new DefaultViewManager(createMockManagerOptions());
+			const spy = vi.spyOn(manager.q, "stop");
+			manager.destroy();
+			expect(spy).toHaveBeenCalled();
+		});
 	});
 
 	describe("pagehide handler", () => {
