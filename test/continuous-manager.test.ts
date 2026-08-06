@@ -264,6 +264,11 @@ describe("ContinuousViewManager", () => {
 			manager.destroy();
 			expect(destroySpy).toHaveBeenCalled();
 		});
+
+		it("should not throw when the manager was never rendered", () => {
+			const manager = new ContinuousViewManager(createMockManagerOptions());
+			expect(() => manager.destroy()).not.toThrow();
+		});
 	});
 
 	describe("check()", () => {

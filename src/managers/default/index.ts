@@ -233,11 +233,17 @@ class DefaultViewManager implements IEventEmitter<DefaultManagerEvents> {
 		// after the manager is torn down.
 		this.q.stop();
 
-		this.clear();
+		// render() is what creates the stage, container and listeners the rest
+		// of this tears down, and it is queued separately from the manager's
+		// construction — a rendition destroyed while its book is still opening
+		// gets here with none of them in place.
+		if (this.rendered) {
+			this.clear();
 
-		this.removeEventListeners();
+			this.removeEventListeners();
 
-		this.stage.destroy();
+			this.stage.destroy();
+		}
 
 		if (this._measurer) {
 			this._measurer.destroy();
