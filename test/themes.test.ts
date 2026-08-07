@@ -120,7 +120,9 @@ describe("Themes", () => {
 			const themes = new Themes(createMockRendition());
 			themes.registerUrl("dark", "http://example.com/dark.css");
 			themes.add("dark", contents);
-			expect(contents.addStylesheet).toHaveBeenCalledWith("http://example.com/dark.css");
+			// Keyed by theme name so re-registering the url replaces the link
+			// instead of stacking a second one.
+			expect(contents.addStylesheet).toHaveBeenCalledWith("http://example.com/dark.css", "dark");
 		});
 
 		it("should call addStylesheetCss for serialized theme", () => {

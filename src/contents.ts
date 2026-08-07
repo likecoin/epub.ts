@@ -739,8 +739,9 @@ class Contents implements IEventEmitter<ContentsEvents> {
 	/**
 	 * Append a stylesheet link to the document head
 	 * @param {string} src url
+	 * @param {string} key If the key is the same, the link will be replaced instead of inserted
 	 */
-	addStylesheet(src: string): Promise<boolean> {
+	addStylesheet(src: string, key?: string): Promise<boolean> {
 		return new Promise((resolve: (value: boolean) => void, _reject: (reason?: unknown) => void) => {
 			let $stylesheet;
 			let ready = false;
@@ -750,14 +751,39 @@ class Contents implements IEventEmitter<ContentsEvents> {
 				return;
 			}
 
-			// Check if link already exists
-			$stylesheet = this.document.querySelector("link[href='"+src+"']");
-			if ($stylesheet) {
-				resolve(true);
-				return; // already present
+			const id = key ? "epubjs-inserted-link-" + key : undefined;
+
+			if (id) {
+				// The keyed link is swapped in place, so re-registering a url
+				// theme replaces its stylesheet instead of leaving the old one
+				// applying every rule the new one doesn't override.
+				const existing = this.document.getElementById(id);
+				if (existing) {
+					if (existing.getAttribute("href") === src) {
+						resolve(true);
+						return; // already present
+					}
+					existing.remove();
+				}
+			}
+
+			// Check if link already exists. Skipped for a keyed call: matching
+			// someone else's link — the book's own css, another theme sharing
+			// the url — would leave the key with no node to swap, and the next
+			// re-register would stack a second stylesheet after all. Adopting
+			// that link instead would mean removing a node we never created.
+			if (!id) {
+				$stylesheet = this.document.querySelector("link[href='"+src+"']");
+				if ($stylesheet) {
+					resolve(true);
+					return; // already present
+				}
 			}
 
 			$stylesheet = this.document.createElement("link");
+			if (id) {
+				$stylesheet.id = id;
+			}
 			$stylesheet.type = "text/css";
 			$stylesheet.rel = "stylesheet";
 			$stylesheet.href = src;
@@ -822,8 +848,13 @@ class Contents implements IEventEmitter<ContentsEvents> {
 		const styleSheet: CSSStyleSheet = (this._getStylesheetNode(key) as HTMLStyleElement).sheet as CSSStyleSheet;
 
 		// The node is reused per key, so clear it to replace rather than stack.
-		for (let i = styleSheet.cssRules.length - 1; i >= 0; i--) {
-			styleSheet.deleteRule(i);
+		// Only when a key was given: every keyless caller shares the one
+		// unkeyed node, and Rendition.adjustImages() writes its column-fitting
+		// rules there, so clearing would drop rules another caller owns.
+		if (key) {
+			for (let i = styleSheet.cssRules.length - 1; i >= 0; i--) {
+				styleSheet.deleteRule(i);
+			}
 		}
 
 		if (Array.isArray(rules)) {
@@ -987,16 +1018,18 @@ class Contents implements IEventEmitter<ContentsEvents> {
 	 * @private
 	 */
 	removeSelectionListeners(): void {
+		// A selection made within 250ms of teardown would otherwise fire against
+		// a detached window and emit `selected` from a destroyed Contents. This
+		// stays above the document guard — a teardown that already dropped the
+		// document is exactly the case the timer needs cancelling in.
+		clearTimeout(this.selectionEndTimeout);
+		this.selectionEndTimeout = undefined;
+
 		if(!this.document) {
 			return;
 		}
 		this.document.removeEventListener("selectionchange", this._onSelectionChange!);
 		this._onSelectionChange = undefined;
-
-		// A selection made within 250ms of teardown would otherwise fire against
-		// a detached window and emit `selected` from a destroyed Contents.
-		clearTimeout(this.selectionEndTimeout);
-		this.selectionEndTimeout = undefined;
 	}
 
 	/**

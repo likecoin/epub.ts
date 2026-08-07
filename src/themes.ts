@@ -195,7 +195,7 @@ class Themes {
 		}
 
 		if (theme.url) {
-			contents.addStylesheet(theme.url);
+			contents.addStylesheet(theme.url, name);
 		} else if (theme.serialized) {
 			contents.addStylesheetCss(theme.serialized, name);
 			theme.injected = true;

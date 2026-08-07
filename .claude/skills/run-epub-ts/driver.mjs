@@ -97,15 +97,20 @@ async function startServer() {
 			stdio: ["ignore", "pipe", "pipe"],
 			env: { ...process.env, BENCH_PORT: String(PORT) },
 		});
+		// `active` is only assigned once this promise resolves, so the top-level
+		// cleanup cannot reap the child on a failure path — kill it here or it
+		// keeps holding PORT and the next run adopts a server it never
+		// confirmed was ready.
+		const fail = (e) => { proc.kill(); rej(e); };
 		// A live timer keeps the event loop open, so leaving this pending would
 		// add ~9s of dead wait to every successful run.
-		const timer = setTimeout(() => rej(new Error("server start timeout")), 10_000);
+		const timer = setTimeout(() => fail(new Error("server start timeout")), 10_000);
 		timer.unref();
 		proc.stdout.on("data", (b) => {
 			if (b.toString().includes("listening on")) { clearTimeout(timer); res(proc); }
 		});
 		proc.stderr.on("data", (b) => process.stderr.write(b));
-		proc.on("error", (e) => { clearTimeout(timer); rej(e); });
+		proc.on("error", (e) => { clearTimeout(timer); fail(e); });
 	});
 }
 

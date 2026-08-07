@@ -279,6 +279,53 @@ describe("Contents", () => {
 			// cleanup
 			document.querySelectorAll("link[href='http://example.com/dup.css']").forEach(el => el.remove());
 		});
+
+		it("should replace the link registered under the same key", () => {
+			const { contents } = createContents();
+			contents.addStylesheet("http://example.com/night-v1.css", "night");
+			contents.addStylesheet("http://example.com/night-v2.css", "night");
+
+			const links = document.querySelectorAll("#epubjs-inserted-link-night");
+			expect(links.length).toBe(1);
+			expect(links[0]!.getAttribute("href")).toBe("http://example.com/night-v2.css");
+			// The superseded stylesheet is gone, so it can't keep applying every
+			// rule the new one doesn't override.
+			expect(document.querySelector("link[href='http://example.com/night-v1.css']")).toBeNull();
+			links[0]!.remove();
+		});
+
+		it("should still create the keyed link when another link holds the url", () => {
+			const { contents } = createContents();
+			// The book's own stylesheet, which we must neither adopt nor remove.
+			const foreign = document.createElement("link");
+			foreign.setAttribute("rel", "stylesheet");
+			foreign.setAttribute("href", "http://example.com/shared.css");
+			document.head.appendChild(foreign);
+
+			contents.addStylesheet("http://example.com/shared.css", "night");
+			expect(document.getElementById("epubjs-inserted-link-night")).not.toBeNull();
+
+			// Without the keyed node above, this would stack rather than swap.
+			contents.addStylesheet("http://example.com/night-v2.css", "night");
+			const keyed = document.querySelectorAll("#epubjs-inserted-link-night");
+			expect(keyed.length).toBe(1);
+			expect(keyed[0]!.getAttribute("href")).toBe("http://example.com/night-v2.css");
+			expect(document.querySelector("link[href='http://example.com/shared.css']")).toBe(foreign);
+
+			keyed[0]!.remove();
+			foreign.remove();
+		});
+
+		it("should not replace the keyed link when the url is unchanged", () => {
+			const { contents } = createContents();
+			contents.addStylesheet("http://example.com/same.css", "day");
+			const first = document.querySelector("#epubjs-inserted-link-day");
+			contents.addStylesheet("http://example.com/same.css", "day");
+
+			expect(document.querySelectorAll("#epubjs-inserted-link-day").length).toBe(1);
+			expect(document.querySelector("#epubjs-inserted-link-day")).toBe(first);
+			first!.remove();
+		});
 	});
 
 	describe("addStylesheetCss()", () => {
@@ -345,6 +392,21 @@ describe("Contents", () => {
 
 			expect(styleEl.sheet!.cssRules.length).toBe(first);
 			expect(styleEl.sheet!.cssRules[0]!.cssText).toContain("red");
+			styleEl.remove();
+		});
+
+		it("should keep rules from other callers when no key is given", () => {
+			const { contents } = createContents();
+			// Every keyless caller shares one node — Rendition.adjustImages()
+			// writes its column-fitting rules there before any content hook runs.
+			contents.addStylesheetRules({ "img": { "max-width": "100%" } });
+			contents.addStylesheetRules({ "p": { "color": "red" } });
+
+			const styleEl = document.getElementById("epubjs-inserted-css-") as HTMLStyleElement;
+			const cssText = Array.from(styleEl.sheet!.cssRules).map(rule => rule.cssText).join(" ");
+			expect(cssText).toContain("img");
+			expect(cssText).toContain("max-width");
+			expect(cssText).toContain("color: red");
 			styleEl.remove();
 		});
 	});
@@ -620,6 +682,33 @@ describe("Contents", () => {
 			} finally {
 				delete (contents.document as unknown as Record<string, unknown>)["styleSheets"];
 				contents.window.matchMedia = originalMatchMedia;
+			}
+		});
+	});
+
+	describe("removeSelectionListeners()", () => {
+		it("should clear a pending selection timer when the document is already gone", () => {
+			vi.useFakeTimers();
+			try {
+				const { contents } = createContents();
+				const doc = contents.document;
+				const spy = vi.spyOn(contents, "triggerSelectedEvent");
+
+				contents.onSelectionChange(new Event("selectionchange"));
+				expect(contents.selectionEndTimeout).toBeDefined();
+
+				// Teardown ordering that already dropped the document is exactly
+				// when a surviving timer fires against a detached window.
+				(contents as unknown as { document: Document | undefined }).document = undefined;
+				contents.removeSelectionListeners();
+
+				vi.advanceTimersByTime(300);
+				expect(spy).not.toHaveBeenCalled();
+				expect(contents.selectionEndTimeout).toBeUndefined();
+
+				contents.document = doc;
+			} finally {
+				vi.useRealTimers();
 			}
 		});
 	});

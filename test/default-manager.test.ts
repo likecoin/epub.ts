@@ -504,6 +504,21 @@ describe("DefaultViewManager", () => {
 			manager.destroy();
 			expect(spy).toHaveBeenCalled();
 		});
+
+		it("should tear down the stage when render() threw partway", () => {
+			const manager = new DefaultViewManager(createMockManagerOptions());
+			// The stage is attached and the listeners are registered before
+			// render() sets `rendered`, so a throw in between leaves them behind.
+			vi.spyOn(manager, "addEventListeners").mockImplementation(() => {
+				throw new Error("boom");
+			});
+			expect(() => manager.render(document.createElement("div"), { width: 800, height: 600 })).toThrow("boom");
+			expect(manager.rendered).toBe(false);
+
+			const spy = vi.spyOn(manager.stage, "destroy");
+			manager.destroy();
+			expect(spy).toHaveBeenCalled();
+		});
 	});
 
 	describe("pagehide handler", () => {
