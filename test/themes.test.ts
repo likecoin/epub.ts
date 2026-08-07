@@ -147,6 +147,44 @@ describe("Themes", () => {
 		});
 	});
 
+	describe("re-registering an injected theme", () => {
+		it("should update rendered contents for the selected theme", () => {
+			const contents = createMockContents();
+			const themes = new Themes(createMockRendition([contents]));
+			themes.registerRules("dark", { "body": { "color": "black" } });
+			themes.select("dark");
+			vi.mocked(contents.addStylesheetRules).mockClear();
+
+			const updated = { "body": { "color": "white" } };
+			themes.registerRules("dark", updated);
+
+			expect(contents.addStylesheetRules).toHaveBeenCalledWith(updated, "dark");
+		});
+
+		it("should not update a theme that was never injected", () => {
+			const contents = createMockContents();
+			const themes = new Themes(createMockRendition([contents]));
+			themes.registerRules("sepia", { "body": { "color": "brown" } });
+
+			expect(contents.addStylesheetRules).not.toHaveBeenCalled();
+		});
+
+		it("should record each injected theme only once", () => {
+			const contents = createMockContents();
+			const themes = new Themes(createMockRendition([contents]));
+			themes.registerRules("dark", { "body": { "color": "black" } });
+			themes.select("dark");
+
+			// inject() runs once per rendered section
+			themes.inject(contents);
+			themes.inject(contents);
+			themes.inject(contents);
+
+			// inject() records the default alongside the selected theme
+			expect(themes._injected).toEqual(["default", "dark"]);
+		});
+	});
+
 	describe("override() / removeOverride()", () => {
 		it("should store override and apply via contents.css()", () => {
 			const contents = createMockContents();
