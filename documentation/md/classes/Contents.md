@@ -6,7 +6,7 @@
 
 # Class: Contents
 
-Defined in: src/contents.ts:34
+Defined in: src/contents.ts:42
 
 ## Implements
 
@@ -18,7 +18,7 @@ Defined in: src/contents.ts:34
 
 > **new Contents**(`doc`, `content?`, `cfiBase?`, `sectionIndex?`): `Contents`
 
-Defined in: src/contents.ts:60
+Defined in: src/contents.ts:68
 
 #### Parameters
 
@@ -48,7 +48,7 @@ Defined in: src/contents.ts:60
 
 > **\_\_listeners**: `Record`\<`string`, (...`args`) => `void`[]\> \| `undefined`
 
-Defined in: src/contents.ts:38
+Defined in: src/contents.ts:46
 
 #### Implementation of
 
@@ -60,7 +60,7 @@ Defined in: src/contents.ts:38
 
 > **\_expanding**: `boolean`
 
-Defined in: src/contents.ts:52
+Defined in: src/contents.ts:60
 
 ***
 
@@ -68,7 +68,7 @@ Defined in: src/contents.ts:52
 
 > **\_layoutStyle**: `string`
 
-Defined in: src/contents.ts:58
+Defined in: src/contents.ts:66
 
 ***
 
@@ -76,7 +76,7 @@ Defined in: src/contents.ts:58
 
 > **\_mediaQueryHandlers**: `object`[]
 
-Defined in: src/contents.ts:56
+Defined in: src/contents.ts:64
 
 #### handler()
 
@@ -102,7 +102,7 @@ Defined in: src/contents.ts:56
 
 > **\_onSelectionChange**: (`e`) => `void` \| `undefined`
 
-Defined in: src/contents.ts:55
+Defined in: src/contents.ts:63
 
 ***
 
@@ -110,7 +110,7 @@ Defined in: src/contents.ts:55
 
 > **\_resizeCheck**: () => `void` \| `undefined`
 
-Defined in: src/contents.ts:53
+Defined in: src/contents.ts:61
 
 ***
 
@@ -118,7 +118,7 @@ Defined in: src/contents.ts:53
 
 > **\_size**: `object`
 
-Defined in: src/contents.ts:45
+Defined in: src/contents.ts:53
 
 #### height
 
@@ -134,7 +134,7 @@ Defined in: src/contents.ts:45
 
 > **\_triggerEvent**: (`e`) => `void` \| `undefined`
 
-Defined in: src/contents.ts:54
+Defined in: src/contents.ts:62
 
 ***
 
@@ -142,7 +142,7 @@ Defined in: src/contents.ts:54
 
 > **active**: `boolean`
 
-Defined in: src/contents.ts:49
+Defined in: src/contents.ts:57
 
 ***
 
@@ -150,7 +150,7 @@ Defined in: src/contents.ts:49
 
 > **called**: `number`
 
-Defined in: src/contents.ts:48
+Defined in: src/contents.ts:56
 
 ***
 
@@ -158,7 +158,7 @@ Defined in: src/contents.ts:48
 
 > **cfiBase**: `string`
 
-Defined in: src/contents.ts:47
+Defined in: src/contents.ts:55
 
 ***
 
@@ -166,7 +166,7 @@ Defined in: src/contents.ts:47
 
 > **content**: `HTMLElement`
 
-Defined in: src/contents.ts:43
+Defined in: src/contents.ts:51
 
 ***
 
@@ -174,7 +174,7 @@ Defined in: src/contents.ts:43
 
 > **document**: `Document`
 
-Defined in: src/contents.ts:41
+Defined in: src/contents.ts:49
 
 ***
 
@@ -182,7 +182,7 @@ Defined in: src/contents.ts:41
 
 > **documentElement**: `HTMLElement`
 
-Defined in: src/contents.ts:42
+Defined in: src/contents.ts:50
 
 ***
 
@@ -190,7 +190,7 @@ Defined in: src/contents.ts:42
 
 > **emit**: \<`K`\>(`type`, ...`args`) => `void`
 
-Defined in: src/contents.ts:37
+Defined in: src/contents.ts:45
 
 #### Type Parameters
 
@@ -222,7 +222,7 @@ Defined in: src/contents.ts:37
 
 > **epubcfi**: [`EpubCFI`](EpubCFI.md)
 
-Defined in: src/contents.ts:40
+Defined in: src/contents.ts:48
 
 ***
 
@@ -230,7 +230,7 @@ Defined in: src/contents.ts:40
 
 > **observer**: `ResizeObserver` \| `MutationObserver` \| `undefined`
 
-Defined in: src/contents.ts:50
+Defined in: src/contents.ts:58
 
 ***
 
@@ -238,7 +238,7 @@ Defined in: src/contents.ts:50
 
 > **off**: \<`K`\>(`type`, `fn?`) => `void`
 
-Defined in: src/contents.ts:36
+Defined in: src/contents.ts:44
 
 #### Type Parameters
 
@@ -270,7 +270,7 @@ Defined in: src/contents.ts:36
 
 > **on**: \<`K`\>(`type`, `fn`) => `void`
 
-Defined in: src/contents.ts:35
+Defined in: src/contents.ts:43
 
 #### Type Parameters
 
@@ -302,7 +302,7 @@ Defined in: src/contents.ts:35
 
 > **onResize**: (`size`) => `void` \| `undefined`
 
-Defined in: src/contents.ts:51
+Defined in: src/contents.ts:59
 
 ***
 
@@ -310,7 +310,7 @@ Defined in: src/contents.ts:51
 
 > **sectionIndex**: `number`
 
-Defined in: src/contents.ts:46
+Defined in: src/contents.ts:54
 
 ***
 
@@ -318,7 +318,7 @@ Defined in: src/contents.ts:46
 
 > **selectionEndTimeout**: `Timeout` \| `undefined`
 
-Defined in: src/contents.ts:57
+Defined in: src/contents.ts:65
 
 ***
 
@@ -326,7 +326,7 @@ Defined in: src/contents.ts:57
 
 > **window**: `Window`
 
-Defined in: src/contents.ts:44
+Defined in: src/contents.ts:52
 
 ## Accessors
 
@@ -336,7 +336,7 @@ Defined in: src/contents.ts:44
 
 > **get** `static` **listenedEvents**(): readonly \[`"keydown"`, `"keyup"`, `"keypress"`, `"mouseup"`, `"mousedown"`, `"mousemove"`, `"click"`, `"dblclick"`, `"touchend"`, `"touchstart"`, `"touchmove"`\]
 
-Defined in: src/contents.ts:87
+Defined in: src/contents.ts:95
 
 Get DOM events that are listened for and passed along
 
@@ -350,7 +350,7 @@ readonly \[`"keydown"`, `"keyup"`, `"keypress"`, `"mouseup"`, `"mousedown"`, `"m
 
 > **\_getStylesheetNode**(`key?`): `false` \| `HTMLStyleElement`
 
-Defined in: src/contents.ts:760
+Defined in: src/contents.ts:805
 
 #### Parameters
 
@@ -368,7 +368,7 @@ Defined in: src/contents.ts:760
 
 > **addClass**(`className`): `void`
 
-Defined in: src/contents.ts:884
+Defined in: src/contents.ts:939
 
 Add a class to the contents container
 
@@ -388,7 +388,7 @@ Add a class to the contents container
 
 > **addScript**(`src`): `Promise`\<`boolean`\>
 
-Defined in: src/contents.ts:852
+Defined in: src/contents.ts:907
 
 Append a script tag to the document head
 
@@ -410,9 +410,9 @@ loaded
 
 ### addStylesheet()
 
-> **addStylesheet**(`src`): `Promise`\<`boolean`\>
+> **addStylesheet**(`src`, `key?`): `Promise`\<`boolean`\>
 
-Defined in: src/contents.ts:724
+Defined in: src/contents.ts:744
 
 Append a stylesheet link to the document head
 
@@ -424,6 +424,12 @@ Append a stylesheet link to the document head
 
 url
 
+##### key?
+
+`string`
+
+If the key is the same, the link will be replaced instead of inserted
+
 #### Returns
 
 `Promise`\<`boolean`\>
@@ -434,7 +440,7 @@ url
 
 > **addStylesheetCss**(`serializedCss`, `key?`): `boolean`
 
-Defined in: src/contents.ts:782
+Defined in: src/contents.ts:827
 
 Append stylesheet css
 
@@ -460,7 +466,7 @@ If the key is the same, the CSS will be replaced instead of inserted
 
 > **addStylesheetRules**(`rules`, `key?`): `void`
 
-Defined in: src/contents.ts:799
+Defined in: src/contents.ts:844
 
 Append stylesheet rules to a generate stylesheet
 Array: https://developer.mozilla.org/en-US/docs/Web/API/CSSStyleSheet/insertRule
@@ -488,7 +494,7 @@ If the key is the same, the CSS will be replaced instead of inserted
 
 > **cfiFromNode**(`node`, `ignoreClass?`): `string`
 
-Defined in: src/contents.ts:1034
+Defined in: src/contents.ts:1096
 
 Get an EpubCFI from a Dom node
 
@@ -514,7 +520,7 @@ cfi
 
 > **cfiFromRange**(`range`, `ignoreClass?`): `string`
 
-Defined in: src/contents.ts:1024
+Defined in: src/contents.ts:1086
 
 Get an EpubCFI from a Dom Range
 
@@ -540,7 +546,7 @@ cfi
 
 > **columns**(`width`, `height`, `columnWidth`, `gap`, `dir?`): `void`
 
-Defined in: src/contents.ts:1077
+Defined in: src/contents.ts:1139
 
 Apply columns to the contents for pagination
 
@@ -576,7 +582,7 @@ Apply columns to the contents for pagination
 
 > **contentHeight**(`h?`): `number`
 
-Defined in: src/contents.ts:163
+Defined in: src/contents.ts:171
 
 Get or Set height of the contents
 
@@ -598,7 +604,7 @@ height
 
 > **contentWidth**(`w?`): `number`
 
-Defined in: src/contents.ts:141
+Defined in: src/contents.ts:149
 
 Get or Set width of the contents
 
@@ -620,7 +626,7 @@ width
 
 > **css**(`property`, `value?`, `priority?`): `string`
 
-Defined in: src/contents.ts:284
+Defined in: src/contents.ts:292
 
 Set Css styles on the contents element (typically Body)
 
@@ -650,7 +656,7 @@ set as "important"
 
 > **destroy**(): `void`
 
-Defined in: src/contents.ts:1302
+Defined in: src/contents.ts:1366
 
 #### Returns
 
@@ -662,7 +668,7 @@ Defined in: src/contents.ts:1302
 
 > **direction**(`dir?`): `void`
 
-Defined in: src/contents.ts:1217
+Defined in: src/contents.ts:1281
 
 Set the direction of the text
 
@@ -684,7 +690,7 @@ Set the direction of the text
 
 > **fit**(`width`, `height`, `section?`): `boolean`
 
-Defined in: src/contents.ts:1163
+Defined in: src/contents.ts:1226
 
 Fit contents into a fixed width and height
 
@@ -714,7 +720,7 @@ whether the contents could be fitted
 
 > **height**(`h?`): `number`
 
-Defined in: src/contents.ts:119
+Defined in: src/contents.ts:127
 
 Get or Set height
 
@@ -736,7 +742,7 @@ height
 
 > **locationOf**(`target`, `ignoreClass?`): `object`
 
-Defined in: src/contents.ts:629
+Defined in: src/contents.ts:648
 
 Get the location offset of a EpubCFI or an #id
 
@@ -770,7 +776,7 @@ for the cfi
 
 > **mapPage**(`cfiBase`, `layout`, `start`, `end`, `dev?`): [`EpubCFIPair`](../interfaces/EpubCFIPair.md) \| `undefined`
 
-Defined in: src/contents.ts:1223
+Defined in: src/contents.ts:1287
 
 #### Parameters
 
@@ -804,7 +810,7 @@ Defined in: src/contents.ts:1223
 
 > **overflow**(`overflow?`): `string`
 
-Defined in: src/contents.ts:243
+Defined in: src/contents.ts:251
 
 Set overflow css style of the contents
 
@@ -824,7 +830,7 @@ Set overflow css style of the contents
 
 > **overflowX**(`overflow?`): `string`
 
-Defined in: src/contents.ts:256
+Defined in: src/contents.ts:264
 
 Set overflowX css style of the documentElement
 
@@ -844,7 +850,7 @@ Set overflowX css style of the documentElement
 
 > **overflowY**(`overflow?`): `string`
 
-Defined in: src/contents.ts:269
+Defined in: src/contents.ts:277
 
 Set overflowY css style of the documentElement
 
@@ -864,7 +870,7 @@ Set overflowY css style of the documentElement
 
 > **range**(`_cfi`, `ignoreClass?`): `Range`
 
-Defined in: src/contents.ts:1013
+Defined in: src/contents.ts:1075
 
 Get a Dom Range from EpubCFI
 
@@ -890,7 +896,7 @@ range
 
 > **removeClass**(`className`): `void`
 
-Defined in: src/contents.ts:899
+Defined in: src/contents.ts:954
 
 Remove a class from the contents container
 
@@ -912,7 +918,7 @@ class name to remove
 
 > **root**(): `HTMLElement` \| `null`
 
-Defined in: src/contents.ts:618
+Defined in: src/contents.ts:637
 
 Get the documentElement
 
@@ -928,7 +934,7 @@ documentElement
 
 > **scaler**(`scale`, `offsetX?`, `offsetY?`): `void`
 
-Defined in: src/contents.ts:1144
+Defined in: src/contents.ts:1205
 
 Scale contents from center
 
@@ -956,7 +962,7 @@ Scale contents from center
 
 > **scrollHeight**(): `number`
 
-Defined in: src/contents.ts:233
+Defined in: src/contents.ts:241
 
 Get documentElement scrollHeight
 
@@ -972,7 +978,7 @@ height
 
 > **scrollWidth**(): `number`
 
-Defined in: src/contents.ts:223
+Defined in: src/contents.ts:231
 
 Get documentElement scrollWidth
 
@@ -988,7 +994,7 @@ width
 
 > **size**(`width?`, `height?`): `void`
 
-Defined in: src/contents.ts:1043
+Defined in: src/contents.ts:1105
 
 Size the contents to a given width and height
 
@@ -1012,7 +1018,7 @@ Size the contents to a given width and height
 
 > **textHeight**(): `number`
 
-Defined in: src/contents.ts:207
+Defined in: src/contents.ts:215
 
 Get the height of the text using Range
 
@@ -1028,7 +1034,7 @@ height
 
 > **textWidth**(): `number`
 
-Defined in: src/contents.ts:183
+Defined in: src/contents.ts:191
 
 Get the width of the text using Range
 
@@ -1044,7 +1050,7 @@ width
 
 > **viewport**(`options?`): [`ViewportSettings`](../interfaces/ViewportSettings.md)
 
-Defined in: src/contents.ts:323
+Defined in: src/contents.ts:331
 
 Get or Set the viewport element
 
@@ -1064,7 +1070,7 @@ Get or Set the viewport element
 
 > **width**(`w?`): `number`
 
-Defined in: src/contents.ts:96
+Defined in: src/contents.ts:104
 
 Get or Set width
 
@@ -1086,7 +1092,7 @@ width
 
 > **writingMode**(`mode?`): `string`
 
-Defined in: src/contents.ts:1243
+Defined in: src/contents.ts:1307
 
 Set the writingMode of the text
 

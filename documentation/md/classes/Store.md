@@ -238,7 +238,7 @@ store objects
 
 > **createUrl**(`url`, `options?`): `Promise`\<`string`\>
 
-Defined in: src/store.ts:307
+Defined in: src/store.ts:306
 
 Create a Url from a stored item
 
@@ -268,7 +268,7 @@ url promise with Url string
 
 > **destroy**(): `void`
 
-Defined in: src/store.ts:341
+Defined in: src/store.ts:340
 
 #### Returns
 
@@ -280,7 +280,7 @@ Defined in: src/store.ts:341
 
 > **getBase64**(`url`, `mimeType?`): `Promise`\<`string` \| `undefined`\>
 
-Defined in: src/store.ts:282
+Defined in: src/store.ts:285
 
 Get a base64 encoded result from Storage by Url
 
@@ -306,7 +306,7 @@ base64 encoded
 
 > **getBlob**(`url`, `mimeType?`): `Promise`\<`Blob` \| `undefined`\>
 
-Defined in: src/store.ts:249
+Defined in: src/store.ts:252
 
 Get a Blob from Storage by Url
 
@@ -330,7 +330,7 @@ Get a Blob from Storage by Url
 
 > **getText**(`url`, `_mimeType?`): `Promise`\<`string` \| `undefined`\>
 
-Defined in: src/store.ts:267
+Defined in: src/store.ts:270
 
 Get Text from Storage by Url
 
@@ -352,9 +352,9 @@ Get Text from Storage by Url
 
 ### put()
 
-> **put**(`url`, `withCredentials?`, `headers?`): `Promise`\<`Uint8Array`\<`ArrayBufferLike`\> \| `null`\>
+> **put**(`url`, `withCredentials?`, `headers?`, `signal?`): `Promise`\<`Uint8Array`\<`ArrayBufferLike`\> \| `null`\>
 
-Defined in: src/store.ts:171
+Defined in: src/store.ts:172
 
 Put binary data from a url to storage
 
@@ -374,6 +374,10 @@ a url to request from storage
 
 `Record`\<`string`, `string`\>
 
+##### signal?
+
+`AbortSignal`
+
 #### Returns
 
 `Promise`\<`Uint8Array`\<`ArrayBufferLike`\> \| `null`\>
@@ -382,9 +386,9 @@ a url to request from storage
 
 ### request()
 
-> **request**(`url`, `type?`, `withCredentials?`, `headers?`): `Promise`\<`unknown`\>
+> **request**(`url`, `type?`, `withCredentials?`, `headers?`, `signal?`): `Promise`\<`unknown`\>
 
-Defined in: src/store.ts:192
+Defined in: src/store.ts:194
 
 Request a url
 
@@ -410,6 +414,10 @@ specify the type of the returned result
 
 `Record`\<`string`, `string`\>
 
+##### signal?
+
+`AbortSignal`
+
 #### Returns
 
 `Promise`\<`unknown`\>
@@ -420,7 +428,7 @@ specify the type of the returned result
 
 > **retrieve**(`url`, `type?`): `Promise`\<`unknown`\>
 
-Defined in: src/store.ts:213
+Defined in: src/store.ts:216
 
 Request a url from storage
 
@@ -448,7 +456,7 @@ specify the type of the returned result
 
 > **revokeUrl**(`url`): `void`
 
-Defined in: src/store.ts:336
+Defined in: src/store.ts:335
 
 Revoke Temp Url for a archive item
 

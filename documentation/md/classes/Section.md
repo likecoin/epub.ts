@@ -182,7 +182,7 @@ Defined in: src/section.ts:22
 
 > **cfiFromElement**(`el`): `string`
 
-Defined in: src/section.ts:283
+Defined in: src/section.ts:282
 
 Get a CFI from an Element in the Section
 
@@ -204,7 +204,7 @@ cfi an EpubCFI string
 
 > **cfiFromRange**(`_range`): `string`
 
-Defined in: src/section.ts:274
+Defined in: src/section.ts:273
 
 Get a CFI from a Range in the Section
 
@@ -226,7 +226,7 @@ cfi an EpubCFI string
 
 > **destroy**(): `void`
 
-Defined in: src/section.ts:296
+Defined in: src/section.ts:295
 
 #### Returns
 
@@ -238,7 +238,7 @@ Defined in: src/section.ts:296
 
 > **find**(`_query`): [`SearchResult`](../interfaces/SearchResult.md)[]
 
-Defined in: src/section.ts:122
+Defined in: src/section.ts:121
 
 Find a string in a section
 
@@ -290,7 +290,7 @@ a promise with the xml document
 
 > **reconcileLayoutSettings**(`globalLayout`): `Record`\<`string`, `string`\>
 
-Defined in: src/section.ts:245
+Defined in: src/section.ts:244
 
 Reconciles the current chapters layout properties with
 the global layout properties.
@@ -315,7 +315,7 @@ layoutProperties Object with layout properties
 
 > **render**(`_request?`, `signal?`): `Promise`\<`string`\>
 
-Defined in: src/section.ts:108
+Defined in: src/section.ts:107
 
 Render the contents of a section
 
@@ -343,7 +343,7 @@ output a serialized XML Document
 
 > **search**(`_query`, `maxSeqEle?`): [`SearchResult`](../interfaces/SearchResult.md)[]
 
-Defined in: src/section.ts:181
+Defined in: src/section.ts:180
 
 Search a string in multiple sequential Element of the section.
 
@@ -373,7 +373,7 @@ A list of matches, with form {cfi, excerpt}
 
 > **unload**(): `void`
 
-Defined in: src/section.ts:290
+Defined in: src/section.ts:289
 
 Unload the section document
 

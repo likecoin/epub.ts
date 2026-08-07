@@ -26,7 +26,7 @@ Handle Package Resources
 
 > **new Resources**(`manifest`, `options?`): `Resources`
 
-Defined in: src/resources.ts:35
+Defined in: src/resources.ts:37
 
 #### Parameters
 
@@ -62,7 +62,7 @@ Defined in: src/resources.ts:35
 
 > **assets**: [`PackagingManifestItem`](../interfaces/PackagingManifestItem.md)[]
 
-Defined in: src/resources.ts:30
+Defined in: src/resources.ts:32
 
 ***
 
@@ -70,7 +70,7 @@ Defined in: src/resources.ts:30
 
 > **css**: [`PackagingManifestItem`](../interfaces/PackagingManifestItem.md)[]
 
-Defined in: src/resources.ts:31
+Defined in: src/resources.ts:33
 
 ***
 
@@ -78,7 +78,7 @@ Defined in: src/resources.ts:31
 
 > **cssUrls**: `string`[]
 
-Defined in: src/resources.ts:33
+Defined in: src/resources.ts:35
 
 ***
 
@@ -86,7 +86,7 @@ Defined in: src/resources.ts:33
 
 > **html**: [`PackagingManifestItem`](../interfaces/PackagingManifestItem.md)[]
 
-Defined in: src/resources.ts:29
+Defined in: src/resources.ts:31
 
 ***
 
@@ -98,9 +98,19 @@ Defined in: src/resources.ts:26
 
 ***
 
+### ownedUrls
+
+> **ownedUrls**: `string`[]
+
+Defined in: src/resources.ts:30
+
+Blob urls this created that no longer sit in replacementUrls, kept so destroy() can still revoke them
+
+***
+
 ### replacementUrls
 
-> **replacementUrls**: `string`[]
+> **replacementUrls**: (`string` \| `null`)[]
 
 Defined in: src/resources.ts:28
 
@@ -156,7 +166,7 @@ Defined in: src/resources.ts:20
 
 > **urls**: `string`[]
 
-Defined in: src/resources.ts:32
+Defined in: src/resources.ts:34
 
 ## Methods
 
@@ -164,7 +174,7 @@ Defined in: src/resources.ts:32
 
 > **createUrl**(`url`): `Promise`\<`string`\>
 
-Defined in: src/resources.ts:130
+Defined in: src/resources.ts:133
 
 Create a url to a resource
 
@@ -186,7 +196,7 @@ Promise resolves with url string
 
 > **destroy**(): `void`
 
-Defined in: src/resources.ts:329
+Defined in: src/resources.ts:366
 
 #### Returns
 
@@ -198,7 +208,7 @@ Defined in: src/resources.ts:329
 
 > **get**(`path`): `Promise`\<`string`\> \| `undefined`
 
-Defined in: src/resources.ts:298
+Defined in: src/resources.ts:328
 
 Get a URL for a resource
 
@@ -220,7 +230,7 @@ url
 
 > **process**(`manifest`): `void`
 
-Defined in: src/resources.ts:50
+Defined in: src/resources.ts:52
 
 Process resources
 
@@ -240,7 +250,7 @@ Process resources
 
 > **relativeTo**(`absolute`, `resolver?`): `string`[]
 
-Defined in: src/resources.ts:281
+Defined in: src/resources.ts:311
 
 Resolve all resources URLs relative to an absolute URL
 
@@ -266,15 +276,15 @@ array with relative Urls
 
 ### replacements()
 
-> **replacements**(): `Promise`\<`string`[]\>
+> **replacements**(): `Promise`\<(`string` \| `null`)[]\>
 
-Defined in: src/resources.ts:157
+Defined in: src/resources.ts:160
 
 Create blob urls for all the assets
 
 #### Returns
 
-`Promise`\<`string`[]\>
+`Promise`\<(`string` \| `null`)[]\>
 
 returns replacement urls
 
@@ -284,7 +294,7 @@ returns replacement urls
 
 > **substitute**(`content`, `url?`): `string`
 
-Defined in: src/resources.ts:319
+Defined in: src/resources.ts:356
 
 Substitute urls in content, with replacements,
 relative to a url if provided

@@ -71,7 +71,7 @@ new Book({ replacements: "blobUrl" })
 
 > **new Book**(`url?`, `options?`): `Book`
 
-Defined in: src/book.ts:118
+Defined in: src/book.ts:119
 
 #### Parameters
 
@@ -133,7 +133,7 @@ Defined in: src/book.ts:110
 
 > **emit**: \<`K`\>(`type`, ...`args`) => `void`
 
-Defined in: src/book.ts:116
+Defined in: src/book.ts:117
 
 #### Type Parameters
 
@@ -213,7 +213,7 @@ Defined in: src/book.ts:99
 
 > **off**: \<`K`\>(`type`, `fn?`) => `void`
 
-Defined in: src/book.ts:115
+Defined in: src/book.ts:116
 
 #### Type Parameters
 
@@ -245,7 +245,7 @@ Defined in: src/book.ts:115
 
 > **on**: \<`K`\>(`type`, `fn`) => `void`
 
-Defined in: src/book.ts:114
+Defined in: src/book.ts:115
 
 #### Type Parameters
 
@@ -403,7 +403,7 @@ Defined in: src/book.ts:101
 
 > **canonical**(`path`): `string`
 
-Defined in: src/book.ts:505
+Defined in: src/book.ts:506
 
 Get a canonical link to a path
 
@@ -425,7 +425,7 @@ the canonical path string
 
 > **coverUrl**(): `Promise`\<`string` \| `null`\>
 
-Defined in: src/book.ts:791
+Defined in: src/book.ts:824
 
 Get the cover url
 
@@ -441,7 +441,7 @@ coverUrl
 
 > **destroy**(): `void`
 
-Defined in: src/book.ts:857
+Defined in: src/book.ts:894
 
 Destroy the Book and all associated objects
 
@@ -455,7 +455,7 @@ Destroy the Book and all associated objects
 
 > **getRange**(`cfiRange`): `Promise`\<`Range`\>
 
-Defined in: src/book.ts:829
+Defined in: src/book.ts:866
 
 Find a DOM Range for a given CFI Range
 
@@ -477,7 +477,7 @@ a epub cfi range
 
 > **key**(`identifier?`): `string`
 
-Defined in: src/book.ts:849
+Defined in: src/book.ts:886
 
 Generates the Book Key using the identifier in the manifest or other string provided
 
@@ -501,7 +501,7 @@ key
 
 > **load**(`path`, `type?`, `withCredentials?`, `headers?`, `signal?`): `Promise`\<`unknown`\>
 
-Defined in: src/book.ts:457
+Defined in: src/book.ts:458
 
 Load a resource from the Book
 
@@ -552,7 +552,7 @@ and a configured store issues its own requests.
 
 > **open**(`input`, `what?`): `Promise`\<`void`\>
 
-Defined in: src/book.ts:319
+Defined in: src/book.ts:320
 
 Open a epub or url
 
@@ -588,7 +588,7 @@ book.open("/path/to/book.epub")
 
 > **renderTo**(`element`, `options?`): [`Rendition`](Rendition.md)
 
-Defined in: src/book.ts:695
+Defined in: src/book.ts:708
 
 Sugar to render a book to an element
 
@@ -614,7 +614,7 @@ element or string to add a rendition to
 
 > **resolve**(`path`, `absolute?`): `string`
 
-Defined in: src/book.ts:478
+Defined in: src/book.ts:479
 
 Resolve a path to it's absolute position in the Book
 
@@ -642,7 +642,7 @@ the resolved path string
 
 > **section**(`target`): [`Section`](Section.md) \| `null`
 
-Defined in: src/book.ts:685
+Defined in: src/book.ts:698
 
 Gets a Section of the Book from the Spine
 Alias for `book.spine.get`
@@ -663,7 +663,7 @@ Alias for `book.spine.get`
 
 > **setRequestCredentials**(`credentials`): `void`
 
-Defined in: src/book.ts:706
+Defined in: src/book.ts:719
 
 Set if request should use withCredentials
 
@@ -683,7 +683,7 @@ Set if request should use withCredentials
 
 > **setRequestHeaders**(`headers`): `void`
 
-Defined in: src/book.ts:714
+Defined in: src/book.ts:727
 
 Set headers request should use
 

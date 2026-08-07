@@ -76,7 +76,7 @@ Defined in: src/themes.ts:12
 
 > **add**(`name`, `contents`): `void`
 
-Defined in: src/themes.ts:188
+Defined in: src/themes.ts:190
 
 Add Theme to contents
 
@@ -130,7 +130,7 @@ themes.register({ "body": { "color": "purple"}})
 
 > **destroy**(): `void`
 
-Defined in: src/themes.ts:265
+Defined in: src/themes.ts:267
 
 #### Returns
 
@@ -142,7 +142,7 @@ Defined in: src/themes.ts:265
 
 > **font**(`f`): `void`
 
-Defined in: src/themes.ts:261
+Defined in: src/themes.ts:263
 
 Adjust the font-family of a rendition
 
@@ -162,7 +162,7 @@ Adjust the font-family of a rendition
 
 > **fontSize**(`size`): `void`
 
-Defined in: src/themes.ts:253
+Defined in: src/themes.ts:255
 
 Adjust the font size of a rendition
 
@@ -202,7 +202,7 @@ Inject all themes into contents
 
 > **override**(`name`, `value`, `priority?`): `void`
 
-Defined in: src/themes.ts:212
+Defined in: src/themes.ts:214
 
 Add override
 
@@ -230,7 +230,7 @@ Add override
 
 > **overrides**(`contents`): `void`
 
-Defined in: src/themes.ts:239
+Defined in: src/themes.ts:241
 
 Add all overrides
 
@@ -378,7 +378,7 @@ Register a url
 
 > **removeOverride**(`name`): `void`
 
-Defined in: src/themes.ts:225
+Defined in: src/themes.ts:227
 
 #### Parameters
 

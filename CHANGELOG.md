@@ -1,5 +1,28 @@
 # Changelog
 
+## 0.7.1 (2026-08-07)
+
+### Bug fixes
+
+- Re-registering a theme that is already applied now updates the rendered sections instead of being ignored. `_injected` is a `string[]` but was read as a map, so the guard collapsed to `name === "default"`, and `select()` never recorded its own theme — so the common case, selecting a theme and then re-registering it, silently did nothing. The list also grew a duplicate entry per rendered section for the book's lifetime. epubjs v0.3.93 carries the same defect; the public API is unchanged
+- `Contents.addStylesheetRules()` replaces the rules registered under a key instead of appending, matching its documented behavior and the string form. Calling it twice with the same key left two copies of every rule in one sheet. Keyless callers still merge, since they all share one node — `Rendition.adjustImages()` writes its column-fitting rules there
+- Re-registering a url theme replaces its stylesheet instead of stacking a second `<link>`. `Contents.addStylesheet()` deduped only on an identical href and never removed the link it superseded, so the old stylesheet stayed in the document applying every rule the new one didn't override. It now takes an optional key, which `Themes` fills with the theme name
+- A stylesheet whose rules can't be read is skipped rather than abandoning the rest. Touching `cssRules` on a cross-origin sheet throws, and the handler returned out of the whole loop — so one such stylesheet left the document with no media query listeners at all, and `@media`-driven reflows never triggered `expand()`
+- `Store.getBase64()` routes through `blob2base64()` instead of hand-rolling the same `FileReader` promise. A failed read resolved `null`, and `createUrl()` then threw "File not found in storage" for a file that is in storage, hiding the real error
+- `blob2base64()` rejects when the read fails. `onloadend` fires for failures too, where `result` is `null`, so a failure resolved `null` and surfaced much later as an undefined asset url rather than as an error the `Resources` replacement pass could catch
+- `Contents` no longer measures a detached document from callbacks that outlive `destroy()` — a `ResizeObserver` callback already queued on `requestAnimationFrame` (which `disconnect()` cannot cancel), the `fonts.ready` continuation, the `transitionend` listener, and the 250 ms selection timer each emitted from a `Contents` the manager had already dropped
+- Destroying a rendition before its view manager rendered no longer throws. `DefaultViewManager.destroy()` unconditionally touched the container, stage and listeners that only `render()` creates, so closing a reader while its book was still opening threw out of `Rendition.destroy()` — in React, an exception out of `componentWillUnmount` that unmounts the whole tree. `ContinuousViewManager` reached the same code through `super.destroy()`. The teardown is gated on the container and stage themselves rather than on `rendered`, so a `render()` that threw partway is still cleaned up
+
+### Performance
+
+- The mark-placement animation frame is skipped when a view has no marks. `reframe()` runs on every expand, so a reader without annotations scheduled a frame per page turn only to iterate an empty object
+- The discarded computed-style reads are dropped from `Contents` sizing. `width()`/`height()` and `scaler()` wrote a style and read it back through `getComputedStyle` to build a return value their callers ignore, forcing a style flush on a path that runs on every `setLayout`, expand and resize
+
+### Internal
+
+- Add a `run-epub-ts` skill that drives the reader in headless Chrome — paging, CFI reads, screenshots and arbitrary page JS against the committed alice fixture, plus a no-browser mode for the parse layer. Non-localhost requests are blocked so the examples' network defaults fail loudly
+- Trim `AGENTS.md` to what isn't derivable from `package.json`, `ls` and `tsconfig.json`, and replace the conventional-commit examples with the gitmoji subjects the repo actually uses
+
 ## 0.7.0 (2026-08-05)
 
 ### Breaking changes

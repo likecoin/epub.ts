@@ -6,7 +6,7 @@
 
 # Interface: ContentsEvents
 
-Defined in: src/contents.ts:25
+Defined in: src/contents.ts:33
 
 Handles DOM manipulation, queries and events for View contents
 
@@ -36,7 +36,7 @@ Index in Spine of Conntent's Section
 
 > **expand**: \[\]
 
-Defined in: src/contents.ts:26
+Defined in: src/contents.ts:34
 
 ***
 
@@ -44,7 +44,7 @@ Defined in: src/contents.ts:26
 
 > **linkClicked**: \[`string`\]
 
-Defined in: src/contents.ts:30
+Defined in: src/contents.ts:38
 
 ***
 
@@ -52,7 +52,7 @@ Defined in: src/contents.ts:30
 
 > **resize**: \[\{ `height`: `number`; `width`: `number`; \}\]
 
-Defined in: src/contents.ts:27
+Defined in: src/contents.ts:35
 
 ***
 
@@ -60,7 +60,7 @@ Defined in: src/contents.ts:27
 
 > **selected**: \[`string`\]
 
-Defined in: src/contents.ts:28
+Defined in: src/contents.ts:36
 
 ***
 
@@ -68,4 +68,4 @@ Defined in: src/contents.ts:28
 
 > **selectedRange**: \[`Range`\]
 
-Defined in: src/contents.ts:29
+Defined in: src/contents.ts:37
