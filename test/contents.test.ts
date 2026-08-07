@@ -581,6 +581,36 @@ describe("Contents", () => {
 		});
 	});
 
+	describe("mediaQueryListeners()", () => {
+		it("should keep scanning after a stylesheet that throws", () => {
+			const { contents } = createContents();
+			contents._mediaQueryHandlers = [];
+
+			const sheets = [
+				{ get cssRules(): unknown { throw new Error("cross-origin"); } },
+				{ cssRules: null },
+				{ cssRules: [{ media: { mediaText: "(min-width: 500px)" } }] },
+			];
+
+			const originalMatchMedia = contents.window.matchMedia;
+			contents.window.matchMedia = vi.fn(() => ({
+				addEventListener: vi.fn(),
+				removeEventListener: vi.fn(),
+			})) as unknown as typeof window.matchMedia;
+			Object.defineProperty(contents.document, "styleSheets", { value: sheets, configurable: true });
+
+			try {
+				contents.mediaQueryListeners();
+				// The throwing sheet and the null-rules sheet are skipped, not
+				// treated as the end of the list
+				expect(contents._mediaQueryHandlers).toHaveLength(1);
+			} finally {
+				delete (contents.document as unknown as Record<string, unknown>)["styleSheets"];
+				contents.window.matchMedia = originalMatchMedia;
+			}
+		});
+	});
+
 	describe("destroy()", () => {
 		it("should remove listeners and clear __listeners", () => {
 			const { contents } = createContents();

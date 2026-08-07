@@ -533,18 +533,25 @@ class Contents implements IEventEmitter<ContentsEvents> {
 			}
 		};
 
+		// Books repeat the same breakpoint across sheets, and each duplicate
+		// would expand() again on a single media change.
+		const seen = new Set<string>();
+
 		for (let i = 0; i < sheets.length; i += 1) {
 			let rules;
 			// Firefox errors if we access cssRules cross-domain
 			try {
 				rules = sheets[i]!.cssRules;
 			} catch (_e) {
-				return;
+				continue;
 			}
-			if(!rules) return; // Stylesheets changed
+			if(!rules) continue; // Stylesheets changed
 			for (let j = 0; j < rules.length; j += 1) {
 				if((rules[j] as CSSMediaRule).media){
-					const mql = this.window.matchMedia((rules[j] as CSSMediaRule).media.mediaText);
+					const mediaText = (rules[j] as CSSMediaRule).media.mediaText;
+					if (seen.has(mediaText)) continue;
+					seen.add(mediaText);
+					const mql = this.window.matchMedia(mediaText);
 					mql.addEventListener("change", mediaChangeHandler);
 					this._mediaQueryHandlers.push({ mql, handler: mediaChangeHandler });
 				}
