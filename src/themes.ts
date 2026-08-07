@@ -98,7 +98,7 @@ class Themes {
 	 */
 	registerCss (name: string, css: string): void {
 		this._themes![name] = { "serialized" : css };
-		if ((this._injected as unknown as Record<string, boolean>)[name] || name === "default") {
+		if (name === "default" || name === this._current || this._injected!.includes(name)) {
 			this.update(name);
 		}
 	}
@@ -111,7 +111,7 @@ class Themes {
 	registerUrl (name: string, input: string): void {
 		const url = new Url(input);
 		this._themes![name] = { "url": url.toString() };
-		if ((this._injected as unknown as Record<string, boolean>)[name] || name === "default") {
+		if (name === "default" || name === this._current || this._injected!.includes(name)) {
 			this.update(name);
 		}
 	}
@@ -123,7 +123,7 @@ class Themes {
 	 */
 	registerRules (name: string, rules: Record<string, Record<string, string>>): void {
 		this._themes![name] = { "rules": rules };
-		if ((this._injected as unknown as Record<string, boolean>)[name] || name === "default") {
+		if (name === "default" || name === this._current || this._injected!.includes(name)) {
 			this.update(name);
 		}
 	}
@@ -171,7 +171,9 @@ class Themes {
 				if((theme.rules && Object.keys(theme.rules).length > 0) || (theme.url && !links.includes(theme.url)) || (theme.serialized)) {
 					this.add(name, contents);
 				}
-				this._injected!.push(name);
+				if (!this._injected!.includes(name)) {
+					this._injected!.push(name);
+				}
 			}
 		}
 
