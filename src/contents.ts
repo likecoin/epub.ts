@@ -485,6 +485,10 @@ class Contents implements IEventEmitter<ContentsEvents> {
 	 * @private
 	 */
 	resizeCheck(): void {
+		// A queued ResizeObserver frame (disconnect cannot cancel it), the
+		// fonts.ready continuation and transitionend can all fire after destroy().
+		if (!this.active) return;
+
 		const width = this.textWidth();
 		const height = this.textHeight();
 
@@ -968,6 +972,11 @@ class Contents implements IEventEmitter<ContentsEvents> {
 		}
 		this.document.removeEventListener("selectionchange", this._onSelectionChange!);
 		this._onSelectionChange = undefined;
+
+		// A selection made within 250ms of teardown would otherwise fire against
+		// a detached window and emit `selected` from a destroyed Contents.
+		clearTimeout(this.selectionEndTimeout);
+		this.selectionEndTimeout = undefined;
 	}
 
 	/**
@@ -1300,6 +1309,7 @@ class Contents implements IEventEmitter<ContentsEvents> {
 	}
 
 	destroy(): void {
+		this.active = false;
 		this.removeListeners();
 		this.__listeners = {};
 	}
