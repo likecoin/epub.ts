@@ -593,5 +593,49 @@ describe("Contents", () => {
 			contents.destroy();
 			expect(contents._triggerEvent).toBeUndefined();
 		});
+
+		it("should set active to false", () => {
+			const { contents } = createContents();
+			contents.destroy();
+			expect(contents.active).toBe(false);
+		});
+
+		it("should clear a pending selection timeout", () => {
+			vi.useFakeTimers();
+			try {
+				const { contents } = createContents("<p>Hello world</p>");
+				const handler = vi.fn();
+				contents.on("selected", handler);
+
+				contents.onSelectionChange(new Event("selectionchange"));
+				expect(contents.selectionEndTimeout).toBeDefined();
+
+				contents.destroy();
+				expect(contents.selectionEndTimeout).toBeUndefined();
+
+				// The 250ms selection timer must not fire against a torn-down view
+				vi.advanceTimersByTime(500);
+				expect(handler).not.toHaveBeenCalled();
+			} finally {
+				vi.useRealTimers();
+			}
+		});
+
+		it("should stop resizeCheck from emitting after destroy", () => {
+			// A ResizeObserver callback already queued on rAF, or the fonts.ready
+			// continuation, can still reach resizeCheck after teardown.
+			const { contents } = createContents("<p>Hello world</p>");
+			contents.destroy();
+
+			const handler = vi.fn();
+			contents.on("resize", handler);
+			contents.onResize = vi.fn();
+			contents._size = { width: 999, height: 999 };
+
+			contents.resizeCheck();
+
+			expect(handler).not.toHaveBeenCalled();
+			expect(contents.onResize).not.toHaveBeenCalled();
+		});
 	});
 });
