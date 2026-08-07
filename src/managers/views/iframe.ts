@@ -460,15 +460,17 @@ class IframeView implements IEventEmitter<IframeViewEvents> {
 
 		this.pane && this.pane.render();
 
-		requestAnimationFrame(() => {
-			let mark;
-			for (const m in this.marks) {
-				if (Object.prototype.hasOwnProperty.call(this.marks, m)) {
-					mark = this.marks[m]!;
-					this.placeMark(mark.element, mark.range);
+		if (Object.keys(this.marks).length > 0) {
+			requestAnimationFrame(() => {
+				let mark;
+				for (const m in this.marks) {
+					if (Object.prototype.hasOwnProperty.call(this.marks, m)) {
+						mark = this.marks[m]!;
+						this.placeMark(mark.element, mark.range);
+					}
 				}
-			}
-		});
+			});
+		}
 
 		this.onResize(this, size);
 
