@@ -14,6 +14,14 @@ const isWebkit = hasNavigator && !/Chrome/.test(navigator.userAgent) && /AppleWe
 const ELEMENT_NODE = 1;
 const _TEXT_NODE = 3;
 
+// Falsy sizes are skipped, matching the truthiness guard in width()/height().
+function sizeRules(width?: number, height?: number): [string, string?, boolean?][] {
+	const rules: [string, string?, boolean?][] = [];
+	if (width) rules.push(["width", width + "px"]);
+	if (height) rules.push(["height", height + "px"]);
+	return rules;
+}
+
 /**
 	* Handles DOM manipulation, queries and events for View contents
 	* @class
@@ -1064,13 +1072,13 @@ class Contents implements IEventEmitter<ContentsEvents> {
 		const batch: [string, string?, boolean?][] = [];
 
 		if (width !== undefined && width >= 0) {
-			this.width(width);
+			if (width) batch.push(["width", width + "px"]);
 			viewport.width = width;
 			batch.push(["padding", "0 " + (width / 12) + "px"]);
 		}
 
 		if (height !== undefined && height >= 0) {
-			this.height(height);
+			if (height) batch.push(["height", height + "px"]);
 			viewport.height = height;
 		}
 
@@ -1105,8 +1113,7 @@ class Contents implements IEventEmitter<ContentsEvents> {
 			this.direction(dir);
 		}
 
-		this.width(width);
-		this.height(height);
+		this.cssBatch(sizeRules(width, height));
 
 		// Deal with Mobile trying to scale to viewport
 		this.viewport({ width: width, height: height, scale: 1.0, scalable: "no" });
@@ -1161,13 +1168,15 @@ class Contents implements IEventEmitter<ContentsEvents> {
 		const scaleStr = "scale(" + scale + ")";
 		let translateStr = "";
 		// this.css("position", "absolute"));
-		this.css("transform-origin", "top left");
 
 		if ((offsetX !== undefined && offsetX >= 0) || (offsetY !== undefined && offsetY >= 0)) {
 			translateStr = " translate(" + (offsetX || 0 )+ "px, " + (offsetY || 0 )+ "px )";
 		}
 
-		this.css("transform", scaleStr + translateStr);
+		this.cssBatch([
+			["transform-origin", "top left"],
+			["transform", scaleStr + translateStr],
+		]);
 	}
 
 	/**
@@ -1201,9 +1210,10 @@ class Contents implements IEventEmitter<ContentsEvents> {
 		this.layoutStyle("paginated");
 
 		// scale needs width and height to be set
-		this.width(viewportWidth);
-		this.height(viewportHeight);
-		this.overflow("hidden");
+		this.cssBatch(sizeRules(viewportWidth, viewportHeight));
+		// Written directly, as direction() does: overflow() would read the
+		// computed value back and flush the batch above.
+		this.documentElement.style.overflow = "hidden";
 
 		// Scale to the correct size
 		this.scaler(scale, 0, 0);
