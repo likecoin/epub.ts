@@ -1,4 +1,4 @@
-import {handleResponse as _handleResponse, EpubError} from "./utils/core";
+import {handleResponse as _handleResponse, EpubError, blob2base64} from "./utils/core";
 import httpRequest from "./utils/request";
 import mime from "./utils/mime";
 import Path from "./utils/path";
@@ -292,13 +292,9 @@ class Store implements IEventEmitter<StoreEvents> {
 
 		const blob = new Blob([uint8array as BlobPart], {type : mimeType});
 
-		return new Promise<string>((resolve) => {
-			const reader = new FileReader();
-			reader.addEventListener("loadend", () => {
-				resolve(reader.result as string);
-			});
-			reader.readAsDataURL(blob);
-		});
+		// readAsDataURL always yields a string, as the hand-rolled reader this
+		// replaced also assumed.
+		return blob2base64(blob) as Promise<string>;
 	}
 
 	/**

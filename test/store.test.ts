@@ -211,6 +211,34 @@ describe("Store", () => {
 			const result = await store.getBase64("http://example.com/nope.txt");
 			expect(result).toBeUndefined();
 		});
+
+		it("should reject when the read fails", async () => {
+			const data = new TextEncoder().encode("Hello");
+			const requester = vi.fn().mockResolvedValue(data);
+			const store = new Store("test-getbase64-fail", requester);
+			await store.put("http://example.com/fail.txt");
+
+			const OriginalFileReader = globalThis.FileReader;
+			class FailingFileReader {
+				error = new Error("boom");
+				result = null;
+				onerror: (() => void) | null = null;
+				onloadend: (() => void) | null = null;
+				readAsDataURL(): void {
+					setTimeout(() => {
+						this.onerror?.();
+						this.onloadend?.();
+					}, 0);
+				}
+			}
+			globalThis.FileReader = FailingFileReader as unknown as typeof FileReader;
+
+			try {
+				await expect(store.getBase64("http://example.com/fail.txt")).rejects.toThrow("boom");
+			} finally {
+				globalThis.FileReader = OriginalFileReader;
+			}
+		});
 	});
 
 	describe("createUrl()", () => {
