@@ -334,6 +334,19 @@ describe("Contents", () => {
 			const { contents } = createContents();
 			expect(() => contents.addStylesheetRules([])).not.toThrow();
 		});
+
+		it("should replace rules rather than stack them for the same key", () => {
+			const { contents } = createContents();
+			contents.addStylesheetRules({ "body": { "color": "green" } }, "same-key");
+			const styleEl = document.getElementById("epubjs-inserted-css-same-key") as HTMLStyleElement;
+			const first = styleEl.sheet!.cssRules.length;
+
+			contents.addStylesheetRules({ "body": { "color": "red" } }, "same-key");
+
+			expect(styleEl.sheet!.cssRules.length).toBe(first);
+			expect(styleEl.sheet!.cssRules[0]!.cssText).toContain("red");
+			styleEl.remove();
+		});
 	});
 
 	describe("addScript()", () => {

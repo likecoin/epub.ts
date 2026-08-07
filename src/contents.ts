@@ -821,6 +821,11 @@ class Contents implements IEventEmitter<ContentsEvents> {
 		// Grab style sheet
 		const styleSheet: CSSStyleSheet = (this._getStylesheetNode(key) as HTMLStyleElement).sheet as CSSStyleSheet;
 
+		// The node is reused per key, so clear it to replace rather than stack.
+		for (let i = styleSheet.cssRules.length - 1; i >= 0; i--) {
+			styleSheet.deleteRule(i);
+		}
+
 		if (Array.isArray(rules)) {
 			// Array format: [selector, [prop, val], ...] or [selector, [[prop, val], ...]]
 			for (let i = 0, rl = rules.length; i < rl; i++) {
