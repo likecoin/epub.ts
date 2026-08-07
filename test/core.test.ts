@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import Url from "../src/utils/url";
 import Path from "../src/utils/path";
+import { blob2base64 } from "../src/utils/core";
 
 describe("Core", () => {
 
@@ -184,6 +185,66 @@ describe("Core", () => {
 				expect(relative).toBe("../derf.html");
 			});
 
+		});
+
+	});
+
+
+	describe("blob2base64()", () => {
+
+		it("should resolve with a data url", async () => {
+			const result = await blob2base64(new Blob(["hi"], { type: "text/plain" }));
+			expect(String(result)).toMatch(/^data:text\/plain;base64,/);
+		});
+
+		it("should reject when the read fails", async () => {
+			const OriginalFileReader = globalThis.FileReader;
+			class FailingFileReader {
+				error = new Error("boom");
+				result = null;
+				onerror: (() => void) | null = null;
+				onloadend: (() => void) | null = null;
+				readAsDataURL(): void {
+					setTimeout(() => {
+						this.onerror?.();
+						this.onloadend?.();
+					}, 0);
+				}
+			}
+			globalThis.FileReader = FailingFileReader as unknown as typeof FileReader;
+
+			try {
+				await expect(blob2base64(new Blob(["hi"]))).rejects.toThrow("boom");
+			} finally {
+				globalThis.FileReader = OriginalFileReader;
+			}
+		});
+
+		it("should reject when the read is aborted", async () => {
+			// abort fires abort then loadend with a null result, so resolving on
+			// loadend would have reported the abort as a successful empty read.
+			const OriginalFileReader = globalThis.FileReader;
+			class AbortingFileReader {
+				error = new Error("aborted");
+				result = null;
+				onload: (() => void) | null = null;
+				onerror: (() => void) | null = null;
+				onabort: (() => void) | null = null;
+				onloadend: (() => void) | null = null;
+				readAsDataURL(): void {
+					setTimeout(() => {
+						this.onabort?.();
+						this.onloadend?.();
+					}, 0);
+				}
+			}
+			globalThis.FileReader = AbortingFileReader as unknown as typeof FileReader;
+
+			try {
+				await expect(blob2base64(new Blob(["hi"]))).rejects.toThrow("aborted");
+			} finally {
+				globalThis.FileReader = OriginalFileReader;
+			}
 		});
 
 	});

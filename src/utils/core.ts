@@ -681,12 +681,17 @@ export function walk(node: Node, callback: (node: Node) => boolean, _unused?: bo
  * @memberof Core
  */
 export function blob2base64(blob: Blob): Promise<string | ArrayBuffer> {
-	return new Promise(function(resolve, _reject) {
+	return new Promise(function(resolve, reject) {
 		const reader = new FileReader();
-		reader.readAsDataURL(blob);
-		reader.onloadend = function(): void {
+		// Resolve on load, not loadend: loadend also fires for error and abort,
+		// where result is null and the old handler resolved it as success.
+		reader.onload = function(): void {
 			resolve(reader.result!);
 		};
+		reader.onerror = reader.onabort = function(): void {
+			reject(reader.error ?? new Error("Failed to read blob"));
+		};
+		reader.readAsDataURL(blob);
 	});
 }
 
