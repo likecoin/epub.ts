@@ -118,6 +118,72 @@ describe("replacements", () => {
 			expect(link.hasAttribute("href")).toBe(false);
 		});
 
+		it("should strip javascript: with a tab inside the scheme (security fix)", () => {
+			const doc = makeDoc('<a href="java&#9;script:alert(1)">XSS</a>');
+			const fn = vi.fn();
+			replaceLinks(doc.body, fn);
+			const link = doc.querySelector("a")!;
+			expect(link.hasAttribute("href")).toBe(false);
+		});
+
+		it("should strip javascript: with a newline inside the scheme (security fix)", () => {
+			const doc = makeDoc('<a href="java&#10;script:alert(1)">XSS</a>');
+			const fn = vi.fn();
+			replaceLinks(doc.body, fn);
+			const link = doc.querySelector("a")!;
+			expect(link.hasAttribute("href")).toBe(false);
+		});
+
+		it("should strip javascript: with a carriage return inside the scheme (security fix)", () => {
+			const doc = makeDoc('<a href="java&#13;script:alert(1)">XSS</a>');
+			const fn = vi.fn();
+			replaceLinks(doc.body, fn);
+			const link = doc.querySelector("a")!;
+			expect(link.hasAttribute("href")).toBe(false);
+		});
+
+		it("should strip javascript: behind a leading C0 control (security fix)", () => {
+			const doc = makeDoc('<a href="&#1;javascript:alert(1)">XSS</a>');
+			const fn = vi.fn();
+			replaceLinks(doc.body, fn);
+			const link = doc.querySelector("a")!;
+			expect(link.hasAttribute("href")).toBe(false);
+		});
+
+		it("should strip javascript:// even though it looks absolute (security fix)", () => {
+			const doc = makeDoc('<a href="java&#9;script://%0aalert(1)">XSS</a>');
+			const fn = vi.fn();
+			replaceLinks(doc.body, fn);
+			const link = doc.querySelector("a")!;
+			expect(link.hasAttribute("href")).toBe(false);
+			expect(link.hasAttribute("target")).toBe(false);
+		});
+
+		it("should strip data:text/html with a tab inside the scheme (security fix)", () => {
+			const doc = makeDoc('<a href="da&#9;ta:text/html,<script>alert(1)</script>">XSS</a>');
+			const fn = vi.fn();
+			replaceLinks(doc.body, fn);
+			const link = doc.querySelector("a")!;
+			expect(link.hasAttribute("href")).toBe(false);
+		});
+
+		it("should strip vbscript: hrefs (security fix)", () => {
+			const doc = makeDoc('<a href="vbscript:msgbox(1)">XSS</a>');
+			const fn = vi.fn();
+			replaceLinks(doc.body, fn);
+			const link = doc.querySelector("a")!;
+			expect(link.hasAttribute("href")).toBe(false);
+		});
+
+		it("should keep a relative href that contains a space", () => {
+			const doc = makeDoc('<a href="chapter 2.xhtml">Next</a>');
+			const fn = vi.fn();
+			replaceLinks(doc.body, fn);
+			const link = doc.querySelector("a") as HTMLAnchorElement;
+			expect(link.getAttribute("href")).toBe("chapter 2.xhtml");
+			expect(link.onclick).toBeTypeOf("function");
+		});
+
 		it("should leave mailto: links untouched", () => {
 			const doc = makeDoc('<a href="mailto:user@example.com">Email</a>');
 			const fn = vi.fn();
