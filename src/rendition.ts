@@ -48,7 +48,11 @@ const REANCHOR_DEBOUNCE = 50;
  * @param {string} [options.script] url of script to be injected
  * @param {boolean | object} [options.snap=false] use snap scrolling
  * @param {string} [options.defaultDirection='ltr'] default text direction
- * @param {boolean} [options.allowScriptedContent=false] enable running scripts in content
+ * @param {boolean} [options.allowScriptedContent=false] enable running scripts in content.
+ * This adds `allow-scripts` alongside the `allow-same-origin` the sandbox already needs,
+ * a combination the HTML spec documents as removing sandbox protection: the book's scripts
+ * can then reach `parent.document` and act with the host origin's full authority. Only
+ * enable it for books you control. See SECURITY.md.
  * @param {boolean} [options.allowPopups=false] enable opening popup in content
  */
 export interface RenditionEvents extends Record<string, any[]> {
