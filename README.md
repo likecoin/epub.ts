@@ -229,6 +229,12 @@ npm install
 
 Requires Node.js 18+ and npm 9+.
 
+## Security
+
+EPUBs are untrusted input. Sections render in a sandboxed iframe with scripts disabled by
+default; see [SECURITY.md](./SECURITY.md) for the threat model, the cost of
+`allowScriptedContent: true`, and how to report a vulnerability.
+
 ## Contributing
 
 See [PROJECT_STATUS.md](./PROJECT_STATUS.md) for current status and what to work on.
