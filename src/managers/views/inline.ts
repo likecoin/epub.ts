@@ -24,7 +24,7 @@ export interface InlineViewEvents extends Record<string, any[]> {
  * there is no iframe and no sandbox — the section's markup is assigned to
  * `innerHTML` in the host document, so handler attributes such as `onerror` run
  * with the host origin's authority. Do not use it with untrusted books.
- * See SECURITY.md.
+ * See https://github.com/likecoin/epub.ts/blob/master/SECURITY.md
  */
 class InlineView implements IEventEmitter<InlineViewEvents> {
 	settings: ViewSettings & { layout: Layout };

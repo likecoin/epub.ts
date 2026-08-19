@@ -118,36 +118,17 @@ describe("replacements", () => {
 			expect(link.hasAttribute("href")).toBe(false);
 		});
 
-		it("should strip javascript: with a tab inside the scheme (security fix)", () => {
-			const doc = makeDoc('<a href="java&#9;script:alert(1)">XSS</a>');
-			const fn = vi.fn();
-			replaceLinks(doc.body, fn);
-			const link = doc.querySelector("a")!;
-			expect(link.hasAttribute("href")).toBe(false);
-		});
-
-		it("should strip javascript: with a newline inside the scheme (security fix)", () => {
-			const doc = makeDoc('<a href="java&#10;script:alert(1)">XSS</a>');
-			const fn = vi.fn();
-			replaceLinks(doc.body, fn);
-			const link = doc.querySelector("a")!;
-			expect(link.hasAttribute("href")).toBe(false);
-		});
-
-		it("should strip javascript: with a carriage return inside the scheme (security fix)", () => {
-			const doc = makeDoc('<a href="java&#13;script:alert(1)">XSS</a>');
-			const fn = vi.fn();
-			replaceLinks(doc.body, fn);
-			const link = doc.querySelector("a")!;
-			expect(link.hasAttribute("href")).toBe(false);
-		});
-
-		it("should strip javascript: behind a leading C0 control (security fix)", () => {
-			const doc = makeDoc('<a href="&#1;javascript:alert(1)">XSS</a>');
-			const fn = vi.fn();
-			replaceLinks(doc.body, fn);
-			const link = doc.querySelector("a")!;
-			expect(link.hasAttribute("href")).toBe(false);
+		it.each([
+			{ name: "a tab inside the scheme", href: "java&#9;script:alert(1)" },
+			{ name: "a newline inside the scheme", href: "java&#10;script:alert(1)" },
+			{ name: "a carriage return inside the scheme", href: "java&#13;script:alert(1)" },
+			{ name: "a leading C0 control", href: "&#1;javascript:alert(1)" },
+			{ name: "a tab inside data:text/html", href: "da&#9;ta:text/html,<script>alert(1)</script>" },
+			{ name: "a vbscript: scheme", href: "vbscript:msgbox(1)" },
+		])("should strip a hostile href with $name (security fix)", ({ href }) => {
+			const doc = makeDoc(`<a href="${href}">XSS</a>`);
+			replaceLinks(doc.body, vi.fn());
+			expect(doc.querySelector("a")!.hasAttribute("href")).toBe(false);
 		});
 
 		it("should strip javascript:// even though it looks absolute (security fix)", () => {
@@ -157,22 +138,6 @@ describe("replacements", () => {
 			const link = doc.querySelector("a")!;
 			expect(link.hasAttribute("href")).toBe(false);
 			expect(link.hasAttribute("target")).toBe(false);
-		});
-
-		it("should strip data:text/html with a tab inside the scheme (security fix)", () => {
-			const doc = makeDoc('<a href="da&#9;ta:text/html,<script>alert(1)</script>">XSS</a>');
-			const fn = vi.fn();
-			replaceLinks(doc.body, fn);
-			const link = doc.querySelector("a")!;
-			expect(link.hasAttribute("href")).toBe(false);
-		});
-
-		it("should strip vbscript: hrefs (security fix)", () => {
-			const doc = makeDoc('<a href="vbscript:msgbox(1)">XSS</a>');
-			const fn = vi.fn();
-			replaceLinks(doc.body, fn);
-			const link = doc.querySelector("a")!;
-			expect(link.hasAttribute("href")).toBe(false);
 		});
 
 		it("should keep a relative href that contains a space", () => {

@@ -2,7 +2,7 @@
 
 ## Reporting a vulnerability
 
-Report security issues privately via [GitHub Security Advisories](https://github.com/likecoin/epub.ts/security/advisories/new), or by email to the maintainer listed in `package.json`. Please don't open a public issue for an unfixed vulnerability.
+Email the maintainer listed in `package.json` (`me@williamchong.cloud`). Please don't open a public issue for an unfixed vulnerability — the [issue tracker](https://github.com/likecoin/epub.ts/issues) is public, and private vulnerability reporting is not currently enabled on this repository.
 
 ## Threat model
 
@@ -11,7 +11,7 @@ Report security issues privately via [GitHub Security Advisories](https://github
 The boundary that protects your origin is the **sandboxed iframe** each section is rendered into. The defaults are chosen to keep that boundary intact:
 
 ```js
-book.renderTo("area", {
+book.renderTo("viewer", {
 	allowScriptedContent: false,  // default
 	allowPopups: false            // default
 });

@@ -84,13 +84,12 @@ export function replaceLinks(contents: Element, fn: (path: string) => void): voi
 			return;
 		}
 
-		// The URL parser drops ASCII tab/newline anywhere in the input and leading
-		// C0 controls, so "java\tscript:" reaches the browser as "javascript:". Strip
-		// the same characters before sniffing the scheme, or the check runs against a
-		// different string than the one the browser will navigate to.
+		// The URL parser strips tab/newline from anywhere in the input and trims
+		// surrounding whitespace, so "java\tscript:" navigates as "javascript:". Strip a
+		// superset of those before sniffing, or we check a string the browser won't use.
 		// eslint-disable-next-line no-control-regex
-		const hrefScheme = href.replace(/[\u0000-\u0020]+/g, "").toLowerCase();
-		if(hrefScheme.startsWith("javascript:") || hrefScheme.startsWith("data:text/html") || hrefScheme.startsWith("vbscript:")){
+		const hrefNormalized = href.replace(/[\u0000-\u0020]+/g, "").toLowerCase();
+		if(hrefNormalized.startsWith("javascript:") || hrefNormalized.startsWith("data:text/html") || hrefNormalized.startsWith("vbscript:")){
 			link.removeAttribute("href");
 			return;
 		}
