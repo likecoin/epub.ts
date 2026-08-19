@@ -84,8 +84,13 @@ export function replaceLinks(contents: Element, fn: (path: string) => void): voi
 			return;
 		}
 
-		const hrefTrimmed = href.trimStart().toLowerCase();
-		if(hrefTrimmed.startsWith("javascript:") || hrefTrimmed.startsWith("data:text/html")){
+		// The URL parser drops ASCII tab/newline anywhere in the input and leading
+		// C0 controls, so "java\tscript:" reaches the browser as "javascript:". Strip
+		// the same characters before sniffing the scheme, or the check runs against a
+		// different string than the one the browser will navigate to.
+		// eslint-disable-next-line no-control-regex
+		const hrefScheme = href.replace(/[\u0000-\u0020]+/g, "").toLowerCase();
+		if(hrefScheme.startsWith("javascript:") || hrefScheme.startsWith("data:text/html") || hrefScheme.startsWith("vbscript:")){
 			link.removeAttribute("href");
 			return;
 		}
