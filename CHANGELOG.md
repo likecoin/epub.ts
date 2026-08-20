@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.7.2 (2026-08-20)
+
+### Security
+
+- Link hrefs are stripped of ASCII control characters and spaces before their scheme is sniffed, so `java\tscript:alert(1)` no longer reaches the browser as `javascript:`. The URL parser drops tab and newline from anywhere in the input and strips leading C0 controls, so the old `trimStart()` check compared a different string than the one the browser would navigate to. Five payloads bypassed it; four kept the `onclick` guard that cancels the default action, but `java\tscript://%0aalert(1)` contains `://`, so it took the absolute branch and got `target="_blank"` with no guard at all. `vbscript:` is now filtered alongside `javascript:` and `data:text/html`, and hrefs that legitimately contain spaces are unaffected, since the stripped value is only used for the comparison
+
+### Documentation
+
+- `SECURITY.md` documents the untrusted-EPUB threat model and two sharp edges that were previously unstated. `allowScriptedContent: true` adds `allow-scripts` next to the `allow-same-origin` the sandbox already carries — a pairing the HTML spec documents as removing sandbox protection, since the framed document can then reach `parent.document` and act with the host origin's authority. `allow-same-origin` can't be dropped, because CFI generation, pagination and mapping all need same-origin DOM access, so the tradeoff is inherent rather than fixable. `InlineView` assigns section markup to `innerHTML` in the host document with no iframe at all, so handler attributes run unsandboxed; it exists for epubjs deep-import parity and shouldn't meet an untrusted book. No CSP is applied either, so a book can beacon home through ordinary markup even with scripts off
+- Vulnerability reports are directed to the maintainer address, since private vulnerability reporting is disabled on this repository and the GitHub Security Advisories link landed on an error page
+
 ## 0.7.1 (2026-08-07)
 
 ### Bug fixes

@@ -6,7 +6,15 @@
 
 # Class: InlineView
 
-Defined in: src/managers/views/inline.ts:20
+Defined in: src/managers/views/inline.ts:29
+
+Renders a section directly into the host document instead of an iframe.
+
+Exported for compatibility with epubjs deep imports. Unlike IframeView
+there is no iframe and no sandbox — the section's markup is assigned to
+`innerHTML` in the host document, so handler attributes such as `onerror` run
+with the host origin's authority. Do not use it with untrusted books.
+See https://github.com/likecoin/epub.ts/blob/master/SECURITY.md
 
 ## Implements
 
@@ -18,7 +26,7 @@ Defined in: src/managers/views/inline.ts:20
 
 > **new InlineView**(`section`, `options?`): `InlineView`
 
-Defined in: src/managers/views/inline.ts:57
+Defined in: src/managers/views/inline.ts:66
 
 #### Parameters
 
@@ -40,7 +48,7 @@ Defined in: src/managers/views/inline.ts:57
 
 > **\_expanding**: `boolean`
 
-Defined in: src/managers/views/inline.ts:42
+Defined in: src/managers/views/inline.ts:51
 
 ***
 
@@ -48,7 +56,7 @@ Defined in: src/managers/views/inline.ts:42
 
 > **\_height**: `number` \| `undefined`
 
-Defined in: src/managers/views/inline.ts:38
+Defined in: src/managers/views/inline.ts:47
 
 ***
 
@@ -56,7 +64,7 @@ Defined in: src/managers/views/inline.ts:38
 
 > **\_needsReframe**: `boolean`
 
-Defined in: src/managers/views/inline.ts:41
+Defined in: src/managers/views/inline.ts:50
 
 ***
 
@@ -64,7 +72,7 @@ Defined in: src/managers/views/inline.ts:41
 
 > **\_textHeight**: `number` \| `undefined`
 
-Defined in: src/managers/views/inline.ts:40
+Defined in: src/managers/views/inline.ts:49
 
 ***
 
@@ -72,7 +80,7 @@ Defined in: src/managers/views/inline.ts:40
 
 > **\_textWidth**: `number` \| `undefined`
 
-Defined in: src/managers/views/inline.ts:39
+Defined in: src/managers/views/inline.ts:48
 
 ***
 
@@ -80,7 +88,7 @@ Defined in: src/managers/views/inline.ts:39
 
 > **\_width**: `number` \| `undefined`
 
-Defined in: src/managers/views/inline.ts:37
+Defined in: src/managers/views/inline.ts:46
 
 ***
 
@@ -88,7 +96,7 @@ Defined in: src/managers/views/inline.ts:37
 
 > **added**: `boolean`
 
-Defined in: src/managers/views/inline.ts:26
+Defined in: src/managers/views/inline.ts:35
 
 ***
 
@@ -96,7 +104,7 @@ Defined in: src/managers/views/inline.ts:26
 
 > **contents**: [`Contents`](Contents.md) \| `undefined`
 
-Defined in: src/managers/views/inline.ts:49
+Defined in: src/managers/views/inline.ts:58
 
 ***
 
@@ -104,7 +112,7 @@ Defined in: src/managers/views/inline.ts:49
 
 > **displayed**: `boolean`
 
-Defined in: src/managers/views/inline.ts:27
+Defined in: src/managers/views/inline.ts:36
 
 ***
 
@@ -112,7 +120,7 @@ Defined in: src/managers/views/inline.ts:27
 
 > **document**: `Document`
 
-Defined in: src/managers/views/inline.ts:47
+Defined in: src/managers/views/inline.ts:56
 
 ***
 
@@ -120,7 +128,7 @@ Defined in: src/managers/views/inline.ts:47
 
 > **element**: `HTMLElement`
 
-Defined in: src/managers/views/inline.ts:25
+Defined in: src/managers/views/inline.ts:34
 
 ***
 
@@ -128,7 +136,7 @@ Defined in: src/managers/views/inline.ts:25
 
 > **elementBounds**: [`SizeObject`](../interfaces/SizeObject.md) \| `undefined`
 
-Defined in: src/managers/views/inline.ts:43
+Defined in: src/managers/views/inline.ts:52
 
 ***
 
@@ -136,7 +144,7 @@ Defined in: src/managers/views/inline.ts:43
 
 > **emit**: \<`K`\>(`type`, ...`args`) => `void`
 
-Defined in: src/managers/views/inline.ts:55
+Defined in: src/managers/views/inline.ts:64
 
 #### Type Parameters
 
@@ -168,7 +176,7 @@ Defined in: src/managers/views/inline.ts:55
 
 > **epubcfi**: [`EpubCFI`](EpubCFI.md)
 
-Defined in: src/managers/views/inline.ts:33
+Defined in: src/managers/views/inline.ts:42
 
 ***
 
@@ -176,7 +184,7 @@ Defined in: src/managers/views/inline.ts:33
 
 > **fixedHeight**: `number`
 
-Defined in: src/managers/views/inline.ts:32
+Defined in: src/managers/views/inline.ts:41
 
 ***
 
@@ -184,7 +192,7 @@ Defined in: src/managers/views/inline.ts:32
 
 > **fixedWidth**: `number`
 
-Defined in: src/managers/views/inline.ts:31
+Defined in: src/managers/views/inline.ts:40
 
 ***
 
@@ -192,7 +200,7 @@ Defined in: src/managers/views/inline.ts:31
 
 > **frame**: `HTMLDivElement` \| `undefined`
 
-Defined in: src/managers/views/inline.ts:35
+Defined in: src/managers/views/inline.ts:44
 
 ***
 
@@ -200,7 +208,7 @@ Defined in: src/managers/views/inline.ts:35
 
 > **height**: `number`
 
-Defined in: src/managers/views/inline.ts:30
+Defined in: src/managers/views/inline.ts:39
 
 ***
 
@@ -208,7 +216,7 @@ Defined in: src/managers/views/inline.ts:30
 
 > **id**: `string`
 
-Defined in: src/managers/views/inline.ts:22
+Defined in: src/managers/views/inline.ts:31
 
 ***
 
@@ -216,7 +224,7 @@ Defined in: src/managers/views/inline.ts:22
 
 > **index**: `number`
 
-Defined in: src/managers/views/inline.ts:24
+Defined in: src/managers/views/inline.ts:33
 
 ***
 
@@ -224,7 +232,7 @@ Defined in: src/managers/views/inline.ts:24
 
 > **layout**: [`Layout`](Layout.md)
 
-Defined in: src/managers/views/inline.ts:34
+Defined in: src/managers/views/inline.ts:43
 
 ***
 
@@ -232,7 +240,7 @@ Defined in: src/managers/views/inline.ts:34
 
 > **lockedHeight**: `number`
 
-Defined in: src/managers/views/inline.ts:46
+Defined in: src/managers/views/inline.ts:55
 
 ***
 
@@ -240,7 +248,7 @@ Defined in: src/managers/views/inline.ts:46
 
 > **lockedWidth**: `number`
 
-Defined in: src/managers/views/inline.ts:45
+Defined in: src/managers/views/inline.ts:54
 
 ***
 
@@ -248,7 +256,7 @@ Defined in: src/managers/views/inline.ts:45
 
 > **off**: \<`K`\>(`type`, `fn?`) => `void`
 
-Defined in: src/managers/views/inline.ts:54
+Defined in: src/managers/views/inline.ts:63
 
 #### Type Parameters
 
@@ -280,7 +288,7 @@ Defined in: src/managers/views/inline.ts:54
 
 > **on**: \<`K`\>(`type`, `fn`) => `void`
 
-Defined in: src/managers/views/inline.ts:53
+Defined in: src/managers/views/inline.ts:62
 
 #### Type Parameters
 
@@ -312,7 +320,7 @@ Defined in: src/managers/views/inline.ts:53
 
 > **prevBounds**: [`SizeObject`](../interfaces/SizeObject.md) \| `undefined`
 
-Defined in: src/managers/views/inline.ts:44
+Defined in: src/managers/views/inline.ts:53
 
 ***
 
@@ -320,7 +328,7 @@ Defined in: src/managers/views/inline.ts:44
 
 > **rendered**: `boolean`
 
-Defined in: src/managers/views/inline.ts:28
+Defined in: src/managers/views/inline.ts:37
 
 ***
 
@@ -328,7 +336,7 @@ Defined in: src/managers/views/inline.ts:28
 
 > **rendering**: `boolean`
 
-Defined in: src/managers/views/inline.ts:50
+Defined in: src/managers/views/inline.ts:59
 
 ***
 
@@ -336,7 +344,7 @@ Defined in: src/managers/views/inline.ts:50
 
 > **resizing**: `boolean`
 
-Defined in: src/managers/views/inline.ts:36
+Defined in: src/managers/views/inline.ts:45
 
 ***
 
@@ -344,7 +352,7 @@ Defined in: src/managers/views/inline.ts:36
 
 > **section**: [`Section`](Section.md)
 
-Defined in: src/managers/views/inline.ts:23
+Defined in: src/managers/views/inline.ts:32
 
 ***
 
@@ -352,7 +360,7 @@ Defined in: src/managers/views/inline.ts:23
 
 > **settings**: [`ViewSettings`](../interfaces/ViewSettings.md) & `object`
 
-Defined in: src/managers/views/inline.ts:21
+Defined in: src/managers/views/inline.ts:30
 
 #### Type Declaration
 
@@ -366,7 +374,7 @@ Defined in: src/managers/views/inline.ts:21
 
 > **stopExpanding**: `boolean`
 
-Defined in: src/managers/views/inline.ts:51
+Defined in: src/managers/views/inline.ts:60
 
 ***
 
@@ -374,7 +382,7 @@ Defined in: src/managers/views/inline.ts:51
 
 > **width**: `number`
 
-Defined in: src/managers/views/inline.ts:29
+Defined in: src/managers/views/inline.ts:38
 
 ***
 
@@ -382,7 +390,7 @@ Defined in: src/managers/views/inline.ts:29
 
 > **window**: `Window`
 
-Defined in: src/managers/views/inline.ts:48
+Defined in: src/managers/views/inline.ts:57
 
 ## Methods
 
@@ -390,7 +398,7 @@ Defined in: src/managers/views/inline.ts:48
 
 > **addListeners**(): `void`
 
-Defined in: src/managers/views/inline.ts:375
+Defined in: src/managers/views/inline.ts:384
 
 #### Returns
 
@@ -402,7 +410,7 @@ Defined in: src/managers/views/inline.ts:375
 
 > **bounds**(): [`SizeObject`](../interfaces/SizeObject.md)
 
-Defined in: src/managers/views/inline.ts:451
+Defined in: src/managers/views/inline.ts:460
 
 #### Returns
 
@@ -414,7 +422,7 @@ Defined in: src/managers/views/inline.ts:451
 
 > **container**(`axis?`): `HTMLElement`
 
-Defined in: src/managers/views/inline.ts:92
+Defined in: src/managers/views/inline.ts:101
 
 #### Parameters
 
@@ -432,7 +440,7 @@ Defined in: src/managers/views/inline.ts:92
 
 > **contentHeight**(`_min?`): `number`
 
-Defined in: src/managers/views/inline.ts:290
+Defined in: src/managers/views/inline.ts:299
 
 #### Parameters
 
@@ -450,7 +458,7 @@ Defined in: src/managers/views/inline.ts:290
 
 > **contentWidth**(`_min?`): `number`
 
-Defined in: src/managers/views/inline.ts:286
+Defined in: src/managers/views/inline.ts:295
 
 #### Parameters
 
@@ -468,7 +476,7 @@ Defined in: src/managers/views/inline.ts:286
 
 > **create**(): `HTMLDivElement`
 
-Defined in: src/managers/views/inline.ts:116
+Defined in: src/managers/views/inline.ts:125
 
 #### Returns
 
@@ -480,7 +488,7 @@ Defined in: src/managers/views/inline.ts:116
 
 > **destroy**(): `void`
 
-Defined in: src/managers/views/inline.ts:458
+Defined in: src/managers/views/inline.ts:467
 
 #### Returns
 
@@ -492,7 +500,7 @@ Defined in: src/managers/views/inline.ts:458
 
 > **display**(`request`): `Promise`\<`InlineView`\>
 
-Defined in: src/managers/views/inline.ts:381
+Defined in: src/managers/views/inline.ts:390
 
 #### Parameters
 
@@ -510,7 +518,7 @@ Defined in: src/managers/views/inline.ts:381
 
 > **expand**(`_force?`): `void`
 
-Defined in: src/managers/views/inline.ts:259
+Defined in: src/managers/views/inline.ts:268
 
 #### Parameters
 
@@ -528,7 +536,7 @@ Defined in: src/managers/views/inline.ts:259
 
 > **hide**(): `void`
 
-Defined in: src/managers/views/inline.ts:420
+Defined in: src/managers/views/inline.ts:429
 
 #### Returns
 
@@ -540,7 +548,7 @@ Defined in: src/managers/views/inline.ts:420
 
 > **load**(`contents`): `Promise`\<[`Contents`](Contents.md)\>
 
-Defined in: src/managers/views/inline.ts:327
+Defined in: src/managers/views/inline.ts:336
 
 #### Parameters
 
@@ -558,7 +566,7 @@ Defined in: src/managers/views/inline.ts:327
 
 > **locationOf**(`target`): `object`
 
-Defined in: src/managers/views/inline.ts:433
+Defined in: src/managers/views/inline.ts:442
 
 #### Parameters
 
@@ -584,7 +592,7 @@ Defined in: src/managers/views/inline.ts:433
 
 > **lock**(`what`, `width`, `height`): `void`
 
-Defined in: src/managers/views/inline.ts:226
+Defined in: src/managers/views/inline.ts:235
 
 #### Parameters
 
@@ -610,7 +618,7 @@ Defined in: src/managers/views/inline.ts:226
 
 > **onDisplayed**(`_view`): `void`
 
-Defined in: src/managers/views/inline.ts:443
+Defined in: src/managers/views/inline.ts:452
 
 #### Parameters
 
@@ -628,7 +636,7 @@ Defined in: src/managers/views/inline.ts:443
 
 > **onResize**(`_view`, `_e?`): `void`
 
-Defined in: src/managers/views/inline.ts:447
+Defined in: src/managers/views/inline.ts:456
 
 #### Parameters
 
@@ -650,7 +658,7 @@ Defined in: src/managers/views/inline.ts:447
 
 > **position**(): `DOMRect`
 
-Defined in: src/managers/views/inline.ts:429
+Defined in: src/managers/views/inline.ts:438
 
 #### Returns
 
@@ -662,7 +670,7 @@ Defined in: src/managers/views/inline.ts:429
 
 > **removeListeners**(): `void`
 
-Defined in: src/managers/views/inline.ts:378
+Defined in: src/managers/views/inline.ts:387
 
 #### Returns
 
@@ -674,7 +682,7 @@ Defined in: src/managers/views/inline.ts:378
 
 > **render**(`request`, `show?`): `Promise`\<`void`\>
 
-Defined in: src/managers/views/inline.ts:157
+Defined in: src/managers/views/inline.ts:166
 
 #### Parameters
 
@@ -696,7 +704,7 @@ Defined in: src/managers/views/inline.ts:157
 
 > **resize**(`width`, `height`): `void`
 
-Defined in: src/managers/views/inline.ts:295
+Defined in: src/managers/views/inline.ts:304
 
 #### Parameters
 
@@ -718,7 +726,7 @@ Defined in: src/managers/views/inline.ts:295
 
 > **resizeListenters**(): `void`
 
-Defined in: src/managers/views/inline.ts:369
+Defined in: src/managers/views/inline.ts:378
 
 #### Returns
 
@@ -730,7 +738,7 @@ Defined in: src/managers/views/inline.ts:369
 
 > **setLayout**(`layout`): `void`
 
-Defined in: src/managers/views/inline.ts:364
+Defined in: src/managers/views/inline.ts:373
 
 #### Parameters
 
@@ -748,7 +756,7 @@ Defined in: src/managers/views/inline.ts:364
 
 > **show**(): `void`
 
-Defined in: src/managers/views/inline.ts:409
+Defined in: src/managers/views/inline.ts:418
 
 #### Returns
 
@@ -760,7 +768,7 @@ Defined in: src/managers/views/inline.ts:409
 
 > **size**(`_width?`, `_height?`): `void`
 
-Defined in: src/managers/views/inline.ts:211
+Defined in: src/managers/views/inline.ts:220
 
 #### Parameters
 

@@ -6,7 +6,7 @@
 
 # Interface: RenditionEvents
 
-Defined in: src/rendition.ts:54
+Defined in: src/rendition.ts:57
 
 Displays an Epub as a series of Views for each Section.
 Requires Manager and View class to handle specifics of rendering
@@ -66,7 +66,10 @@ default text direction
 
 ## Param
 
-enable running scripts in content
+enable running scripts in content.
+Pairs `allow-scripts` with the `allow-same-origin` the sandbox needs, which the HTML spec
+notes removes sandbox protection — the book gains your origin's full authority.
+See https://github.com/likecoin/epub.ts/blob/master/SECURITY.md
 
 ## Param
 
@@ -86,7 +89,7 @@ enable opening popup in content
 
 > **attached**: \[\]
 
-Defined in: src/rendition.ts:56
+Defined in: src/rendition.ts:59
 
 ***
 
@@ -94,7 +97,7 @@ Defined in: src/rendition.ts:56
 
 > **displayed**: \[[`Section`](../classes/Section.md)\]
 
-Defined in: src/rendition.ts:57
+Defined in: src/rendition.ts:60
 
 ***
 
@@ -102,7 +105,7 @@ Defined in: src/rendition.ts:57
 
 > **displayerror**: \[`Error`\]
 
-Defined in: src/rendition.ts:58
+Defined in: src/rendition.ts:61
 
 ***
 
@@ -110,7 +113,7 @@ Defined in: src/rendition.ts:58
 
 > **layout**: \[[`LayoutProps`](LayoutProps.md), `Partial`\<[`LayoutProps`](LayoutProps.md)\>\]
 
-Defined in: src/rendition.ts:67
+Defined in: src/rendition.ts:70
 
 ***
 
@@ -118,7 +121,7 @@ Defined in: src/rendition.ts:67
 
 > **locationChanged**: \[\{ `end`: `string`; `href`: `string`; `index`: `number`; `percentage`: `number` \| `undefined`; `start`: `string`; \}\]
 
-Defined in: src/rendition.ts:63
+Defined in: src/rendition.ts:66
 
 ***
 
@@ -126,7 +129,7 @@ Defined in: src/rendition.ts:63
 
 > **markClicked**: \[`string`, `object` \| `undefined`, [`Contents`](../classes/Contents.md)\]
 
-Defined in: src/rendition.ts:65
+Defined in: src/rendition.ts:68
 
 ***
 
@@ -134,7 +137,7 @@ Defined in: src/rendition.ts:65
 
 > **orientationchange**: \[`number`\]
 
-Defined in: src/rendition.ts:62
+Defined in: src/rendition.ts:65
 
 ***
 
@@ -142,7 +145,7 @@ Defined in: src/rendition.ts:62
 
 > **relocated**: \[[`Location`](Location.md)\]
 
-Defined in: src/rendition.ts:64
+Defined in: src/rendition.ts:67
 
 ***
 
@@ -150,7 +153,7 @@ Defined in: src/rendition.ts:64
 
 > **removed**: \[[`Section`](../classes/Section.md), `IframeView`\]
 
-Defined in: src/rendition.ts:60
+Defined in: src/rendition.ts:63
 
 ***
 
@@ -158,7 +161,7 @@ Defined in: src/rendition.ts:60
 
 > **rendered**: \[[`Section`](../classes/Section.md), `IframeView`\]
 
-Defined in: src/rendition.ts:59
+Defined in: src/rendition.ts:62
 
 ***
 
@@ -166,7 +169,7 @@ Defined in: src/rendition.ts:59
 
 > **resized**: \[\{ `height`: `number`; `width`: `number`; \}, `string`?\]
 
-Defined in: src/rendition.ts:61
+Defined in: src/rendition.ts:64
 
 ***
 
@@ -174,7 +177,7 @@ Defined in: src/rendition.ts:61
 
 > **selected**: \[`string`, [`Contents`](../classes/Contents.md)\]
 
-Defined in: src/rendition.ts:66
+Defined in: src/rendition.ts:69
 
 ***
 
@@ -182,4 +185,4 @@ Defined in: src/rendition.ts:66
 
 > **started**: \[\]
 
-Defined in: src/rendition.ts:55
+Defined in: src/rendition.ts:58
