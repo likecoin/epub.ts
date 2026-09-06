@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, afterEach, beforeAll } from "vitest";
 import Contents from "../src/contents";
+import EpubCFI from "../src/epubcfi";
 import { DOM_EVENTS } from "../src/utils/constants";
 
 beforeAll(() => {
@@ -558,6 +559,37 @@ describe("Contents", () => {
 			const { contents } = createContents("<p>Hello</p>");
 			const pos = contents.locationOf("no-hash");
 			expect(pos).toEqual({ left: 0, top: 0 });
+		});
+
+		it("should not throw for a CFI that resolves to an element container", () => {
+			const { contents, container } = createContents(
+				'<p id="element-target"><span>Hello there friend</span> and <em>some more words here too</em></p>'
+			);
+			const target = container.querySelector("#element-target") as HTMLElement;
+			target.getBoundingClientRect = (): DOMRect => ({ left: 42, top: 7 }) as DOMRect;
+			const cfi = new EpubCFI(target, "/6/2!").toString();
+			const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+			const pos = contents.locationOf(cfi);
+
+			expect(errorSpy).not.toHaveBeenCalled();
+			expect(pos).toEqual({ left: 42, top: 7 });
+			errorSpy.mockRestore();
+		});
+
+		it("should still extend a collapsed range that lands in a text node", () => {
+			const { contents, container } = createContents('<p id="text-target">Hello there friend</p>');
+			const textNode = container.querySelector("#text-target")!.firstChild!;
+			const cfi = new EpubCFI(textNode, "/6/2!").toString();
+			const setEnd = vi.spyOn(Range.prototype, "setEnd");
+			const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+			contents.locationOf(cfi);
+
+			expect(errorSpy).not.toHaveBeenCalled();
+			expect(setEnd).toHaveBeenCalledWith(textNode, "Hello".length);
+			setEnd.mockRestore();
+			errorSpy.mockRestore();
 		});
 	});
 
