@@ -130,6 +130,18 @@ export function replaceLinks(contents: Element, fn: (path: string) => void): voi
 
 }
 
+const XML_ENTITIES: Record<string, string> = {
+	"&": "&amp;",
+	"<": "&lt;",
+	">": "&gt;",
+	"\"": "&quot;",
+	"'": "&apos;",
+};
+
+function escapeXml(str: string): string {
+	return str.replace(/[&<>"']/g, (c) => XML_ENTITIES[c]!);
+}
+
 export function substitute(content: string, urls: string[], replacements: (string | null)[]): string {
 	const map = new Map<string, string>();
 	const alternatives: string[] = [];
@@ -140,19 +152,18 @@ export function substitute(content: string, urls: string[], replacements: (strin
 		const replacement = replacements[i];
 		if (!url || !replacement) continue;
 
-		const escapedUrl = url.replace(escapeRe, "\\$&");
-		map.set(url, replacement);
-		alternatives.push(escapedUrl);
-
+		const variants = new Set([url]);
 		try {
-			const decoded = decodeURIComponent(url);
-			if (decoded !== url) {
-				const escapedDecoded = decoded.replace(escapeRe, "\\$&");
-				map.set(decoded, replacement);
-				alternatives.push(escapedDecoded);
-			}
+			variants.add(decodeURIComponent(url));
 		} catch (_e) {
 			// Invalid URI encoding, skip decoded variant
+		}
+		// XHTML source may write reserved characters as XML entities
+		for (const variant of [...variants]) variants.add(escapeXml(variant));
+
+		for (const variant of variants) {
+			map.set(variant, replacement);
+			alternatives.push(variant.replace(escapeRe, "\\$&"));
 		}
 	}
 
