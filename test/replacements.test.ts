@@ -212,6 +212,12 @@ describe("replacements", () => {
 			expect(result).toContain("blob:cjk");
 		});
 
+		it("should replace XML-escaped form of URLs with reserved characters", () => {
+			const content = '<img src="image/5-1&amp;5-2.png"/>';
+			const result = substitute(content, ["image/5-1%265-2.png"], ["blob:amp"]);
+			expect(result).toBe('<img src="blob:amp"/>');
+		});
+
 		it("should replace all occurrences of same URL", () => {
 			const content = '<img src="a.jpg"/> <img src="a.jpg"/>';
 			const result = substitute(content, ["a.jpg"], ["blob:1"]);
