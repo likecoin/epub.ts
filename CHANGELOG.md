@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.7.3 (2026-10-26)
+
+### Bug fixes
+
+- Asset URLs are also matched in their XML-escaped form when substituting blob URLs into section markup. A manifest `href="image/5-1%265-2.png"` is written in XHTML as `<img src="image/5-1&amp;5-2.png">`, which matched neither the manifest URL nor its decoded form, so the `src` was left as-is and the browser requested the relative path from the page server (404). Any filename containing `&`, `<`, `>`, `"` or `'` was affected
+
 ## 0.7.2 (2026-08-20)
 
 ### Security
