@@ -253,30 +253,35 @@ describe("Book", () => {
 		const badUrl = getFixtureUrl("/does-not-exist.opf");
 
 		// A failed open rejects every pending promise (opened, ready and each
-		// loaded.* deferred). A real consumer awaits only one of them, so the
-		// siblings would surface as unhandled rejections; swallow them here so
-		// the suite asserts one promise at a time without noisy warnings.
-		const silenceSiblings = (book: Book) => {
-			book.opened.catch(() => {});
-			book.ready.catch(() => {});
-			Object.values(book.loaded).forEach((p) => p.catch(() => {}));
-		};
+		// loaded.* deferred), but a consumer awaits only one of them.
+		it("should not leak unhandled rejections from the promises nobody awaits", async () => {
+			const leaked: unknown[] = [];
+			const onUnhandled = (reason: unknown): void => { leaked.push(reason); };
+			process.on("unhandledRejection", onUnhandled);
+			try {
+				const book = new Book(badUrl);
+				await expect(book.opened).rejects.toBeInstanceOf(EpubError);
+				// Node reports unhandled rejections a macrotask after the
+				// microtask queue drains.
+				await new Promise((resolve) => setTimeout(resolve, 20));
+			} finally {
+				process.off("unhandledRejection", onUnhandled);
+			}
+			expect(leaked).toEqual([]);
+		});
 
 		it("should reject book.opened with an EpubError instead of hanging", async () => {
 			const book = new Book(badUrl);
-			silenceSiblings(book);
 			await expect(book.opened).rejects.toBeInstanceOf(EpubError);
 		});
 
 		it("should reject book.ready fast rather than hanging forever", async () => {
 			const book = new Book(badUrl);
-			silenceSiblings(book);
 			await expect(book.ready).rejects.toBeInstanceOf(EpubError);
 		});
 
 		it("should emit openFailed with the surfaced cause", async () => {
 			const book = new Book(badUrl);
-			silenceSiblings(book);
 			const err = await new Promise<EpubError>((resolve) => {
 				book.on("openFailed", (e: EpubError) => resolve(e));
 			});
@@ -287,7 +292,6 @@ describe("Book", () => {
 
 		it("should propagate the HTTP status from the underlying cause", async () => {
 			const book = new Book(badUrl);
-			silenceSiblings(book);
 			await expect(book.opened).rejects.toMatchObject({ status: 404 });
 		});
 
@@ -306,13 +310,11 @@ describe("Book", () => {
 			it("should not throw from the constructor", async () => {
 				let book!: Book;
 				expect(() => { book = new Book(new ArrayBuffer(8)); }).not.toThrow();
-				silenceSiblings(book);
 				await expect(book.opened).rejects.toThrow("JSZip lib not loaded");
 			});
 
 			it("should reject rather than throw when open() is called directly", async () => {
 				const book = new Book();
-				silenceSiblings(book);
 				let opening!: Promise<void>;
 				expect(() => { opening = book.open(new ArrayBuffer(8), "binary"); }).not.toThrow();
 				await expect(opening).rejects.toBeInstanceOf(EpubError);

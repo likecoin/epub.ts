@@ -20,6 +20,22 @@ describe("Book.store()", () => {
 			return request(...args);
 		};
 
+	it("should not leak an unhandled rejection when the book fails to open", async () => {
+		const leaked: unknown[] = [];
+		const onUnhandled = (reason: unknown): void => { leaked.push(reason); };
+		process.on("unhandledRejection", onUnhandled);
+		try {
+			const book = new Book(getFixtureUrl("/does-not-exist.opf"), { store: uniqueName() });
+			await expect(book.opened).rejects.toThrow();
+			// Node reports unhandled rejections a macrotask after the
+			// microtask queue drains.
+			await new Promise((resolve) => setTimeout(resolve, 20));
+		} finally {
+			process.off("unhandledRejection", onUnhandled);
+		}
+		expect(leaked).toEqual([]);
+	});
+
 	it("should route the book's requests through the store", async () => {
 		const requestMethod = passThrough();
 		const book = new Book(opfUrl(), { store: uniqueName(), requestMethod });
