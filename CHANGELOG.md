@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.7.4 (2026-11-14)
+
+### Bug fixes
+
+- `new Book()` opens an EPUB passed as a `Uint8Array` or Node `Buffer`. The constructor treated anything that wasn't a string, `Blob` or `ArrayBuffer` as an options object, so the bytes were dropped and `book.opened` never settled. Typed arrays are now detected with `ArrayBuffer.isView`, which also holds across realms (a Node `Buffer` under jsdom isn't `instanceof` the global `Uint8Array`), and passed to JSZip as-is
+- A failed open no longer leaks unhandled rejections. It rejects `opened`, `ready` and every `loaded.*` promise at once, but a consumer typically awaits only one or two of them, so the rest surfaced as unhandled rejections unless a `catch` was attached to each. They are now marked handled at construction, and anyone awaiting one still receives the rejection. `store()` chained off `opened` without a `catch` and leaked the same way
+
 ## 0.7.3 (2026-10-26)
 
 ### Bug fixes
