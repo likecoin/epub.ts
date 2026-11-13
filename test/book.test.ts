@@ -60,6 +60,23 @@ describe("Book", () => {
 		});
 	});
 
+	// A Node Buffer is a Uint8Array, not an ArrayBuffer; it used to be taken
+	// for an options object, leaving book.opened pending forever.
+	describe.each([
+		["Uint8Array", (ab: ArrayBuffer) => new Uint8Array(ab)],
+		["Node Buffer", (ab: ArrayBuffer) => Buffer.from(ab)],
+	])("Archived epub in a %s", (_name, wrap) => {
+		it("should open it like an ArrayBuffer", async () => {
+			const response = await fetch(getFixtureUrl("/alice.epub"));
+			const book = new Book(wrap(await response.arrayBuffer()));
+			await book.opened;
+			expect(book.isOpen).toBe(true);
+			expect(book.archive).toBeTruthy();
+			expect(book.packaging.metadata.title).toBeTruthy();
+			await book.replacementsReady;
+		});
+	});
+
 	describe("Lazy replacements (archived epub)", () => {
 		it("should expose replacementsReady promise on archived epub", async () => {
 			const book = new Book(getFixtureUrl("/alice.epub"));
