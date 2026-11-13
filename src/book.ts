@@ -192,6 +192,13 @@ class Book implements IEventEmitter<BookEvents> {
 			this.loaded.displayOptions
 		]);
 
+		// A failed open rejects all of these at once, but a consumer awaits only
+		// one or two; mark them handled so the rest don't surface as unhandled
+		// rejections. Awaiting any of them still receives the rejection.
+		const noop = (): void => {};
+		this.opened.catch(noop);
+		this.ready.catch(noop);
+		Object.values(this.loaded).forEach((p) => p.catch(noop));
 
 		// Queue for methods used before opening
 		this.isRendered = false;
@@ -815,7 +822,7 @@ class Book implements IEventEmitter<BookEvents> {
 				this.spine.hooks.serialize.deregister(substituteResources);
 			});
 
-		});
+		}).catch(() => {});
 
 		return this.storage;
 	}
