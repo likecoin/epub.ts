@@ -14,7 +14,7 @@ import type { BookOptions } from "./types";
  * @returns {Book} a new Book object
  * @example ePub("/path/to/book.epub", {})
  */
-function ePub(url?: string | ArrayBuffer | Blob | BookOptions, options?: BookOptions): Book {
+function ePub(url?: string | ArrayBuffer | Uint8Array | Blob | BookOptions, options?: BookOptions): Book {
 	return new Book(url, options);
 }
 

@@ -116,12 +116,13 @@ class Book implements IEventEmitter<BookEvents> {
 	declare off: IEventEmitter<BookEvents>["off"];
 	declare emit: IEventEmitter<BookEvents>["emit"];
 
-	constructor(url?: string | ArrayBuffer | Blob | BookOptions, options?: BookOptions) {
+	constructor(url?: string | ArrayBuffer | Uint8Array | Blob | BookOptions, options?: BookOptions) {
 		// Allow passing just options to the Book
 		if (typeof(options) === "undefined" &&
 			  typeof(url) !== "string" &&
 		    url instanceof Blob === false &&
-		    url instanceof ArrayBuffer === false) {
+		    url instanceof ArrayBuffer === false &&
+		    !ArrayBuffer.isView(url)) {
 			options = url;
 			url = undefined;
 		}
@@ -306,18 +307,18 @@ class Book implements IEventEmitter<BookEvents> {
 			// open() already surfaces the cause, rejects opening/loading and emits
 			// OPEN_FAILED; swallow the rejection here so the auto-open doesn't
 			// produce an unhandled promise rejection.
-			this.open(url as string | ArrayBuffer | Blob, this.settings.openAs).catch(() => {});
+			this.open(url as string | ArrayBuffer | Uint8Array | Blob, this.settings.openAs).catch(() => {});
 		}
 	}
 
 	/**
 	 * Open a epub or url
-	 * @param {string | ArrayBuffer} input Url, Path or ArrayBuffer
+	 * @param {string | ArrayBuffer | Uint8Array | Blob} input Url, Path or binary data
 	 * @param {string} [what="binary", "base64", "epub", "opf", "json", "directory"] force opening as a certain type
 	 * @returns {Promise} of when the book has been loaded
 	 * @example book.open("/path/to/book.epub")
 	 */
-	open(input: string | ArrayBuffer | Blob, what?: string): Promise<void> {
+	open(input: string | ArrayBuffer | Uint8Array | Blob, what?: string): Promise<void> {
 		// Route both synchronous setup throws (e.g. "JSZip lib not loaded" from
 		// Archive construction) and async open-chain failures through one handler:
 		// preserve the real cause, reject the pending open/load promises so
@@ -332,6 +333,8 @@ class Book implements IEventEmitter<BookEvents> {
 				inputLabel = input.length > 200 ? input.slice(0, 200) + "…" : input;
 			} else if (input instanceof ArrayBuffer) {
 				inputLabel = "ArrayBuffer(" + input.byteLength + " bytes)";
+			} else if (ArrayBuffer.isView(input)) {
+				inputLabel = input.constructor.name + "(" + input.byteLength + " bytes)";
 			} else {
 				inputLabel = "Blob(" + (input.type || "application/octet-stream") + ", " + input.size + " bytes)";
 			}
@@ -388,7 +391,7 @@ class Book implements IEventEmitter<BookEvents> {
 	 * @param  {string} [encoding]
 	 * @return {Promise}
 	 */
-	openEpub(data: string | ArrayBuffer | Blob, encoding?: string): Promise<void> {
+	openEpub(data: string | ArrayBuffer | Uint8Array | Blob, encoding?: string): Promise<void> {
 		return this.unarchive(data, encoding || this.settings.encoding)
 			.then(() => {
 				return this.openContainer(CONTAINER_PATH);
@@ -525,7 +528,7 @@ class Book implements IEventEmitter<BookEvents> {
 	 * @param  {string} input
 	 * @return {string}  binary | directory | epub | opf
 	 */
-	determineType(input: string | ArrayBuffer | Blob): string | undefined {
+	determineType(input: string | ArrayBuffer | Uint8Array | Blob): string | undefined {
 		let extension;
 
 		if (this.settings.encoding === "base64") {
@@ -735,7 +738,7 @@ class Book implements IEventEmitter<BookEvents> {
 	 * @param  {string} [encoding]
 	 * @return {Archive}
 	 */
-	unarchive(input: string | ArrayBuffer | Blob, encoding?: string): Promise<JSZip> {
+	unarchive(input: string | ArrayBuffer | Uint8Array | Blob, encoding?: string): Promise<JSZip> {
 		this.archive = new Archive();
 		return this.archive.open(input, encoding === "base64");
 	}

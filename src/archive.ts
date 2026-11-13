@@ -41,7 +41,7 @@ class Archive {
 	 * @param  {boolean} [isBase64] tells JSZip if the input data is base64 encoded
 	 * @return {Promise} zipfile
 	 */
-	open(input: ArrayBuffer | string | Blob, isBase64?: boolean): Promise<JSZip> {
+	open(input: ArrayBuffer | Uint8Array | string | Blob, isBase64?: boolean): Promise<JSZip> {
 		return this.zip!.loadAsync(input, {"base64": isBase64});
 	}
 
